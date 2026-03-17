@@ -35,12 +35,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
+    (supabase as any)
       .from("profiles")
       .select("notify_lesson_reminder, notify_new_message, notify_lesson_cancelled, theme")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data) {
           setNotifyLessonReminder((data as any).notify_lesson_reminder ?? true);
           setNotifyNewMessage((data as any).notify_new_message ?? true);
@@ -57,13 +57,13 @@ export default function SettingsPage() {
     if (!user) return;
     setIsSavingNotifs(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("profiles")
         .update({
           notify_lesson_reminder: notifyLessonReminder,
           notify_new_message: notifyNewMessage,
           notify_lesson_cancelled: notifyLessonCancelled,
-        } as any)
+        })
         .eq("user_id", user.id);
       if (error) throw error;
       toast.success("Préférences de notifications sauvegardées !");
@@ -77,9 +77,9 @@ export default function SettingsPage() {
   const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
     if (!user) return;
-    await supabase
+    await (supabase as any)
       .from("profiles")
-      .update({ theme: newTheme } as any)
+      .update({ theme: newTheme })
       .eq("user_id", user.id);
   };
 

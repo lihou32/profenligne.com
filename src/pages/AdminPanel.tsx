@@ -85,11 +85,11 @@ export default function AdminPanel() {
   useEffect(() => {
     const fetchPreregistrations = async () => {
       setLoadingPrereg(true);
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("preregistrations")
         .select("*")
         .order("created_at", { ascending: false });
-      if (data) setPreregistrations(data);
+      if (data) setPreregistrations(data as Preregistration[]);
       setLoadingPrereg(false);
     };
     fetchPreregistrations();

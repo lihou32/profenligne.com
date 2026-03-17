@@ -33,7 +33,7 @@ function useAdminTutors() {
   return useQuery({
     queryKey: ["admin-tutors"],
     queryFn: async () => {
-      const { data: tutors, error } = await supabase
+      const { data: tutors, error } = await (supabase as any)
         .from("tutors")
         .select("*")
         .order("created_at", { ascending: false });
@@ -42,7 +42,7 @@ function useAdminTutors() {
       const userIds = [...new Set((tutors || []).map((t) => t.user_id))];
       if (userIds.length === 0) return [] as TutorWithProfile[];
 
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url")
         .in("user_id", userIds);
@@ -60,7 +60,7 @@ function useUpdateTutorStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ tutorId, status }: { tutorId: string; status: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("tutors")
         .update({ status })
         .eq("id", tutorId);

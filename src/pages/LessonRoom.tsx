@@ -60,12 +60,12 @@ export default function LessonRoom() {
   // Verify user is a participant of this lesson
   useEffect(() => {
     if (!user || !id) return;
-    supabase
+    (supabase as any)
       .from("lessons")
       .select("student_id, tutor_id")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (!data || (data.student_id !== user.id && data.tutor_id !== user.id)) {
           toast.error("Vous n'avez pas accès à cette salle");
           navigate("/dashboard");
@@ -124,13 +124,13 @@ export default function LessonRoom() {
     endCall();
     setCallStarted(false);
     // Fetch lesson data for the report redirect
-    const { data: lesson } = await supabase
+    const { data: lesson } = await (supabase as any)
       .from("lessons")
       .select("subject, topic")
       .eq("id", id!)
       .maybeSingle();
-    const subject = encodeURIComponent(lesson?.subject || "Cours");
-    const topic = encodeURIComponent(lesson?.topic || "");
+    const subject = encodeURIComponent((lesson as any)?.subject || "Cours");
+    const topic = encodeURIComponent((lesson as any)?.topic || "");
     navigate(`/report/${roomId}?subject=${subject}&topic=${topic}`);
   };
 

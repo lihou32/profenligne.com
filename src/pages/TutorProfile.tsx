@@ -208,7 +208,7 @@ export default function TutorProfile() {
     queryKey: ["public-tutor", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data: t, error } = await supabase
+      const { data: t, error } = await (supabase as any)
         .from("tutors")
         .select("*")
         .eq("user_id", id!)
@@ -216,13 +216,13 @@ export default function TutorProfile() {
       if (error) throw error;
       if (!t) return null;
 
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .eq("user_id", id!)
         .maybeSingle();
 
-      return { ...t, profile };
+      return { ...t, profile } as any;
     },
   });
 
@@ -231,13 +231,13 @@ export default function TutorProfile() {
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tutor_reviews")
         .select("*")
         .eq("tutor_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 

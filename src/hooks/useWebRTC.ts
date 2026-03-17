@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+const db = supabase as any;
+
 const ICE_SERVERS = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
@@ -32,11 +34,11 @@ export function useWebRTC(roomId: string) {
 
     pc.onicecandidate = async (event) => {
       if (event.candidate && user) {
-        await supabase.from("webrtc_signals").insert([{
+        await db.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "ice-candidate",
-          signal_data: event.candidate.toJSON() as any,
+          signal_data: event.candidate.toJSON(),
         }]);
       }
     };
@@ -90,11 +92,11 @@ export function useWebRTC(roomId: string) {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       if (user) {
-        await supabase.from("webrtc_signals").insert([{
+        await db.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "offer",
-          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type } as any,
+          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type },
         }]);
       }
     } finally {
@@ -113,7 +115,7 @@ export function useWebRTC(roomId: string) {
     politenessRef.current = "impolite";
 
     // Fetch existing offer
-    const { data: offers } = await supabase
+    const { data: offers } = await db
       .from("webrtc_signals")
       .select("*")
       .eq("room_id", roomId)
@@ -127,16 +129,16 @@ export function useWebRTC(roomId: string) {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       if (user) {
-        await supabase.from("webrtc_signals").insert([{
+        await db.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "answer",
-          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type } as any,
+          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type },
         }]);
       }
 
       // Process existing ICE candidates
-      const { data: candidates } = await supabase
+      const { data: candidates } = await db
         .from("webrtc_signals")
         .select("*")
         .eq("room_id", roomId)
@@ -199,14 +201,14 @@ export function useWebRTC(roomId: string) {
                 );
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
-                await supabase.from("webrtc_signals").insert([{
+                await db.from("webrtc_signals").insert([{
                   room_id: roomId,
                   sender_id: user.id,
                   signal_type: "answer",
                   signal_data: {
                     sdp: pc.localDescription?.sdp,
                     type: pc.localDescription?.type,
-                  } as any,
+                  },
                 }]);
               } catch (e) {
                 console.warn("Failed to handle offer:", e);

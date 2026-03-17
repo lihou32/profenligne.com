@@ -182,19 +182,19 @@ export default function Tutors() {
   const { data: tutors = [], isLoading } = useQuery({
     queryKey: ["tutors-search"],
     queryFn: async () => {
-      const { data: t, error } = await supabase.from("tutors").select("*");
+      const { data: t, error } = await (supabase as any).from("tutors").select("*");
       if (error) throw error;
 
-      const userIds = [...new Set((t || []).map((x) => x.user_id))];
+      const userIds = [...new Set((t || []).map((x: any) => x.user_id))];
       if (!userIds.length) return [];
 
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .in("user_id", userIds);
 
-      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-      return (t || []).map((x) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      return (t || []).map((x: any) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
     },
   });
 
@@ -202,9 +202,9 @@ export default function Tutors() {
   const { data: xpData = [] } = useQuery({
     queryKey: ["all-user-xp"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_xp").select("user_id, total_xp");
+      const { data, error } = await (supabase as any).from("user_xp").select("user_id, total_xp");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 

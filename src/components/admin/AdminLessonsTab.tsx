@@ -46,7 +46,7 @@ function useAdminLessons(statusFilter: string) {
   return useQuery({
     queryKey: ["admin-lessons", statusFilter],
     queryFn: async () => {
-      let query = supabase
+      let query = (supabase as any)
         .from("lessons")
         .select("*")
         .order("scheduled_at", { ascending: false });
@@ -67,7 +67,7 @@ function useAdminLessons(statusFilter: string) {
         ]),
       ];
 
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("user_id, first_name, last_name")
         .in("user_id", userIds);
@@ -87,7 +87,7 @@ function useAdminUpdateLesson() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("lessons").update({ status }).eq("id", id);
+      const { error } = await (supabase as any).from("lessons").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

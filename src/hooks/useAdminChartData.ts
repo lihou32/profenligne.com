@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 
+const db = supabase as any;
+
 export function useAdminChartData(months = 6) {
   return useQuery({
     queryKey: ["admin-chart-data", months],
     queryFn: async () => {
       const now = new Date();
 
-      // Build array of month ranges
       const ranges = Array.from({ length: months }, (_, i) => {
         const d = subMonths(now, months - 1 - i);
         return {
@@ -19,17 +20,16 @@ export function useAdminChartData(months = 6) {
         };
       });
 
-      // Fetch all lessons and earnings in one go (within the full range)
       const rangeStart = ranges[0].start;
       const rangeEnd = ranges[ranges.length - 1].end;
 
       const [lessonsRes, earningsRes] = await Promise.all([
-        supabase
+        db
           .from("lessons")
           .select("scheduled_at, status")
           .gte("scheduled_at", rangeStart)
           .lte("scheduled_at", rangeEnd),
-        supabase
+        db
           .from("tutor_earnings")
           .select("amount, created_at, status")
           .eq("status", "paid")
@@ -40,19 +40,19 @@ export function useAdminChartData(months = 6) {
       const lessons = lessonsRes.data ?? [];
       const earnings = earningsRes.data ?? [];
 
-      return ranges.map((r) => {
+      return ranges.map((r: any) => {
         const monthLessons = lessons.filter(
-          (l) => l.scheduled_at >= r.start && l.scheduled_at <= r.end
+          (l: any) => l.scheduled_at >= r.start && l.scheduled_at <= r.end
         );
         const monthEarnings = earnings.filter(
-          (e) => e.created_at >= r.start && e.created_at <= r.end
+          (e: any) => e.created_at >= r.start && e.created_at <= r.end
         );
 
         return {
           mois: r.label,
           cours: monthLessons.length,
           revenus: Math.round(
-            monthEarnings.reduce((s, e) => s + Number(e.amount), 0)
+            monthEarnings.reduce((s: number, e: any) => s + Number(e.amount), 0)
           ),
         };
       });
