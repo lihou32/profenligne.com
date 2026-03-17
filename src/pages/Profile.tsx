@@ -81,7 +81,7 @@ export default function Profile() {
       const url = `${publicUrl}?t=${Date.now()}`;
       setAvatarUrl(url);
 
-      await supabase
+      await (supabase as any)
         .from("profiles")
         .update({ avatar_url: url })
         .eq("user_id", user.id);
