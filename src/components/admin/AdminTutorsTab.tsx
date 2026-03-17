@@ -33,7 +33,7 @@ function useAdminTutors() {
   return useQuery({
     queryKey: ["admin-tutors"],
     queryFn: async () => {
-      const { data: tutors, error } = await supabase
+      const { data: tutors, error } = await (supabase as any)
         .from("tutors")
         .select("*")
         .order("created_at", { ascending: false });
