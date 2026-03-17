@@ -204,9 +204,10 @@ export default function TutorProfile() {
   const [newComment, setNewComment] = useState("");
 
   // Fetch tutor + profile
-  const { data: tutor, isLoading } = useQuery({
+  const { data: tutor, isLoading, isFetching } = useQuery({
     queryKey: ["public-tutor", id],
     enabled: !!id,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: t, error } = await (supabase as any)
         .from("tutors")
@@ -266,7 +267,8 @@ export default function TutorProfile() {
 
   // ── Loading / not found ──────────────────────────────────
 
-  if (isLoading) {
+  // Only show spinner when actively fetching (avoids infinite spinner if query is disabled or id is missing)
+  if (!id || (isLoading && isFetching)) {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

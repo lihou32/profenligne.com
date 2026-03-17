@@ -61,14 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfileAndRoles(session.user.id);
-        } else {
-          setProfile(null);
-          setRoles([]);
+        try {
+          if (session?.user) {
+            await fetchProfileAndRoles(session.user.id);
+          } else {
+            setProfile(null);
+            setRoles([]);
+          }
+        } catch (err) {
+          console.warn("Auth state change error:", err);
+        } finally {
+          clearTimeout(safetyTimer);
+          setLoading(false);
         }
-        clearTimeout(safetyTimer);
-        setLoading(false);
       }
     );
 
