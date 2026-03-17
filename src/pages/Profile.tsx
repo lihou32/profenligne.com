@@ -40,12 +40,12 @@ export default function Profile() {
     }
     // Load subjects: for tutors from tutors table, for students from user metadata
     if (isTutor && user) {
-      supabase
+      (supabase as any)
         .from("tutors")
         .select("subjects")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (data?.subjects) setSelectedSubjects(data.subjects);
         });
     } else if (user?.user_metadata?.subjects) {
