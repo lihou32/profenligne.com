@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileAndRoles = async (userId: string) => {
     const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", userId).single(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
+      (supabase as any).from("profiles").select("*").eq("user_id", userId).single(),
+      (supabase as any).from("user_roles").select("role").eq("user_id", userId),
     ]);
 
     // Si le profil n'existe pas encore (trigger DB pas encore exécuté après signup),

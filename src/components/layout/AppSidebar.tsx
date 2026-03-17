@@ -60,12 +60,12 @@ export function AppSidebar() {
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("user_xp")
         .select("total_xp")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return data?.total_xp ?? 0;
+      return (data as any)?.total_xp ?? 0;
     },
   });
 

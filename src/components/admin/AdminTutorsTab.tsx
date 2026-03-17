@@ -60,7 +60,7 @@ function useUpdateTutorStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ tutorId, status }: { tutorId: string; status: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("tutors")
         .update({ status })
         .eq("id", tutorId);
