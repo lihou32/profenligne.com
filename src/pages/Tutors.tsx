@@ -202,9 +202,9 @@ export default function Tutors() {
   const { data: xpData = [] } = useQuery({
     queryKey: ["all-user-xp"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_xp").select("user_id, total_xp");
+      const { data, error } = await (supabase as any).from("user_xp").select("user_id, total_xp");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
