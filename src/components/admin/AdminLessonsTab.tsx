@@ -46,7 +46,7 @@ function useAdminLessons(statusFilter: string) {
   return useQuery({
     queryKey: ["admin-lessons", statusFilter],
     queryFn: async () => {
-      let query = supabase
+      let query = (supabase as any)
         .from("lessons")
         .select("*")
         .order("scheduled_at", { ascending: false });
