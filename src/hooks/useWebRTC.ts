@@ -129,11 +129,11 @@ export function useWebRTC(roomId: string) {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       if (user) {
-        await supabase.from("webrtc_signals").insert([{
+        await db.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "answer",
-          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type } as any,
+          signal_data: { sdp: pc.localDescription?.sdp, type: pc.localDescription?.type },
         }]);
       }
 
