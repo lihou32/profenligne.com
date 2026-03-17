@@ -115,7 +115,7 @@ export function useWebRTC(roomId: string) {
     politenessRef.current = "impolite";
 
     // Fetch existing offer
-    const { data: offers } = await supabase
+    const { data: offers } = await db
       .from("webrtc_signals")
       .select("*")
       .eq("room_id", roomId)
