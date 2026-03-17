@@ -45,13 +45,13 @@ export default function SettingsPage() {
           setNotifyLessonReminder((data as any).notify_lesson_reminder ?? true);
           setNotifyNewMessage((data as any).notify_new_message ?? true);
           setNotifyLessonCancelled((data as any).notify_lesson_cancelled ?? true);
+          // Apply saved theme on mount only — setTheme is stable so no dep needed
           const savedTheme = (data as any).theme;
-          if (savedTheme && savedTheme !== theme) {
-            setTheme(savedTheme);
-          }
+          if (savedTheme) setTheme(savedTheme);
         }
       });
-  }, [user, theme]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSaveNotifs = async () => {
     if (!user) return;

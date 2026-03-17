@@ -77,11 +77,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfileAndRoles(session.user.id);
+        // Must await so roles are populated before setLoading(false),
+        // otherwise ProtectedRoute sees roles=[] and redirects prematurely.
+        try {
+          await fetchProfileAndRoles(session.user.id);
+        } catch (err) {
+          console.warn("getSession fetchProfileAndRoles error:", err);
+        }
       }
       clearTimeout(safetyTimer);
       setLoading(false);
