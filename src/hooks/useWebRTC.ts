@@ -138,7 +138,7 @@ export function useWebRTC(roomId: string) {
       }
 
       // Process existing ICE candidates
-      const { data: candidates } = await supabase
+      const { data: candidates } = await db
         .from("webrtc_signals")
         .select("*")
         .eq("room_id", roomId)
