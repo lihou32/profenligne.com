@@ -34,11 +34,11 @@ export function useWebRTC(roomId: string) {
 
     pc.onicecandidate = async (event) => {
       if (event.candidate && user) {
-        await supabase.from("webrtc_signals").insert([{
+        await db.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "ice-candidate",
-          signal_data: event.candidate.toJSON() as any,
+          signal_data: event.candidate.toJSON(),
         }]);
       }
     };
