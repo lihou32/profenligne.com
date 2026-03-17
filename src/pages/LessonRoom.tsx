@@ -60,12 +60,12 @@ export default function LessonRoom() {
   // Verify user is a participant of this lesson
   useEffect(() => {
     if (!user || !id) return;
-    supabase
+    (supabase as any)
       .from("lessons")
       .select("student_id, tutor_id")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (!data || (data.student_id !== user.id && data.tutor_id !== user.id)) {
           toast.error("Vous n'avez pas accès à cette salle");
           navigate("/dashboard");

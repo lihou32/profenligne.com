@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const notFound = !profileRes.data && profileRes.error?.code === "PGRST116";
     if (notFound) {
       await new Promise((r) => setTimeout(r, 1000));
-      const retry = await supabase.from("profiles").select("*").eq("user_id", userId).single();
-      if (retry.data) setProfile(retry.data as Profile);
+      const retry = await (supabase as any).from("profiles").select("*").eq("user_id", userId).single();
+      if (retry.data) setProfile(retry.data as unknown as Profile);
     } else if (profileRes.data) {
       setProfile(profileRes.data as Profile);
     }
