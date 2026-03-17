@@ -67,7 +67,7 @@ function useAdminLessons(statusFilter: string) {
         ]),
       ];
 
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("user_id, first_name, last_name")
         .in("user_id", userIds);
