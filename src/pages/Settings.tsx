@@ -57,13 +57,13 @@ export default function SettingsPage() {
     if (!user) return;
     setIsSavingNotifs(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("profiles")
         .update({
           notify_lesson_reminder: notifyLessonReminder,
           notify_new_message: notifyNewMessage,
           notify_lesson_cancelled: notifyLessonCancelled,
-        } as any)
+        })
         .eq("user_id", user.id);
       if (error) throw error;
       toast.success("Préférences de notifications sauvegardées !");
