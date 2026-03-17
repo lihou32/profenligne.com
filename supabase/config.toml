@@ -1,0 +1,19 @@
+project_id = "wpfczfoidtopnvmhfwni"
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.send-lesson-reminders]
+verify_jwt = false
+
+[functions.weekly-preregistrations-report]
+verify_jwt = false
+
+[functions.notify-lesson-status]
+verify_jwt = false
+
+[functions.notify-lesson-booking]
+verify_jwt = false

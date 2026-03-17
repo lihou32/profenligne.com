@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Desktop_Commander__list_directory",
+      "mcp__Desktop_Commander__read_file",
+      "Bash(npm install)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

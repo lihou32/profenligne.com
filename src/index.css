@@ -1,0 +1,397 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Space+Grotesk:wght@300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prof en Ligne — Deep Purple Gamified Design System
+   Inspired by: dark purple bg, violet→magenta→pink gradients, glassmorphism cards
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Deep purple base */
+    --background: 270 30% 14%;
+    --foreground: 270 10% 95%;
+
+    --card: 270 25% 18%;
+    --card-foreground: 270 10% 95%;
+
+    --popover: 270 25% 18%;
+    --popover-foreground: 270 10% 95%;
+
+    --primary: 265 80% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 20% 22%;
+    --secondary-foreground: 265 80% 75%;
+
+    --muted: 270 18% 20%;
+    --muted-foreground: 270 12% 60%;
+
+    --accent: 330 85% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 18% 24%;
+    --input: 270 18% 22%;
+    --ring: 265 80% 65%;
+
+    --radius: 1rem;
+
+    /* Sidebar — even deeper */
+    --sidebar-background: 268 35% 10%;
+    --sidebar-foreground: 270 15% 88%;
+    --sidebar-primary: 265 85% 68%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 268 28% 16%;
+    --sidebar-accent-foreground: 270 15% 88%;
+    --sidebar-border: 268 25% 14%;
+    --sidebar-ring: 265 85% 68%;
+
+    /* Vibrant gradient: violet → magenta → pink */
+    --gradient-start: 265 80% 55%;
+    --gradient-mid: 300 75% 55%;
+    --gradient-end: 340 85% 60%;
+
+    /* Gold accent for XP / rewards */
+    --gold: 42 90% 58%;
+    --gold-foreground: 42 90% 15%;
+
+    /* Semantic */
+    --success: 152 65% 48%;
+    --success-foreground: 0 0% 100%;
+    --warning: 42 90% 58%;
+    --warning-foreground: 42 90% 15%;
+    --info: 210 85% 58%;
+    --info-foreground: 0 0% 100%;
+
+    /* Glow */
+    --glow-primary: 265 80% 65%;
+    --glow-accent: 330 85% 60%;
+    --glow-gold: 42 90% 58%;
+  }
+
+  /* Light mode */
+  .light {
+    --background: 270 15% 96%;
+    --foreground: 270 30% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 270 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 270 30% 15%;
+    --primary: 265 80% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 15% 92%;
+    --secondary-foreground: 265 70% 45%;
+    --muted: 270 10% 90%;
+    --muted-foreground: 270 10% 45%;
+    --accent: 330 75% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 270 12% 85%;
+    --input: 270 12% 88%;
+    --ring: 265 80% 55%;
+    --sidebar-background: 270 18% 98%;
+    --sidebar-foreground: 270 20% 25%;
+    --sidebar-primary: 265 80% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 15% 93%;
+    --sidebar-accent-foreground: 270 20% 25%;
+    --sidebar-border: 270 12% 88%;
+    --sidebar-ring: 265 80% 55%;
+    --gradient-start: 265 80% 55%;
+    --gradient-mid: 300 75% 55%;
+    --gradient-end: 340 85% 60%;
+    --gold: 42 90% 50%;
+    --gold-foreground: 42 90% 15%;
+    --success: 152 65% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 42 85% 50%;
+    --warning-foreground: 42 90% 15%;
+    --info: 210 85% 50%;
+    --info-foreground: 0 0% 100%;
+    --glow-primary: 265 80% 55%;
+    --glow-accent: 330 75% 55%;
+    --glow-gold: 42 90% 50%;
+  }
+
+  /* Dark mode */
+  .dark {
+    --background: 270 35% 8%;
+    --foreground: 270 10% 95%;
+    --card: 270 28% 12%;
+    --card-foreground: 270 10% 95%;
+    --popover: 270 28% 12%;
+    --popover-foreground: 270 10% 95%;
+    --primary: 265 80% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 22% 16%;
+    --secondary-foreground: 265 80% 75%;
+    --muted: 270 20% 14%;
+    --muted-foreground: 270 12% 55%;
+    --accent: 330 80% 58%;
+    --accent-foreground: 0 0% 100%;
+    --border: 270 20% 18%;
+    --input: 270 20% 16%;
+    --ring: 265 80% 68%;
+    --sidebar-background: 268 38% 6%;
+    --sidebar-foreground: 270 15% 85%;
+    --sidebar-primary: 265 85% 68%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 268 30% 12%;
+    --sidebar-accent-foreground: 270 15% 85%;
+    --sidebar-border: 268 28% 10%;
+    --sidebar-ring: 265 85% 68%;
+    --gradient-start: 265 80% 60%;
+    --gradient-mid: 300 70% 58%;
+    --gradient-end: 340 80% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer utilities {
+  /* Primary gradient — violet → magenta → pink */
+  .gradient-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)),
+      hsl(var(--gradient-mid)),
+      hsl(var(--gradient-end))
+    );
+  }
+
+  /* Hero gradient — big banner like the reference */
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      hsl(265 75% 40%),
+      hsl(300 70% 45%),
+      hsl(340 80% 55%)
+    );
+  }
+
+  /* Gold gradient for XP / badges */
+  .gradient-gold {
+    background: linear-gradient(
+      135deg,
+      hsl(42 90% 50%),
+      hsl(35 95% 58%),
+      hsl(42 90% 65%)
+    );
+  }
+
+  /* Softer gradient for subtle backgrounds */
+  .gradient-subtle {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start) / 0.12),
+      hsl(var(--gradient-mid) / 0.08),
+      hsl(var(--gradient-end) / 0.12)
+    );
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)),
+      hsl(var(--gradient-mid)),
+      hsl(var(--gradient-end))
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gold text */
+  .gold-text {
+    background: linear-gradient(135deg, hsl(42 90% 55%), hsl(35 95% 65%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glass morphism card — purple-tinted */
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl;
+    background: hsl(var(--card) / 0.6);
+    border: 1px solid hsl(var(--border) / 0.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.15),
+      0 8px 32px -8px hsl(270 50% 5% / 0.5),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.03);
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start) / 0.06),
+      transparent 40%,
+      hsl(var(--gradient-end) / 0.04)
+    );
+    pointer-events: none;
+  }
+
+  /* Stronger glass for hero sections */
+  .glass-hero {
+    @apply relative overflow-hidden rounded-2xl;
+    background: hsl(var(--card) / 0.3);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    backdrop-filter: blur(32px) saturate(1.8);
+    box-shadow:
+      0 16px 48px -12px hsl(270 60% 10% / 0.6),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.05);
+  }
+
+  /* Glow effect */
+  .glow {
+    box-shadow:
+      0 0 24px -4px hsl(var(--glow-primary) / 0.5),
+      0 0 80px -12px hsl(var(--glow-primary) / 0.2);
+  }
+
+  .glow-accent {
+    box-shadow:
+      0 0 24px -4px hsl(var(--glow-accent) / 0.5),
+      0 0 80px -12px hsl(var(--glow-accent) / 0.2);
+  }
+
+  .glow-gold {
+    box-shadow:
+      0 0 24px -4px hsl(var(--glow-gold) / 0.5),
+      0 0 60px -12px hsl(var(--glow-gold) / 0.2);
+  }
+
+  /* Stat card hover */
+  .stat-card {
+    @apply glass-card transition-all duration-300 cursor-default;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 12px 40px -8px hsl(270 50% 5% / 0.6),
+      0 0 24px -6px hsl(var(--glow-primary) / 0.25);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  /* Interactive button glow */
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 32px -6px hsl(var(--glow-primary) / 0.6);
+    transform: translateY(-1px);
+  }
+
+  .btn-glow:active {
+    transform: translateY(0);
+  }
+
+  /* Purple mesh gradient background */
+  .mesh-bg {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(at 15% 15%, hsl(265 80% 30% / 0.2) 0px, transparent 55%),
+      radial-gradient(at 85% 15%, hsl(300 70% 35% / 0.15) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, hsl(340 80% 40% / 0.12) 0px, transparent 55%),
+      radial-gradient(at 20% 70%, hsl(265 80% 50% / 0.08) 0px, transparent 45%);
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.15) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* XP badge pill */
+  .xp-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold;
+    background: hsl(var(--gold) / 0.15);
+    color: hsl(var(--gold));
+    border: 1px solid hsl(var(--gold) / 0.25);
+  }
+
+  /* Progress bar glow */
+  .progress-glow {
+    box-shadow: 0 0 8px hsl(var(--glow-primary) / 0.4);
+  }
+
+  /* Pulse ring */
+  .pulse-ring {
+    @apply relative;
+  }
+
+  .pulse-ring::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 hsl(var(--glow-primary) / 0.4); }
+  70% { box-shadow: 0 0 0 12px hsl(var(--glow-primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--glow-primary) / 0); }
+}
