@@ -231,13 +231,13 @@ export default function TutorProfile() {
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tutor_reviews")
         .select("*")
         .eq("tutor_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 

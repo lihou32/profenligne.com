@@ -110,7 +110,7 @@ export default function Profile() {
         updates.school_type = schoolType || null;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("profiles")
         .update(updates)
         .eq("user_id", user.id);
@@ -119,7 +119,7 @@ export default function Profile() {
 
       // Update subjects: for tutors save to tutors table, for students to user metadata
       if (isTutor) {
-        const { error: tutorError } = await supabase
+        const { error: tutorError } = await (supabase as any)
           .from("tutors")
           .update({ subjects: selectedSubjects })
           .eq("user_id", user.id);

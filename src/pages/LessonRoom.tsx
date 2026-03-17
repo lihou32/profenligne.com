@@ -124,13 +124,13 @@ export default function LessonRoom() {
     endCall();
     setCallStarted(false);
     // Fetch lesson data for the report redirect
-    const { data: lesson } = await supabase
+    const { data: lesson } = await (supabase as any)
       .from("lessons")
       .select("subject, topic")
       .eq("id", id!)
       .maybeSingle();
-    const subject = encodeURIComponent(lesson?.subject || "Cours");
-    const topic = encodeURIComponent(lesson?.topic || "");
+    const subject = encodeURIComponent((lesson as any)?.subject || "Cours");
+    const topic = encodeURIComponent((lesson as any)?.topic || "");
     navigate(`/report/${roomId}?subject=${subject}&topic=${topic}`);
   };
 

@@ -77,9 +77,9 @@ export default function SettingsPage() {
   const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
     if (!user) return;
-    await supabase
+    await (supabase as any)
       .from("profiles")
-      .update({ theme: newTheme } as any)
+      .update({ theme: newTheme })
       .eq("user_id", user.id);
   };
 
