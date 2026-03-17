@@ -35,12 +35,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
+    (supabase as any)
       .from("profiles")
       .select("notify_lesson_reminder, notify_new_message, notify_lesson_cancelled, theme")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data) {
           setNotifyLessonReminder((data as any).notify_lesson_reminder ?? true);
           setNotifyNewMessage((data as any).notify_new_message ?? true);
