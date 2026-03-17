@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+const db = supabase as any;
+
 type ChatMessage = {
   id: string;
   sender_name: string;
@@ -15,22 +17,20 @@ export function useRoomChat(roomId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const fetchedRef = useRef(false);
 
-  // Fetch existing messages
   useEffect(() => {
     if (!roomId || fetchedRef.current) return;
     fetchedRef.current = true;
 
-    supabase
+    db
       .from("room_messages")
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true })
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data) setMessages(data as ChatMessage[]);
       });
   }, [roomId]);
 
-  // Realtime subscription
   useEffect(() => {
     if (!roomId) return;
 
@@ -44,7 +44,7 @@ export function useRoomChat(roomId: string) {
           table: "room_messages",
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        (payload: any) => {
           const msg = payload.new as ChatMessage;
           setMessages((prev) => {
             if (prev.find((m) => m.id === msg.id)) return prev;
@@ -64,7 +64,7 @@ export function useRoomChat(roomId: string) {
     const senderName =
       [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Utilisateur";
 
-    await supabase.from("room_messages").insert({
+    await db.from("room_messages").insert({
       room_id: roomId,
       user_id: user.id,
       sender_name: senderName,
