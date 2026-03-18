@@ -46,9 +46,9 @@ function ProfileCompletion({ profile }: { profile: any }) {
           <div className="flex items-center gap-2 shrink-0">
             {PROFILE_FIELDS.map((f) =>
               profile?.[f.key] ? (
-                <CheckCircle2 key={f.key} className="h-4 w-4 text-success" title={f.label} />
+                <CheckCircle2 key={f.key} className="h-4 w-4 text-success" />
               ) : (
-                <CircleDashed key={f.key} className="h-4 w-4 text-muted-foreground/40" title={f.label + " manquant"} />
+                <CircleDashed key={f.key} className="h-4 w-4 text-muted-foreground/40" />
               )
             )}
           </div>
