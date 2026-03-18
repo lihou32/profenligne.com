@@ -16,6 +16,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     // Bypass navigator.locks entirely to avoid deadlocks caused by stale locks
     // after page reloads or tab crashes in the preview/iframe environment.
     // This is safe for single-tab usage which is the typical case for this app.
-    lock: (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+    lock: <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => fn(),
   }
 });
