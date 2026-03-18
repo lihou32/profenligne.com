@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bell, BookOpen, Video, Bot, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications, useMarkNotificationsRead } from "@/hooks/useData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -15,6 +16,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function Notifications() {
+  useDocumentTitle("Notifications");
   const { data: notifications, isLoading } = useNotifications();
   const markRead = useMarkNotificationsRead();
 

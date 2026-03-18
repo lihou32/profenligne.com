@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, ArrowDownToLine, Clock, Sparkles, Wallet } from "lucide-react";
 import { useEarningsBalance, useTutorEarnings, useWithdrawalRequests, useRequestWithdrawal } from "@/hooks/useEarnings";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 
 export default function TutorEarnings() {
+  useDocumentTitle("Mes revenus");
   const { data: balance, isLoading } = useEarningsBalance();
   const { data: earnings } = useTutorEarnings();
   const { data: withdrawals } = useWithdrawalRequests();

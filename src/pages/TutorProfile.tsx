@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateLesson, useCreateReview } from "@/hooks/useData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toast } from "sonner";
 
 // ─── Star rating ─────────────────────────────────────────
@@ -198,6 +199,7 @@ function BookingModal({
 // ─── Main page ────────────────────────────────────────────
 
 export default function TutorProfile() {
+  useDocumentTitle("Profil du professeur");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();

@@ -5,6 +5,7 @@ import { Video, Users, Clock, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useTutors, useLessons } from "@/hooks/useData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 
 const statusColors: Record<string, string> = {
@@ -14,6 +15,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function LiveConnect() {
+  useDocumentTitle("LiveConnect");
   const { data: tutors } = useTutors();
   const { data: lessons } = useLessons();
 

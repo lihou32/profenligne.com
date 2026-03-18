@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Sparkles, Zap, Crown, Check, Wallet } from "lucide-react";
 import { useUserCredits, useCreditTransactions } from "@/hooks/useCredits";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ const packs = [
 ];
 
 export default function BuyCredits() {
+  useDocumentTitle("Acheter des crédits");
   const { data: userCredits } = useUserCredits();
   const { data: transactions } = useCreditTransactions();
 

@@ -8,6 +8,7 @@ import { Star, Send, ExternalLink } from "lucide-react";
 import { useTutors } from "@/hooks/useData";
 import { useTutorReviews, useCreateReview } from "@/hooks/useData";
 import { useAuth } from "@/hooks/useAuth";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toast } from "sonner";
 
 function StarRating({ rating, onRate, interactive = false }: { rating: number; onRate?: (r: number) => void; interactive?: boolean }) {
@@ -25,6 +26,7 @@ function StarRating({ rating, onRate, interactive = false }: { rating: number; o
 }
 
 export default function TutorReviews() {
+  useDocumentTitle("Avis Professeurs");
   const navigate = useNavigate();
   const { data: tutors, isLoading: loadingTutors } = useTutors();
   const { data: reviews, isLoading: loadingReviews } = useTutorReviews();
