@@ -4,9 +4,10 @@ import {
   LogOut, GraduationCap, Shield, Zap, Star, Crown,
   DollarSign, CreditCard, Settings, Bot, Users,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { XPBadge } from "@/components/gamification/XPBadge";
+import { useEffect } from "react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
   SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
@@ -54,6 +55,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { signOut, profile, hasRole, user } = useAuth();
   const isTutor = hasRole("tutor");
+  const queryClient = useQueryClient();
 
   // Fetch current user's XP
   const { data: xpData } = useQuery({
@@ -68,6 +70,34 @@ export function AppSidebar() {
       return (data as any)?.total_xp ?? 0;
     },
   });
+
+  // Fetch unread notification count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["unread-notifications", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("read", false);
+      return count ?? 0;
+    },
+  });
+
+  // Realtime subscription for new notifications
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("sidebar-notifications")
+      .on(
+        "postgres_changes" as any,
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => { queryClient.invalidateQueries({ queryKey: ["unread-notifications", user.id] }); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   const handleSignOut = async () => {
     try {
@@ -92,6 +122,7 @@ export function AppSidebar() {
   const renderNavItems = (items: { title: string; icon: any; path: string }[]) =>
     items.map((item) => {
       const isActive = location.pathname === item.path;
+      const badge = item.path === "/notifications" && unreadCount > 0 ? unreadCount : null;
       return (
         <SidebarMenuItem key={item.path}>
           <SidebarMenuButton
@@ -104,9 +135,14 @@ export function AppSidebar() {
                 : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
             }`}
           >
-            <Link to={item.path}>
-              <item.icon className="h-4 w-4" />
-              <span className="font-medium">{item.title}</span>
+            <Link to={item.path} className="flex items-center w-full gap-2">
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="font-medium flex-1">{item.title}</span>
+              {badge !== null && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

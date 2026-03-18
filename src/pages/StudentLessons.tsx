@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Calendar, Clock, Video, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLessons } from "@/hooks/useData";
@@ -43,7 +44,7 @@ export default function StudentLessons() {
         </TabsList>
 
         <TabsContent value="all" className="mt-4 space-y-3">
-          {isLoading && <p className="text-center text-muted-foreground py-8">Chargement...</p>}
+          {isLoading && <LessonSkeletons />}
           {!isLoading && (lessons || []).length === 0 && (
             <Card className="glass-card">
               <CardContent className="flex flex-col items-center gap-3 p-8">
@@ -67,6 +68,28 @@ export default function StudentLessons() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function LessonSkeletons() {
+  return (
+    <>
+      {[0, 1, 2].map((i) => (
+        <Card key={i} className="glass-card">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </CardContent>
+        </Card>
+      ))}
+    </>
   );
 }
 
