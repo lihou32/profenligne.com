@@ -49,8 +49,8 @@ export default function Signup() {
       }
       if (selectedSubjects.length > 0) metadata.subjects = selectedSubjects.join(",");
       await signUp(email, password, metadata);
-      toast.success("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
-      setEmailSent(true);
+      toast.success("Compte créé avec succès ! Bienvenue 🎉");
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'inscription");
     } finally {
