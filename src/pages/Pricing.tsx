@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Star, Zap, Crown } from "lucide-react";
@@ -63,6 +64,7 @@ const plans = [
 ];
 
 export default function Pricing() {
+  useDocumentTitle("Tarifs");
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div className="text-center">

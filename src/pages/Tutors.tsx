@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,6 +173,7 @@ function LeaderboardRow({ tutor, rank, xp }: { tutor: any; rank: number; xp: num
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Tutors() {
+  useDocumentTitle("Trouver un Professeur");
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("all");
   const [maxPrice, setMaxPrice] = useState(200);

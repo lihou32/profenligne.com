@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ type Message = {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
 export default function AITutor() {
+  useDocumentTitle("AI Tutor");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { toast } from "sonner";
 import { SUBJECTS, GRADE_LEVELS, SCHOOL_TYPES } from "@/lib/constants";
 
 export default function Profile() {
+  useDocumentTitle("Mon Profil");
   const { user, profile, hasRole } = useAuth();
   const isStudent = hasRole("student");
   const isTutor = hasRole("tutor");

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ const faqs = [
 ];
 
 export default function Help() {
+  useDocumentTitle("Centre d'aide");
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
       <div className="text-center">
