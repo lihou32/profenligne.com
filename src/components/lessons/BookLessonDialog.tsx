@@ -29,7 +29,11 @@ export function BookLessonDialog() {
       return;
     }
 
-    const scheduledAt = new Date(`${date}T${time}`).toISOString();
+    const scheduledAt = new Date(`${date}T${time}`);
+    if (scheduledAt <= new Date()) {
+      toast.error("La date et l'heure doivent être dans le futur");
+      return;
+    }
 
     try {
       await createLesson.mutateAsync({
@@ -37,7 +41,7 @@ export function BookLessonDialog() {
         tutor_id: tutorId,
         subject,
         topic: topic || null,
-        scheduled_at: scheduledAt,
+        scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parseInt(duration),
         status: "pending",
       });
@@ -47,6 +51,7 @@ export function BookLessonDialog() {
       setTopic("");
       setDate("");
       setTime("");
+      setDuration("60");
       setTutorId("");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la réservation");

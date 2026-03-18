@@ -102,14 +102,18 @@ function BookingModal({
       return;
     }
 
-    const scheduledAt = new Date(`${date}T${time}`).toISOString();
+    const scheduledAt = new Date(`${date}T${time}`);
+    if (scheduledAt <= new Date()) {
+      toast.error("La date et l'heure doivent être dans le futur");
+      return;
+    }
     try {
       await createLesson.mutateAsync({
         student_id: user.id,
         tutor_id: tutorUserId,
         subject,
         topic: topic || null,
-        scheduled_at: scheduledAt,
+        scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parseInt(duration),
         status: "pending",
       });
