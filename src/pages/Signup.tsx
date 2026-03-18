@@ -27,7 +27,7 @@ export default function Signup() {
   const [schoolType, setSchoolType] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
