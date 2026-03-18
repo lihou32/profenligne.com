@@ -65,26 +65,8 @@ export default function Signup() {
     if (error) toast.error(String(error));
   };
 
-  if (emailSent) {
-    return (
-      <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden mesh-bg">
-        <div className="absolute top-[-10%] left-[-10%] h-[450px] w-[450px] rounded-full bg-gradient-to-br from-info/15 to-primary/10 blur-[90px] float" />
-        <div className="relative w-full max-w-md animate-scale-in text-center">
-          <div className="mx-auto mb-6 gradient-primary inline-flex h-16 w-16 items-center justify-center rounded-2xl glow">
-            <Sparkles className="h-9 w-9 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold font-display mb-3">Vérifiez votre email</h1>
-          <p className="text-muted-foreground mb-6">
-            Un email de confirmation a été envoyé à <strong className="text-foreground">{email}</strong>. 
-            Cliquez sur le lien dans l'email pour activer votre compte.
-          </p>
-          <Button variant="outline" onClick={() => navigate("/login")}>
-            Retour à la connexion
-          </Button>
-        </div>
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden mesh-bg">
