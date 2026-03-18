@@ -2,34 +2,46 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ComingSoon from "./pages/ComingSoon";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+
+// Eagerly loaded — needed immediately on first paint
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ComingSoon from "./pages/ComingSoon";
 import Dashboard from "./pages/Dashboard";
-import Lessons from "./pages/Lessons";
-import LiveConnect from "./pages/LiveConnect";
-import Notifications from "./pages/Notifications";
-import Help from "./pages/Help";
-import Pricing from "./pages/Pricing";
-import AdminPanel from "./pages/AdminPanel";
-import LessonRoom from "./pages/LessonRoom";
-import LessonReport from "./pages/LessonReport";
-import TutorReviews from "./pages/TutorReviews";
-import TutorEarnings from "./pages/TutorEarnings";
-import BuyCredits from "./pages/BuyCredits";
-import AITutor from "./pages/AITutor";
-import Profile from "./pages/Profile";
-import SettingsPage from "./pages/Settings";
-import TutorProfile from "./pages/TutorProfile";
-import Tutors from "./pages/Tutors";
+
+// Lazy loaded — only fetched when the user navigates to that page
+const Lessons = lazy(() => import("./pages/Lessons"));
+const LiveConnect = lazy(() => import("./pages/LiveConnect"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Help = lazy(() => import("./pages/Help"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const LessonRoom = lazy(() => import("./pages/LessonRoom"));
+const LessonReport = lazy(() => import("./pages/LessonReport"));
+const TutorReviews = lazy(() => import("./pages/TutorReviews"));
+const TutorEarnings = lazy(() => import("./pages/TutorEarnings"));
+const BuyCredits = lazy(() => import("./pages/BuyCredits"));
+const AITutor = lazy(() => import("./pages/AITutor")); // heavy: includes KaTeX
+const Profile = lazy(() => import("./pages/Profile"));
+const SettingsPage = lazy(() => import("./pages/Settings"));
+const TutorProfile = lazy(() => import("./pages/TutorProfile"));
+const Tutors = lazy(() => import("./pages/Tutors"));
+
+// Shared page-level loading fallback
+const PageLoader = () => (
+  <div className="flex min-h-[60vh] items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,22 +96,22 @@ function AppRoutes() {
 
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/lessons" element={<Lessons />} />
-        <Route path="/live" element={<LiveConnect />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/help" element={<Help />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/reviews" element={<TutorReviews />} />
-        <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><TutorEarnings /></ProtectedRoute>} />
-        <Route path="/credits" element={<ProtectedRoute requiredRole="student"><BuyCredits /></ProtectedRoute>} />
-        <Route path="/ai-tutor" element={<AITutor />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/tutors" element={<Tutors />} />
-        <Route path="/tutors/:id" element={<TutorProfile />} />
-        <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>} />
-        <Route path="/room/:id" element={<LessonRoom />} />
-        <Route path="/report/:id" element={<LessonReport />} />
+        <Route path="/lessons" element={<Suspense fallback={<PageLoader />}><Lessons /></Suspense>} />
+        <Route path="/live" element={<Suspense fallback={<PageLoader />}><LiveConnect /></Suspense>} />
+        <Route path="/notifications" element={<Suspense fallback={<PageLoader />}><Notifications /></Suspense>} />
+        <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
+        <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
+        <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
+        <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
+        <Route path="/credits" element={<ProtectedRoute requiredRole="student"><Suspense fallback={<PageLoader />}><BuyCredits /></Suspense></ProtectedRoute>} />
+        <Route path="/ai-tutor" element={<Suspense fallback={<PageLoader />}><AITutor /></Suspense>} />
+        <Route path="/profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+        <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+        <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
+        <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
+        <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ProtectedRoute>} />
+        <Route path="/room/:id" element={<Suspense fallback={<PageLoader />}><LessonRoom /></Suspense>} />
+        <Route path="/report/:id" element={<Suspense fallback={<PageLoader />}><LessonReport /></Suspense>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
