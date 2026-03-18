@@ -3,7 +3,7 @@ import { useDashboardStats, useTutors } from "@/hooks/useData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Clock, TrendingUp, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap } from "lucide-react";
+import { BookOpen, Clock, TrendingUp, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap, CheckCircle2, CircleDashed, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -14,6 +14,52 @@ import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { XPBadge } from "@/components/gamification/XPBadge";
+
+const PROFILE_FIELDS = [
+  { key: "first_name", label: "Prénom" },
+  { key: "last_name", label: "Nom" },
+  { key: "bio", label: "Biographie" },
+  { key: "grade_level", label: "Niveau scolaire" },
+];
+
+function ProfileCompletion({ profile }: { profile: any }) {
+  const completed = PROFILE_FIELDS.filter((f) => !!profile?.[f.key]);
+  const pct = Math.round((completed.length / PROFILE_FIELDS.length) * 100);
+  if (pct === 100) return null;
+
+  return (
+    <Card className="glass-card border-primary/20 animate-fade-in">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="gradient-primary flex h-10 w-10 items-center justify-center rounded-xl">
+              <UserCircle className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Complétez votre profil</p>
+              <p className="text-xs text-muted-foreground">{pct}% — {PROFILE_FIELDS.length - completed.length} champ{PROFILE_FIELDS.length - completed.length > 1 ? "s" : ""} manquant{PROFILE_FIELDS.length - completed.length > 1 ? "s" : ""}</p>
+            </div>
+          </div>
+          <div className="flex-1 max-w-xs">
+            <Progress value={pct} className="h-2" />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {PROFILE_FIELDS.map((f) =>
+              profile?.[f.key] ? (
+                <CheckCircle2 key={f.key} className="h-4 w-4 text-success" title={f.label} />
+              ) : (
+                <CircleDashed key={f.key} className="h-4 w-4 text-muted-foreground/40" title={f.label + " manquant"} />
+              )
+            )}
+          </div>
+          <Button size="sm" variant="outline" asChild className="rounded-xl shrink-0">
+            <Link to="/profile">Compléter</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function StudentDashboard() {
   const { profile, user } = useAuth();
@@ -130,6 +176,8 @@ export default function StudentDashboard() {
           </Card>
         ))}
       </div>
+
+      <ProfileCompletion profile={profile} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="glass-card lg:col-span-2">

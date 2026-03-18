@@ -3,8 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Calendar, Clock, Video, Sparkles } from "lucide-react";
+import { BookOpen, Calendar, Clock, Video, Sparkles, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useLessons } from "@/hooks/useData";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 import { format } from "date-fns";
@@ -21,8 +22,14 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 export default function StudentLessons() {
   const { data: lessons, isLoading } = useLessons();
-  const upcoming = (lessons || []).filter((l) => ["pending", "confirmed", "in_progress"].includes(l.status));
-  const completed = (lessons || []).filter((l) => l.status === "completed");
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+
+  const allLessons = lessons || [];
+  const subjects = Array.from(new Set(allLessons.map((l) => l.subject))).sort();
+  const filtered = subjectFilter === "all" ? allLessons : allLessons.filter((l) => l.subject === subjectFilter);
+
+  const upcoming = filtered.filter((l) => ["pending", "confirmed", "in_progress"].includes(l.status));
+  const completed = filtered.filter((l) => l.status === "completed");
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -36,16 +43,41 @@ export default function StudentLessons() {
         <BookLessonDialog />
       </div>
 
+      {subjects.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Button
+            size="sm"
+            variant={subjectFilter === "all" ? "default" : "outline"}
+            onClick={() => setSubjectFilter("all")}
+            className={`rounded-xl h-7 text-xs ${subjectFilter === "all" ? "gradient-primary text-primary-foreground" : ""}`}
+          >
+            Toutes
+          </Button>
+          {subjects.map((s) => (
+            <Button
+              key={s}
+              size="sm"
+              variant={subjectFilter === s ? "default" : "outline"}
+              onClick={() => setSubjectFilter(s)}
+              className={`rounded-xl h-7 text-xs ${subjectFilter === s ? "gradient-primary text-primary-foreground" : ""}`}
+            >
+              {s}
+            </Button>
+          ))}
+        </div>
+      )}
+
       <Tabs defaultValue="all">
         <TabsList className="bg-secondary/50 rounded-xl border border-border/30">
-          <TabsTrigger value="all" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Tous ({(lessons || []).length})</TabsTrigger>
+          <TabsTrigger value="all" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Tous ({filtered.length})</TabsTrigger>
           <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">À venir ({upcoming.length})</TabsTrigger>
           <TabsTrigger value="completed" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Terminés ({completed.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4 space-y-3">
           {isLoading && <LessonSkeletons />}
-          {!isLoading && (lessons || []).length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <Card className="glass-card">
               <CardContent className="flex flex-col items-center gap-3 p-8">
                 <BookOpen className="h-12 w-12 text-muted-foreground/20" />
@@ -54,7 +86,7 @@ export default function StudentLessons() {
               </CardContent>
             </Card>
           )}
-          {(lessons || []).map((lesson, i) => (
+          {filtered.map((lesson, i) => (
             <LessonCard key={lesson.id} lesson={lesson} index={i} />
           ))}
         </TabsContent>
