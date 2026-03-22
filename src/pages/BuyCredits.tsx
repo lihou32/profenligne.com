@@ -1,112 +1,130 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard, Sparkles, Zap, Crown, Check, Wallet } from "lucide-react";
-import { useUserCredits, useCreditTransactions } from "@/hooks/useCredits";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { toast } from "sonner";
+import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/hooks/useAuth"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button"
+import { Loader2, Check } from "lucide-react"
 
-const packs = [
-  { credits: 5, price: 25, popular: false, label: "Découverte" },
-  { credits: 10, price: 45, popular: true, label: "Standard" },
-  { credits: 20, price: 80, popular: false, label: "Premium" },
-];
+interface CreditPack {
+  credits: number
+  price: number
+  priceEuros: number
+  description: string
+  popular?: boolean
+}
+
+const CREDIT_PACKS: CreditPack[] = [
+  { credits: 5,  price: 2500, priceEuros: 25, description: "Parfait pour essayer" },
+  { credits: 10, price: 4500, priceEuros: 45, description: "Le plus populaire", popular: true },
+  { credits: 20, price: 8000, priceEuros: 80, description: "Meilleure valeur" },
+]
 
 export default function BuyCredits() {
-  useDocumentTitle("Acheter des crédits");
-  const { data: userCredits } = useUserCredits();
-  const { data: transactions } = useCreditTransactions();
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const [loadingPack, setLoadingPack] = useState<number | null>(null)
 
-  const handleBuy = (credits: number) => {
-    toast.info("L'achat de crédits via Stripe sera configuré prochainement !");
-  };
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Veuillez vous connecter</h1>
+          <Button onClick={() => navigate("/login")}>Aller à la connexion</Button>
+        </div>
+      </div>
+    )
+  }
+
+  const handleBuy = async (pack: CreditPack) => {
+    setLoadingPack(pack.credits)
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: { credits: pack.credits, userId: user.id },
+      })
+
+      if (error) {
+        toast({ variant: "destructive", title: "Erreur", description: error.message || "Erreur lors du paiement." })
+        return
+      }
+
+      if (!data?.url) {
+        toast({ variant: "destructive", title: "Erreur", description: "Réponse invalide du serveur." })
+        return
+      }
+
+      window.location.href = data.url
+    } catch {
+      toast({ variant: "destructive", title: "Erreur", description: "Une erreur inattendue s'est produite." })
+    } finally {
+      setLoadingPack(null)
+    }
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight font-display flex items-center justify-center gap-2">
-          <Crown className="h-6 w-6 text-gold" /> Acheter des Crédits
-        </h1>
-        <p className="text-muted-foreground mt-1">1 crédit = 1 cours avec un professeur</p>
-      </div>
+    <div className="min-h-screen bg-gray-950 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-white mb-4">Acheter des crédits</h1>
+          <p className="text-lg text-gray-400">Choisissez un pack pour accéder aux tuteurs</p>
+        </div>
 
-      {/* Current balance */}
-      <Card className="glass-card max-w-md mx-auto">
-        <CardContent className="p-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold to-warning shadow-lg">
-              <Wallet className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mon solde</p>
-              <p className="text-3xl font-bold font-display">{userCredits?.balance ?? 0} <span className="text-sm text-muted-foreground">crédits</span></p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-3 max-w-3xl mx-auto">
-        {packs.map((pack, i) => (
-          <Card
-            key={pack.credits}
-            className={`glass-card transition-all duration-300 hover:border-primary/30 ${pack.popular ? "ring-2 ring-primary/50 scale-105" : ""}`}
-            style={{ animationDelay: `${i * 100}ms` }}
-          >
-            <CardHeader className="text-center pb-2">
+        <div className="grid md:grid-cols-3 gap-8">
+          {CREDIT_PACKS.map((pack) => (
+            <div
+              key={pack.credits}
+              className={`relative rounded-lg border transition-all duration-300 ${
+                pack.popular
+                  ? "border-blue-500 shadow-lg shadow-blue-500/20 md:scale-105"
+                  : "border-gray-700 hover:border-gray-600"
+              } bg-gray-900 p-8`}
+            >
               {pack.popular && (
-                <Badge className="mx-auto mb-2 rounded-full bg-primary/15 text-primary border-primary/30 px-3">
-                  <Zap className="mr-1 h-3 w-3" /> Populaire
-                </Badge>
-              )}
-              <CardTitle className="text-lg font-display">{pack.label}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <div>
-                <p className="text-4xl font-bold font-display gradient-text">{pack.credits}</p>
-                <p className="text-sm text-muted-foreground">crédits</p>
-              </div>
-              <p className="text-2xl font-bold">{pack.price}€</p>
-              <p className="text-xs text-muted-foreground">{(pack.price / pack.credits).toFixed(2)}€ / cours</p>
-              <ul className="text-xs text-muted-foreground space-y-1.5 text-left">
-                <li className="flex items-center gap-2"><Check className="h-3 w-3 text-success" /> {pack.credits} cours inclus</li>
-                <li className="flex items-center gap-2"><Check className="h-3 w-3 text-success" /> Valable 6 mois</li>
-                <li className="flex items-center gap-2"><Check className="h-3 w-3 text-success" /> Support prioritaire</li>
-              </ul>
-              <Button
-                className={`w-full rounded-xl font-semibold ${pack.popular ? "gradient-primary text-primary-foreground btn-glow" : ""}`}
-                variant={pack.popular ? "default" : "outline"}
-                onClick={() => handleBuy(pack.credits)}
-              >
-                <CreditCard className="mr-2 h-4 w-4" /> Acheter
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Transaction history */}
-      {transactions && transactions.length > 0 && (
-        <Card className="glass-card max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-lg font-display flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> Historique
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {transactions.map((tx: any) => (
-              <div key={tx.id} className="flex items-center justify-between rounded-xl border border-border/30 p-3">
-                <div>
-                  <p className="text-sm font-semibold">{tx.amount > 0 ? "+" : ""}{tx.amount} crédits</p>
-                  <p className="text-xs text-muted-foreground">{tx.description || tx.type}</p>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <span className="inline-block bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    Populaire
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground">{format(new Date(tx.created_at), "dd MMM yyyy", { locale: fr })}</p>
+              )}
+
+              <div className="text-center mb-8">
+                <div className="text-5xl font-bold text-white mb-2">{pack.credits}</div>
+                <div className="text-gray-400 text-sm mb-4">crédits</div>
+                <div className="text-3xl font-bold text-white mb-2">{pack.priceEuros}€</div>
+                <p className="text-gray-500 text-sm">{pack.description}</p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+
+              <div className="text-center mb-6 text-gray-400 text-xs">
+                {(pack.priceEuros / pack.credits).toFixed(2)}€ par crédit
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {["Crédits non expirables", "Paiement sécurisé Stripe", "Accès immédiat"].map((b) => (
+                  <li key={b} className="flex items-center text-gray-300 text-sm">
+                    <Check className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                onClick={() => handleBuy(pack)}
+                disabled={loadingPack !== null}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
+              >
+                {loadingPack === pack.credits ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Traitement...</>
+                ) : "Acheter maintenant"}
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center text-gray-400 text-sm">
+          <p>Paiement sécurisé par <span className="text-white font-semibold">Stripe</span></p>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
