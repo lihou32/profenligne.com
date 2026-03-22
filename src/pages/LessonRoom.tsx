@@ -2,18 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
-  Video,
-  VideoOff,
-  Mic,
-  MicOff,
-  Monitor,
-  MonitorOff,
-  PhoneOff,
-  MessageCircle,
-  Send,
-  Phone,
-  PenLine,
+  Video, VideoOff, Mic, MicOff, Monitor, MonitorOff,
+  PhoneOff, MessageCircle, Send, Phone, PenLine, BookOpen,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -23,29 +15,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Whiteboard } from "@/components/lessons/Whiteboard";
 
+interface LessonInfo {
+  subject: string;
+  topic: string | null;
+  student_id: string;
+  tutor_id: string;
+  status: string;
+}
+
 export default function LessonRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const roomId = id || "default";
+
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [lessonInfo, setLessonInfo] = useState<LessonInfo | null>(null);
 
   const {
-    localStream,
-    remoteStream,
-    isConnected,
-    screenStream,
-    startCall,
-    joinCall,
-    endCall,
-    toggleVideo,
-    toggleAudio,
-    startScreenShare,
-    stopScreenShare,
+    localStream, remoteStream, isConnected, screenStream,
+    startCall, joinCall, endCall, toggleVideo, toggleAudio,
+    startScreenShare, stopScreenShare,
   } = useWebRTC(roomId);
 
   const { messages: chatMessages, sendMessage } = useRoomChat(roomId);
-
   const [videoOn, setVideoOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
@@ -57,33 +50,35 @@ export default function LessonRoom() {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Verify user is a participant of this lesson
+  // Vérifier que l'utilisateur est bien participant + récupérer les infos du cours
   useEffect(() => {
     if (!user || !id) return;
-    (supabase as any)
+    supabase
       .from("lessons")
-      .select("student_id, tutor_id")
+      .select("student_id, tutor_id, subject, topic, status")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }: any) => {
+      .then(({ data, error }) => {
+        if (error) console.error("Lesson fetch error:", error);
         if (!data || (data.student_id !== user.id && data.tutor_id !== user.id)) {
           toast.error("Vous n'avez pas accès à cette salle");
           navigate("/dashboard");
           setAuthorized(false);
         } else {
+          setLessonInfo(data as LessonInfo);
           setAuthorized(true);
         }
       });
   }, [user, id, navigate]);
 
-  // Attach local stream to video element
+  // Attacher le flux local à la vidéo
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = screenStream || localStream;
     }
   }, [localStream, screenStream]);
 
-  // Attach remote stream to video element
+  // Attacher le flux distant
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
@@ -96,7 +91,11 @@ export default function LessonRoom() {
   }, [chatMessages]);
 
   if (authorized === null) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><span className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
   if (authorized === false) return null;
 
@@ -123,36 +122,14 @@ export default function LessonRoom() {
   const handleEndCall = async () => {
     endCall();
     setCallStarted(false);
-    // Fetch lesson data for the report redirect
-    const { data: lesson } = await (supabase as any)
-      .from("lessons")
-      .select("subject, topic")
-      .eq("id", id!)
-      .maybeSingle();
-    const subject = encodeURIComponent((lesson as any)?.subject || "Cours");
-    const topic = encodeURIComponent((lesson as any)?.topic || "");
+    const subject = encodeURIComponent(lessonInfo?.subject || "Cours");
+    const topic = encodeURIComponent(lessonInfo?.topic || "");
     navigate(`/report/${roomId}?subject=${subject}&topic=${topic}`);
   };
 
-  const handleToggleVideo = () => {
-    const next = !videoOn;
-    setVideoOn(next);
-    toggleVideo(next);
-  };
-
-  const handleToggleAudio = () => {
-    const next = !micOn;
-    setMicOn(next);
-    toggleAudio(next);
-  };
-
-  const handleScreenShare = () => {
-    if (screenStream) {
-      stopScreenShare();
-    } else {
-      startScreenShare();
-    }
-  };
+  const handleToggleVideo = () => { const n = !videoOn; setVideoOn(n); toggleVideo(n); };
+  const handleToggleAudio = () => { const n = !micOn; setMicOn(n); toggleAudio(n); };
+  const handleScreenShare = () => screenStream ? stopScreenShare() : startScreenShare();
 
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,25 +138,40 @@ export default function LessonRoom() {
     setChatInput("");
   };
 
-  const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (dateStr: string) =>
+    new Date(dateStr).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4 animate-fade-in">
-      {/* Main video area */}
+      {/* Zone vidéo principale */}
       <div className="flex flex-1 flex-col gap-4">
+
+        {/* Bandeau info cours */}
+        {lessonInfo && (
+          <div className="flex items-center gap-3 rounded-xl bg-muted/40 px-4 py-2">
+            <BookOpen className="h-4 w-4 text-primary shrink-0" />
+            <span className="font-semibold text-sm">{lessonInfo.subject}</span>
+            {lessonInfo.topic && (
+              <Badge variant="secondary" className="text-xs">{lessonInfo.topic}</Badge>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground">Salle #{roomId.slice(0, 8)}</span>
+          </div>
+        )}
+
         <div className="relative flex-1 overflow-hidden rounded-2xl bg-sidebar">
           {!callStarted ? (
-            /* Pre-call screen */
             <div className="flex h-full flex-col items-center justify-center gap-4">
-              <Video className="h-16 w-16 text-sidebar-foreground/30" />
-              <p className="text-lg font-medium text-sidebar-foreground">
-                Salle de cours #{roomId}
-              </p>
+              <div className="gradient-primary flex h-20 w-20 items-center justify-center rounded-2xl">
+                <Video className="h-10 w-10 text-primary-foreground" />
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-sidebar-foreground">
+                  {lessonInfo?.subject || "Cours"}
+                </p>
+                {lessonInfo?.topic && (
+                  <p className="text-sm text-sidebar-foreground/60 mt-1">{lessonInfo.topic}</p>
+                )}
+              </div>
               <div className="flex gap-3">
                 <Button onClick={handleStartCall} className="gradient-primary text-primary-foreground">
                   <Phone className="mr-2 h-4 w-4" />
@@ -193,13 +185,7 @@ export default function LessonRoom() {
             </div>
           ) : (
             <>
-              {/* Remote video (main) */}
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="h-full w-full object-cover"
-              />
+              <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
               {!remoteStream && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-sidebar-foreground">
@@ -208,99 +194,53 @@ export default function LessonRoom() {
                   </div>
                 </div>
               )}
-
-              {/* Local video (PiP) */}
+              {/* Vidéo locale (PiP) */}
               <div className="absolute bottom-4 right-4 h-32 w-44 overflow-hidden rounded-xl border-2 border-background/50 bg-sidebar/80 backdrop-blur">
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="h-full w-full object-cover"
-                />
+                <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
               </div>
-
-              {/* Connection status */}
+              {/* Statut connexion */}
               <div className="absolute left-4 top-4 flex items-center gap-2 rounded-lg bg-sidebar/80 px-3 py-1.5 text-sm font-medium text-sidebar-foreground backdrop-blur">
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    isConnected ? "bg-green-500" : "bg-yellow-500 animate-pulse"
-                  }`}
-                />
+                <span className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500 animate-pulse"}`} />
                 {isConnected ? "Connecté" : "En attente..."}
               </div>
+              {/* Matière en overlay */}
+              {lessonInfo && (
+                <div className="absolute right-4 top-4 flex items-center gap-2 rounded-lg bg-sidebar/80 px-3 py-1.5 text-sm text-sidebar-foreground backdrop-blur">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  {lessonInfo.subject}
+                  {lessonInfo.topic && <span className="text-sidebar-foreground/60">· {lessonInfo.topic}</span>}
+                </div>
+              )}
             </>
           )}
         </div>
 
-        {/* Controls */}
+        {/* Contrôles */}
         <div className="flex items-center justify-center gap-3">
-          <Button
-            variant={micOn ? "outline" : "destructive"}
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={handleToggleAudio}
-            disabled={!callStarted}
-          >
+          <Button variant={micOn ? "outline" : "destructive"} size="icon" className="h-12 w-12 rounded-full" onClick={handleToggleAudio} disabled={!callStarted}>
             {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
           </Button>
-          <Button
-            variant={videoOn ? "outline" : "destructive"}
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={handleToggleVideo}
-            disabled={!callStarted}
-          >
+          <Button variant={videoOn ? "outline" : "destructive"} size="icon" className="h-12 w-12 rounded-full" onClick={handleToggleVideo} disabled={!callStarted}>
             {videoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
           </Button>
-          <Button
-            variant={screenStream ? "secondary" : "outline"}
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={handleScreenShare}
-            disabled={!callStarted}
-          >
-            {screenStream ? (
-              <MonitorOff className="h-5 w-5" />
-            ) : (
-              <Monitor className="h-5 w-5" />
-            )}
+          <Button variant={screenStream ? "secondary" : "outline"} size="icon" className="h-12 w-12 rounded-full" onClick={handleScreenShare} disabled={!callStarted}>
+            {screenStream ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
           </Button>
-          <Button
-            variant={whiteboardOpen ? "secondary" : "outline"}
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={() => {
-              setWhiteboardOpen(!whiteboardOpen);
-              if (chatOpen) setChatOpen(false);
-            }}
-            title="Tableau blanc"
-          >
+          <Button variant={whiteboardOpen ? "secondary" : "outline"} size="icon" className="h-12 w-12 rounded-full"
+            onClick={() => { setWhiteboardOpen(!whiteboardOpen); if (chatOpen) setChatOpen(false); }} title="Tableau blanc">
             <PenLine className="h-5 w-5" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={() => {
-              setChatOpen(!chatOpen);
-              if (whiteboardOpen) setWhiteboardOpen(false);
-            }}
-          >
+          <Button variant="outline" size="icon" className="h-12 w-12 rounded-full"
+            onClick={() => { setChatOpen(!chatOpen); if (whiteboardOpen) setWhiteboardOpen(false); }}>
             <MessageCircle className="h-5 w-5" />
           </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            className="h-12 w-12 rounded-full"
-            onClick={handleEndCall}
-          >
+          <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full" onClick={handleEndCall}>
             <PhoneOff className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
-      {/* Chat panel */}
+      {/* Panel chat */}
       {chatOpen && (
         <Card className="glass-card flex w-80 flex-col">
           <div className="border-b p-3">
@@ -311,9 +251,7 @@ export default function LessonRoom() {
               <div key={msg.id}>
                 <p className="text-xs font-medium">
                   {msg.user_id === user?.id ? "Vous" : msg.sender_name}{" "}
-                  <span className="text-muted-foreground">
-                    {formatTime(msg.created_at)}
-                  </span>
+                  <span className="text-muted-foreground">{formatTime(msg.created_at)}</span>
                 </p>
                 <p className="text-sm text-muted-foreground">{msg.content}</p>
               </div>
@@ -322,12 +260,7 @@ export default function LessonRoom() {
           </div>
           <div className="border-t p-3">
             <form onSubmit={handleSendChat} className="flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Message..."
-                className="flex-1"
-              />
+              <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Message..." className="flex-1" />
               <Button type="submit" size="icon" disabled={!chatInput.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
@@ -336,7 +269,7 @@ export default function LessonRoom() {
         </Card>
       )}
 
-      {/* Whiteboard panel */}
+      {/* Panel whiteboard */}
       {whiteboardOpen && (
         <Card className="glass-card flex flex-col" style={{ width: "520px" }}>
           <div className="border-b p-3">

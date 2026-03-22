@@ -3,7 +3,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Star, Zap, Crown } from "lucide-react";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
@@ -35,7 +35,7 @@ const plans = [
     prestige: false,
     features: [
       { text: "Leçons illimitées", included: true },
-      { text: "Tuteur IA illimité (Gemini)", included: true },
+      { text: "Tuteur IA illimité", included: true },
       { text: "Corrigés détaillés", included: true },
       { text: "Support prioritaire (24h)", included: true },
       { text: "Quiz avancés & tournois", included: true },
@@ -65,6 +65,8 @@ const plans = [
 
 export default function Pricing() {
   useDocumentTitle("Tarifs");
+  const navigate = useNavigate();
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div className="text-center">
@@ -104,6 +106,7 @@ export default function Pricing() {
                 <span className="text-muted-foreground">{plan.period}</span>
               </div>
             </CardHeader>
+
             <CardContent className="space-y-4">
               <ul className="space-y-2.5">
                 {plan.features.map((feature) => (
@@ -119,6 +122,7 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
+
               <Button
                 className={`w-full ${
                   plan.prestige
@@ -130,18 +134,22 @@ export default function Pricing() {
                 variant={plan.popular || plan.prestige ? "default" : "outline"}
                 onClick={() => {
                   if (plan.price === "0") {
-                    toast.info("Vous utilisez déjà la formule Découverte !");
+                    navigate("/dashboard");
                   } else {
-                    toast.info("Les abonnements seront disponibles prochainement.");
+                    navigate("/credits");
                   }
                 }}
               >
-                {plan.price === "0" ? "Commencer gratuitement" : "S'abonner"}
+                {plan.price === "0" ? "Commencer gratuitement" : "Acheter des crédits"}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Les abonnements mensuels arrivent bientôt. En attendant, achetez des crédits pour accéder aux tuteurs.
+      </p>
     </div>
   );
 }
