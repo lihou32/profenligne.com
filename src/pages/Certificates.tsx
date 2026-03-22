@@ -137,17 +137,8 @@ export default function Certificates() {
       const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("id, first_name, last_name")
-        .in("id", tutorIds)
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]))
-
-      // Fetch ratings given by this student
-      const lessonIds = (ls as any[]).map((l: any) => l.id)
-      const { data: reviews } = await (supabase as any)
-        .from("reviews")
-        .select("lesson_id, rating")
-        .in("lesson_id", lessonIds)
-        .eq("reviewer_id", user!.id)
-      const reviewMap = new Map((reviews || []).map((r: any) => [r.lesson_id, r.rating]))
+        .in("user_id", tutorIds)
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]))
 
       return (ls as any[]).map((l: any) => {
         const p = profileMap.get(l.tutor_id)
@@ -158,7 +149,8 @@ export default function Certificates() {
           ...l,
           tutor_name: tutorName,
           completed_at: l.scheduled_at,
-          rating: reviewMap.get(l.id) ?? null,
+          // lessons.rating is 0-20, convert to 0-5 for display
+          rating: l.rating != null ? (l.rating / 4).toFixed(1) : null,
         }
       })
     },
