@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Video, Bell, HelpCircle,
   LogOut, GraduationCap, Shield, Zap, Star, Crown,
-  DollarSign, CreditCard, Settings, Bot, Users,
+  DollarSign, CreditCard, Settings, Bot, Users, Award, Gift,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,8 @@ const studentApprentissageNav = [
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor" },
   { title: "Trouver un prof", icon: Users, path: "/tutors" },
   { title: "Avis Profs", icon: Star, path: "/reviews" },
+  { title: "Mes Certificats", icon: Award, path: "/certificates" },
+  { title: "Parrainage", icon: Gift, path: "/referral" },
   { title: "Acheter des crédits", icon: CreditCard, path: "/credits" },
   { title: "Club Prestige", icon: Crown, path: "/pricing" },
 ];
@@ -43,6 +45,7 @@ const tutorActiviteNav = [
   { title: "Mes Avis", icon: Star, path: "/reviews" },
   { title: "Cours en direct", icon: Video, path: "/live" },
   { title: "Classement profs", icon: Users, path: "/tutors" },
+  { title: "Parrainage", icon: Gift, path: "/referral" },
 ];
 
 const generalNav = [

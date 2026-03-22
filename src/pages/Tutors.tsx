@@ -179,6 +179,7 @@ export default function Tutors() {
   const [maxPrice, setMaxPrice] = useState(200);
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState<"rating" | "price_asc" | "price_desc" | "xp">("rating");
+  const [onlineOnly, setOnlineOnly] = useState(false);
 
   // Fetch tutors with profiles
   const { data: tutors = [], isLoading } = useQuery({
@@ -226,6 +227,7 @@ export default function Tutors() {
       if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false;
       if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false;
       if (t.status === "suspended") return false;
+      if (onlineOnly && t.status !== "online") return false;
       return true;
     });
 
@@ -235,7 +237,7 @@ export default function Tutors() {
     else if (sortBy === "xp") result = result.sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0));
 
     return result;
-  }, [tutors, search, subject, maxPrice, minRating, sortBy, xpMap]);
+  }, [tutors, search, subject, maxPrice, minRating, sortBy, xpMap, onlineOnly]);
 
   // Leaderboard: top tutors by XP
   const leaderboard = useMemo(() => {
@@ -254,7 +256,7 @@ export default function Tutors() {
           Trouver un Professeur
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {tutors.length} professeur{tutors.length !== 1 ? "s" : ""} disponible{tutors.length !== 1 ? "s" : ""}
+          {filtered.length > 0 || onlineOnly ? `${filtered.length} résultat${filtered.length !== 1 ? "s" : ""}` : `${tutors.length} professeur${tutors.length !== 1 ? "s" : ""} disponible${tutors.length !== 1 ? "s" : ""}`}
         </p>
       </div>
 
@@ -354,6 +356,20 @@ export default function Tutors() {
                     {r === 0 ? "Tous" : `${r}+ ★`}
                   </Button>
                 ))}
+                <div className="ml-auto flex items-center gap-2">
+                  <Button
+                    variant={onlineOnly ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 text-xs rounded-full px-3 gap-1.5"
+                    onClick={() => setOnlineOnly(!onlineOnly)}
+                  >
+                    <Wifi className="h-3 w-3" />
+                    Disponible maintenant
+                    {onlineOnly && (
+                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
