@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +10,39 @@ import { useCreateLesson, useTutors } from "@/hooks/useData";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
 
-export function BookLessonDialog() {
-  const [open, setOpen] = useState(false);
+interface BookLessonDialogProps {
+  defaultTutorId?: string;
+  defaultOpen?: boolean;
+  onClose?: () => void;
+  trigger?: React.ReactNode;
+}
+
+export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose, trigger }: BookLessonDialogProps = {}) {
+  const [open, setOpen] = useState(defaultOpen);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("60");
-  const [tutorId, setTutorId] = useState("");
+  const [tutorId, setTutorId] = useState(defaultTutorId || "");
+
   const { user } = useAuth();
   const createLesson = useCreateLesson();
   const { data: tutors } = useTutors();
+
+  // Sync if defaultTutorId changes (e.g. different tutor clicked)
+  useEffect(() => {
+    if (defaultTutorId) setTutorId(defaultTutorId);
+  }, [defaultTutorId]);
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
+
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) onClose?.();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,13 +50,11 @@ export function BookLessonDialog() {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-
     const scheduledAt = new Date(`${date}T${time}`);
     if (scheduledAt <= new Date()) {
       toast.error("La date et l'heure doivent être dans le futur");
       return;
     }
-
     try {
       await createLesson.mutateAsync({
         student_id: user.id,
@@ -47,25 +67,32 @@ export function BookLessonDialog() {
       });
       toast.success("Cours réservé avec succès !");
       setOpen(false);
+      onClose?.();
       setSubject("");
       setTopic("");
       setDate("");
       setTime("");
       setDuration("60");
-      setTutorId("");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la réservation");
+      if (!defaultTutorId) setTutorId("");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Erreur lors de la réservation";
+      toast.error(msg);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gradient-primary text-primary-foreground">
-          <Plus className="mr-2 h-4 w-4" />
-          Réserver un cours
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : !defaultTutorId ? (
+        <DialogTrigger asChild>
+          <Button className="gradient-primary text-primary-foreground">
+            <Plus className="mr-2 h-4 w-4" />
+            Réserver un cours
+          </Button>
+        </DialogTrigger>
+      ) : null}
+
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Réserver un cours</DialogTitle>
