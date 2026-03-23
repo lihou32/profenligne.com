@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Environment variables (NEVER commit API keys)
+.env
+.env.local
+.env.production
+agents/.env
+agents/venv/
