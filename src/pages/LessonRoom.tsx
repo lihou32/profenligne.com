@@ -122,9 +122,24 @@ export default function LessonRoom() {
   const handleEndCall = async () => {
     endCall();
     setCallStarted(false);
-    const subject = encodeURIComponent(lessonInfo?.subject || "Cours");
-    const topic = encodeURIComponent(lessonInfo?.topic || "");
-    navigate(`/report/${roomId}?subject=${subject}&topic=${topic}`);
+
+    let subject = lessonInfo?.subject || "Cours";
+    let topic = lessonInfo?.topic || "";
+
+    if (id) {
+      const { data } = await supabase
+        .from("lessons")
+        .select("subject, topic")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (data?.subject) subject = data.subject;
+      if (typeof data?.topic === "string") topic = data.topic;
+    }
+
+    navigate(
+      `/report/${roomId}?subject=${encodeURIComponent(subject)}&topic=${encodeURIComponent(topic)}`
+    );
   };
 
   const handleToggleVideo = () => { const n = !videoOn; setVideoOn(n); toggleVideo(n); };
