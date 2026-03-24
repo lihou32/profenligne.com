@@ -30,7 +30,10 @@ describe("LessonReport", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetSession.mockResolvedValue({ data: { session: null } });
-    mockInvoke.mockImplementation((fnName: string, payload: { body: { mode: string } }) => {
+    mockInvoke.mockImplementation((
+      fnName: string,
+      payload: { body: { mode: string; subject?: string; topic?: string } }
+    ) => {
       if (fnName !== "ai-chat") return Promise.resolve({ data: {} });
       if (payload.body.mode === "quiz") {
         return Promise.resolve({

@@ -127,12 +127,15 @@ export default function LessonRoom() {
     let topic = lessonInfo?.topic || "";
 
     if (id) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("lessons")
         .select("subject, topic")
         .eq("id", id)
         .maybeSingle();
 
+      if (error) {
+        console.error("Lesson refresh error:", error);
+      }
       if (data?.subject) subject = data.subject;
       if (typeof data?.topic === "string") topic = data.topic;
     }
