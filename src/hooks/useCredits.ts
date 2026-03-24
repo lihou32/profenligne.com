@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-const db = supabase as any;
+const db = supabase;
 
 export function useUserCredits() {
   const { user } = useAuth();

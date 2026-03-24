@@ -77,7 +77,7 @@ export default function Referral() {
     queryKey: ["referral-stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("referrals")
         .select("id, referred_user_id, status, credits_awarded, created_at")
         .eq("referrer_id", user!.id)

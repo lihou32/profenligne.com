@@ -71,7 +71,7 @@ export default function StudentDashboard() {
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("user_xp")
         .select("total_xp")
         .eq("user_id", user!.id)

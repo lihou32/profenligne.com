@@ -55,7 +55,7 @@ export default function AITutor() {
     if (!user) { setHistoryLoading(false); return; }
     (async () => {
       try {
-        const { data: conv } = await (supabase as any)
+        const { data: conv } = await supabase
           .from("ai_conversations")
           .select("id")
           .eq("user_id", user.id)
@@ -65,7 +65,7 @@ export default function AITutor() {
 
         if (!conv) { setHistoryLoading(false); return; }
 
-        const { data: msgs } = await (supabase as any)
+        const { data: msgs } = await supabase
           .from("ai_messages")
           .select("role, content")
           .eq("conversation_id", conv.id)
@@ -157,7 +157,7 @@ export default function AITutor() {
       // Ensure a conversation exists in DB (create lazily on first real message)
       let convId = conversationId;
       if (!convId && user) {
-        const { data: newConv } = await (supabase as any)
+        const { data: newConv } = await supabase
           .from("ai_conversations")
           .insert({ user_id: user.id, title: userMsg.content.slice(0, 60) || "Nouvelle conversation" })
           .select("id")
@@ -170,7 +170,7 @@ export default function AITutor() {
 
       // Save user message to DB (text only — images are transient)
       if (convId) {
-        await (supabase as any).from("ai_messages").insert({
+        await supabase.from("ai_messages").insert({
           conversation_id: convId,
           role: "user",
           content: userMsg.content,
@@ -252,7 +252,7 @@ export default function AITutor() {
 
       // Persist assistant response
       if (convId && assistantSoFar) {
-        await (supabase as any).from("ai_messages").insert({
+        await supabase.from("ai_messages").insert({
           conversation_id: convId,
           role: "assistant",
           content: assistantSoFar,

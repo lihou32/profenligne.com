@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const db = supabase as any;
+const db = supabase;
 
 export function useAdminStats() {
   return useQuery({
