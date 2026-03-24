@@ -104,7 +104,7 @@ L'application est bien architecturee dans l'ensemble avec une bonne separation d
 
 - [ ] **Calendrier de disponibilité** — les tuteurs définissent leurs créneaux, les étudiants réservent
 - [ ] **Recherche avancée de tuteurs** — filtres par matière, note, prix, disponibilité
-- [ ] **Enregistrement video** — enregistrer les cours pour les revoir
+- [ ] **Enregistrement vidéo** — enregistrer les cours pour les revoir
 - [ ] **Améliorations du referral** — évolutions du système de parrainage déjà présent
 - [ ] **Améliorations des certificats** — évolutions du système de certificats déjà présent
 - [ ] **Vérification tuteur** — upload de pièce d'identité, vérification manuelle
