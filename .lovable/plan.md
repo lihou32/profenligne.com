@@ -98,3 +98,15 @@ Le cast `from("preregistrations" as any)` contourne le typage, probablement parc
 
 L'application est bien architecturee dans l'ensemble avec une bonne separation des roles (student/tutor), des hooks de donnees clairs, et une UI soignee. Les corrections critiques concernent principalement le routing, l'auth flow et la compatibilite ESM. Une fois ces points corriges, l'application sera prete pour une mise en production.
 
+---
+
+## Backlog - Features avancees (priorite Low, apres phases 1-5)
+
+- [ ] **Calendrier de disponibilite** — les tuteurs definissent leurs creneaux, les etudiants reservent
+- [ ] **Recherche avancee de tuteurs** — filtres par matiere, note, prix, disponibilite
+- [ ] **Enregistrement video** — enregistrer les cours pour les revoir
+- [ ] **Ameliorations du referral** — evolutions du systeme de parrainage deja present
+- [ ] **Ameliorations des certificats** — evolutions du systeme de certificats deja present
+- [ ] **Verification tuteur** — upload de piece d'identite, verification manuelle
+- [ ] **Resolution de litiges** — interface de reclamations student/tutor
+- [ ] **Analytics etudiant** — tableau de bord de progression
