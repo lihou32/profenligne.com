@@ -100,13 +100,13 @@ L'application est bien architecturee dans l'ensemble avec une bonne separation d
 
 ---
 
-## Backlog - Features avancées (priorité Low, apres phases 1-5)
+## Backlog - Features avancées (priorité Low, après phases 1-5)
 
-- [ ] **Calendrier de disponibilité** — les tuteurs définissent leurs créneaux, les etudiants reservent
+- [ ] **Calendrier de disponibilité** — les tuteurs définissent leurs créneaux, les étudiants réservent
 - [ ] **Recherche avancée de tuteurs** — filtres par matière, note, prix, disponibilité
 - [ ] **Enregistrement video** — enregistrer les cours pour les revoir
-- [ ] **Améliorations du referral** — évolutions du système de parrainage déjà present
-- [ ] **Améliorations des certificats** — évolutions du système de certificats déjà present
+- [ ] **Améliorations du referral** — évolutions du système de parrainage déjà présent
+- [ ] **Améliorations des certificats** — évolutions du système de certificats déjà présent
 - [ ] **Vérification tuteur** — upload de pièce d'identité, vérification manuelle
-- [ ] **Resolution de litiges** — interface de reclamations student/tutor
+- [ ] **Résolution de litiges** — interface de réclamations student/tutor
 - [ ] **Analytics étudiant** — tableau de bord de progression
