@@ -17,6 +17,7 @@ import {
   Wifi, Users, Medal,
 } from "lucide-react";
 import { XPBadge, getBadge } from "@/components/gamification/XPBadge";
+import type { Tables } from "@/integrations/supabase/types";
 
 const ALL_SUBJECTS = [
   "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
@@ -32,7 +33,13 @@ const statusConfig: Record<string, { dot: string; label: string }> = {
 
 // ─── Tutor card ───────────────────────────────────────────────────────────────
 
-function TutorCard({ tutor, xp }: { tutor: any; xp: number }) {
+type TutorRow = Tables<"tutors">;
+type ProfileRow = Pick<Tables<"profiles">, "user_id" | "first_name" | "last_name" | "avatar_url" | "bio">;
+type UserXpRow = Pick<Tables<"user_xp">, "user_id" | "total_xp">;
+type TutorWithProfile = TutorRow & { profiles: ProfileRow | null };
+type SortBy = "rating" | "price_asc" | "price_desc" | "xp";
+
+function TutorCard({ tutor, xp }: { tutor: TutorWithProfile; xp: number }) {
   const navigate = useNavigate();
   const profile = tutor.profiles;
   const fullName = profile
@@ -128,7 +135,7 @@ function TutorCard({ tutor, xp }: { tutor: any; xp: number }) {
 
 // ─── Leaderboard row ──────────────────────────────────────────────────────────
 
-function LeaderboardRow({ tutor, rank, xp }: { tutor: any; rank: number; xp: number }) {
+function LeaderboardRow({ tutor, rank, xp }: { tutor: TutorWithProfile; rank: number; xp: number }) {
   const navigate = useNavigate();
   const profile = tutor.profiles;
   const fullName = profile
@@ -178,26 +185,26 @@ export default function Tutors() {
   const [subject, setSubject] = useState("all");
   const [maxPrice, setMaxPrice] = useState(200);
   const [minRating, setMinRating] = useState(0);
-  const [sortBy, setSortBy] = useState<"rating" | "price_asc" | "price_desc" | "xp">("rating");
+  const [sortBy, setSortBy] = useState<SortBy>("rating");
   const [onlineOnly, setOnlineOnly] = useState(false);
 
   // Fetch tutors with profiles
   const { data: tutors = [], isLoading } = useQuery({
     queryKey: ["tutors-search"],
     queryFn: async () => {
-      const { data: t, error } = await (supabase as any).from("tutors").select("*");
+      const { data: t, error } = await supabase.from("tutors").select("*");
       if (error) throw error;
 
-      const userIds = [...new Set((t || []).map((x: any) => x.user_id))];
+      const userIds = [...new Set((t || []).map((x) => x.user_id))];
       if (!userIds.length) return [];
 
-      const { data: profiles } = await (supabase as any)
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .in("user_id", userIds);
 
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-      return (t || []).map((x: any) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+      return (t || []).map((x) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
     },
   });
 
@@ -205,9 +212,9 @@ export default function Tutors() {
   const { data: xpData = [] } = useQuery({
     queryKey: ["all-user-xp"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("user_xp").select("user_id, total_xp");
+      const { data, error } = await supabase.from("user_xp").select("user_id, total_xp");
       if (error) throw error;
-      return (data ?? []) as any[];
+      return (data ?? []) as UserXpRow[];
     },
   });
 
@@ -328,7 +335,7 @@ export default function Tutors() {
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
                     <Filter className="h-3 w-3" /> Trier par
                   </Label>
-                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

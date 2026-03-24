@@ -123,7 +123,7 @@ export default function Certificates() {
     enabled: !!user,
     queryFn: async () => {
       // Fetch completed lessons for this student
-      const { data: ls, error } = await (supabase as any)
+      const { data: ls, error } = await supabase
         .from("lessons")
         .select("id, subject, topic, scheduled_at, duration_minutes, status, tutor_id, student_id")
         .eq("student_id", user!.id)
@@ -134,7 +134,7 @@ export default function Certificates() {
 
       // Fetch tutor profiles
       const tutorIds = [...new Set((ls as any[]).map((l: any) => l.tutor_id))]
-      const { data: profiles } = await (supabase as any)
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("id, first_name, last_name")
         .in("user_id", tutorIds)

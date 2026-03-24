@@ -37,18 +37,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any)
+    supabase
       .from("profiles")
       .select("notify_lesson_reminder, notify_new_message, notify_lesson_cancelled, theme")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }: any) => {
+      .then(({ data }) => {
         if (data) {
-          setNotifyLessonReminder((data as any).notify_lesson_reminder ?? true);
-          setNotifyNewMessage((data as any).notify_new_message ?? true);
-          setNotifyLessonCancelled((data as any).notify_lesson_cancelled ?? true);
+          setNotifyLessonReminder(data.notify_lesson_reminder ?? true);
+          setNotifyNewMessage(data.notify_new_message ?? true);
+          setNotifyLessonCancelled(data.notify_lesson_cancelled ?? true);
           // Apply saved theme on mount only — setTheme is stable so no dep needed
-          const savedTheme = (data as any).theme;
+          const savedTheme = data.theme;
           if (savedTheme) setTheme(savedTheme);
         }
       });
@@ -59,7 +59,7 @@ export default function SettingsPage() {
     if (!user) return;
     setIsSavingNotifs(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update({
           notify_lesson_reminder: notifyLessonReminder,
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
     if (!user) return;
-    await (supabase as any)
+    await supabase
       .from("profiles")
       .update({ theme: newTheme })
       .eq("user_id", user.id);

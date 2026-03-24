@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-const db = supabase as any;
+const db = supabase;
 
 export function useTutorEarnings() {
   const { user } = useAuth();

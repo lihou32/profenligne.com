@@ -65,12 +65,12 @@ export function AppSidebar() {
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("user_xp")
         .select("total_xp")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return (data as any)?.total_xp ?? 0;
+      return data?.total_xp ?? 0;
     },
   });
 
@@ -79,7 +79,7 @@ export function AppSidebar() {
     queryKey: ["unread-notifications", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { count } = await (supabase as any)
+      const { count } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user!.id)
@@ -94,7 +94,7 @@ export function AppSidebar() {
     const channel = supabase
       .channel("sidebar-notifications")
       .on(
-        "postgres_changes" as any,
+        "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         () => { queryClient.invalidateQueries({ queryKey: ["unread-notifications", user.id] }); }
       )

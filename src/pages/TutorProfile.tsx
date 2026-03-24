@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCreateLesson, useCreateReview } from "@/hooks/useData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toast } from "sonner";
+import type { Tables } from "@/integrations/supabase/types";
 
 // ─── Star rating ─────────────────────────────────────────
 
@@ -69,6 +70,9 @@ const subjects = [
   "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
   "Histoire", "Géographie", "SVT", "Informatique", "Philosophie",
 ];
+
+type TutorProfileRow = Pick<Tables<"profiles">, "user_id" | "first_name" | "last_name" | "avatar_url" | "bio">;
+type PublicTutor = Tables<"tutors"> & { profile: TutorProfileRow | null };
 
 function BookingModal({
   open,
@@ -215,7 +219,7 @@ export default function TutorProfile() {
     enabled: !!id,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: t, error } = await (supabase as any)
+      const { data: t, error } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", id!)
@@ -223,13 +227,13 @@ export default function TutorProfile() {
       if (error) throw error;
       if (!t) return null;
 
-      const { data: profile } = await (supabase as any)
+      const { data: profile } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .eq("user_id", id!)
         .maybeSingle();
 
-      return { ...t, profile } as any;
+      return { ...t, profile } satisfies PublicTutor;
     },
   });
 
@@ -238,13 +242,13 @@ export default function TutorProfile() {
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("tutor_reviews")
         .select("*")
         .eq("tutor_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as any[];
+      return data ?? [];
     },
   });
 

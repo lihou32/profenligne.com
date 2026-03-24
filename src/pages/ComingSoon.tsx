@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Rocket, GraduationCap, BookOpen, CheckCircle, Mail } from "lucide-react";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const LAUNCH_DATE = new Date("2026-04-01T00:00:00");
 
@@ -43,9 +44,13 @@ const ComingSoon = () => {
 
     setLoading(true);
     try {
-      const { error } = await (supabase as any)
+      const preregistration: TablesInsert<"preregistrations"> = {
+        email: email.trim().toLowerCase(),
+        role,
+      };
+      const { error } = await supabase
         .from("preregistrations")
-        .insert([{ email: email.trim().toLowerCase(), role }]);
+        .insert([preregistration]);
 
       if (error) {
         if (error.code === "23505") {

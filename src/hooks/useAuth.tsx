@@ -1,16 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 type AppRole = "admin" | "student" | "tutor";
 
-interface Profile {
-  id: string;
-  user_id: string;
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
-}
+type Profile = Tables<"profiles">;
 
 interface AuthContextType {
   user: User | null;
@@ -35,8 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileAndRoles = async (userId: string) => {
     const [profileRes, rolesRes] = await Promise.all([
-      (supabase as any).from("profiles").select("*").eq("user_id", userId).single(),
-      (supabase as any).from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("profiles").select("*").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
 
     // Si le profil n'existe pas encore (trigger DB pas encore exécuté après signup),
@@ -44,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const notFound = !profileRes.data && profileRes.error?.code === "PGRST116";
     if (notFound) {
       await new Promise((r) => setTimeout(r, 1000));
-      const retry = await (supabase as any).from("profiles").select("*").eq("user_id", userId).single();
+      const retry = await supabase.from("profiles").select("*").eq("user_id", userId).single();
       if (retry.data) setProfile(retry.data as unknown as Profile);
     } else if (profileRes.data) {
       setProfile(profileRes.data as Profile);

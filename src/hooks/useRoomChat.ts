@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-const db = supabase as any;
+const db = supabase;
 
 type ChatMessage = {
   id: string;

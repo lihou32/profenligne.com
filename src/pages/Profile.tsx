@@ -42,7 +42,7 @@ export default function Profile() {
     }
     // Load subjects: for tutors from tutors table, for students from user metadata
     if (isTutor && user) {
-      (supabase as any)
+      supabase
         .from("tutors")
         .select("subjects")
         .eq("user_id", user.id)
@@ -83,7 +83,7 @@ export default function Profile() {
       const url = `${publicUrl}?t=${Date.now()}`;
       setAvatarUrl(url);
 
-      await (supabase as any)
+      await supabase
         .from("profiles")
         .update({ avatar_url: url })
         .eq("user_id", user.id);
@@ -112,7 +112,7 @@ export default function Profile() {
         updates.school_type = schoolType || null;
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update(updates)
         .eq("user_id", user.id);
@@ -121,7 +121,7 @@ export default function Profile() {
 
       // Update subjects: for tutors save to tutors table, for students to user metadata
       if (isTutor) {
-        const { error: tutorError } = await (supabase as any)
+        const { error: tutorError } = await supabase
           .from("tutors")
           .update({ subjects: selectedSubjects })
           .eq("user_id", user.id);
