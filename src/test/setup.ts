@@ -15,6 +15,18 @@ Object.defineProperty(window, "matchMedia", {
   }),
 })
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// Required by Radix UI primitives used in forms/dialogs
+Object.defineProperty(globalThis, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+})
+
 // ── Silence les warnings React Router v7 future flags ────────────────────────
 const originalWarn = console.warn
 console.warn = (...args: unknown[]) => {
