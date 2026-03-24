@@ -40,9 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (notFound) {
       await new Promise((r) => setTimeout(r, 1000));
       const retry = await supabase.from("profiles").select("*").eq("user_id", userId).single();
-      if (retry.data) setProfile(retry.data as unknown as Profile);
+      if (retry.data) setProfile(retry.data);
     } else if (profileRes.data) {
-      setProfile(profileRes.data as Profile);
+      setProfile(profileRes.data);
     }
 
     if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole));

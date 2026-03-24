@@ -9,9 +9,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Award, BookOpen, Download, Star, Calendar, User } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import type { Tables } from "@/integrations/supabase/types"
+
+type LessonRow = Tables<"lessons">
+type ProfileNameRow = Pick<Tables<"profiles">, "user_id" | "first_name" | "last_name">
+type Certificate = LessonRow & {
+  tutor_name: string
+  completed_at: string
+  rating: string | null
+}
 
 // ─── Certificate Card ─────────────────────────────────────────────────────────
-function CertificateCard({ cert }: { cert: any }) {
+function CertificateCard({ cert }: { cert: Certificate }) {
   const completedDate = cert.completed_at
     ? format(new Date(cert.completed_at), "d MMMM yyyy", { locale: fr })
     : "Date inconnue"
@@ -133,14 +142,14 @@ export default function Certificates() {
       if (!ls || ls.length === 0) return []
 
       // Fetch tutor profiles
-      const tutorIds = [...new Set((ls as any[]).map((l: any) => l.tutor_id))]
+      const tutorIds = [...new Set(ls.map((l) => l.tutor_id))]
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name")
+        .select("user_id, first_name, last_name")
         .in("user_id", tutorIds)
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]))
+      const profileMap = new Map((profiles || []).map((p: ProfileNameRow) => [p.user_id, p]))
 
-      return (ls as any[]).map((l: any) => {
+      return ls.map((l): Certificate => {
         const p = profileMap.get(l.tutor_id)
         const tutorName = p
           ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Professeur"
@@ -233,7 +242,7 @@ export default function Certificates() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {(lessons as any[]).map((cert) => (
+          {lessons.map((cert) => (
             <CertificateCard key={cert.id} cert={cert} />
           ))}
         </div>
