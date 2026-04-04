@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GraduationCap, Eye, EyeOff, Sparkles, Zap } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { SUBJECTS, GRADE_LEVELS } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
@@ -27,9 +27,19 @@ export default function Signup() {
   const [schoolType, setSchoolType] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Capture referral code from URL on mount
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref && /^[A-Z0-9]{8}$/i.test(ref)) {
+      setReferralCode(ref.toUpperCase());
+    }
+  }, [searchParams]);
 
   const isStudent = role === "student";
 
@@ -48,7 +58,33 @@ export default function Signup() {
         if (schoolType) metadata.school_type = schoolType;
       }
       if (selectedSubjects.length > 0) metadata.subjects = selectedSubjects.join(",");
-      await signUp(email, password, metadata);
+      const user = await signUp(email, password, metadata);
+
+      // Link referral if a valid ?ref= code was present
+      if (referralCode && user?.id) {
+        try {
+          // Find the referrer by matching the first 8 chars of their user_id
+          const { data: referrerProfile } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .ilike("user_id", `${referralCode.toLowerCase()}%`)
+            .limit(1)
+            .single();
+
+          if (referrerProfile) {
+            await supabase.from("referrals").insert({
+              referrer_id: referrerProfile.user_id,
+              referred_user_id: user.id,
+              referral_code: referralCode,
+              status: "pending",
+              credits_awarded: 0,
+            });
+          }
+        } catch {
+          // Referral linking is best-effort — don't block signup
+        }
+      }
+
       toast.success("Compte créé avec succès ! Bienvenue 🎉");
       navigate("/dashboard");
     } catch (error: any) {
@@ -59,10 +95,13 @@ export default function Signup() {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
     });
-    if (error) toast.error(String(error));
+    if (error) toast.error(error.message);
   };
 
 
@@ -219,8 +258,8 @@ export default function Signup() {
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mot de passe</Label>
                 <div className="relative">
                   <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 rounded-xl bg-secondary/50 border-border/50 pr-10" />
-                  <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  <Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
                   </Button>
                 </div>
               </div>

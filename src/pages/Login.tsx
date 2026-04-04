@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, Eye, EyeOff, Sparkles, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -32,10 +32,13 @@ export default function Login() {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
     });
-    if (error) toast.error(String(error));
+    if (error) toast.error(error.message);
   };
 
   return (
@@ -117,8 +120,8 @@ export default function Login() {
                     required
                     className="h-12 rounded-xl bg-secondary/50 border-border/50 focus:border-primary/50 focus:bg-secondary/80 transition-all pr-10"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  <Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
                   </Button>
                 </div>
               </div>
