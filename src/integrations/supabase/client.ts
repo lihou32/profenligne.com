@@ -15,6 +15,11 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // Use implicit flow for OAuth — tokens come directly in the URL hash,
+    // no PKCE code exchange needed. More reliable for SPAs.
+    flowType: 'implicit',
+    // Detect OAuth tokens in the URL hash on page load
+    detectSessionInUrl: true,
     // Bypass navigator.locks entirely to avoid deadlocks caused by stale locks
     // after page reloads or tab crashes in the preview/iframe environment.
     // This is safe for single-tab usage which is the typical case for this app.
