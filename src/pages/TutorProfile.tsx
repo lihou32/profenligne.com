@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Star,
@@ -21,11 +20,11 @@ import {
   ChevronLeft,
   Calendar,
   MessageSquare,
-  Send,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useCreateLesson, useCreateReview } from "@/hooks/useData";
+import { useCreateLesson } from "@/hooks/useData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { SEO } from "@/components/SEO";
 import { toast } from "sonner";
 
 // ─── Star rating ─────────────────────────────────────────
@@ -203,11 +202,8 @@ export default function TutorProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
-  const createReview = useCreateReview();
 
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [newRating, setNewRating] = useState(0);
-  const [newComment, setNewComment] = useState("");
 
   // Fetch tutor + profile
   const { data: tutor, isLoading, isFetching } = useQuery({
@@ -215,7 +211,7 @@ export default function TutorProfile() {
     enabled: !!id,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: t, error } = await (supabase as any)
+      const { data: t, error } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", id!)
@@ -223,53 +219,47 @@ export default function TutorProfile() {
       if (error) throw error;
       if (!t) return null;
 
-      const { data: profile } = await (supabase as any)
+      const { data: profile } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .eq("user_id", id!)
         .maybeSingle();
 
-      return { ...t, profile } as any;
+      return { ...t, profile };
     },
   });
 
-  // Fetch reviews for this tutor
+  // Fetch reviews for this tutor with student names
   const { data: reviews } = useQuery({
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("tutor_reviews")
-        .select("*")
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at, student_id")
         .eq("tutor_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as any[];
+      if (!data || data.length === 0) return [];
+
+      // Fetch student names
+      const studentIds = [...new Set(data.map((r) => r.student_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, first_name")
+        .in("user_id", studentIds);
+      const nameMap = new Map((profiles ?? []).map((p) => [p.user_id, p.first_name || "Élève"]));
+
+      return data.map((r) => ({
+        ...r,
+        student_name: nameMap.get(r.student_id) || "Élève",
+      }));
     },
   });
 
   const avgRating = reviews?.length
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : 0;
-
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) { toast.error("Connectez-vous pour laisser un avis"); return; }
-    if (!newRating) { toast.error("Choisissez une note"); return; }
-    try {
-      await createReview.mutateAsync({
-        tutor_id: id!,
-        student_id: user.id,
-        rating: newRating,
-        comment: newComment || null,
-      });
-      toast.success("Avis publié !");
-      setNewRating(0);
-      setNewComment("");
-    } catch {
-      toast.error("Erreur lors de la publication");
-    }
-  };
 
   // ── Loading / not found ──────────────────────────────────
 
@@ -302,9 +292,16 @@ export default function TutorProfile() {
     : "P";
   const statusInfo = statusConfig[tutor.status] ?? statusConfig.offline;
   const isStudent = user && hasRole("student");
+  const seoSubjects = (tutor.subjects || []).slice(0, 3).join(", ");
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-fade-in pb-16">
+      <SEO
+        title={`${fullName} — Professeur ${seoSubjects}`}
+        description={`Réservez un cours avec ${fullName}. ${seoSubjects ? `Matières : ${seoSubjects}.` : ""} Note : ${avgRating.toFixed(1)}/5 (${reviews?.length ?? 0} avis). À partir de ${tutor.hourly_rate || "–"}€/h.`}
+        path={`/tutor/${id}`}
+        type="profile"
+      />
       {/* Back */}
       <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => navigate(-1)}>
         <ChevronLeft className="h-4 w-4" />
@@ -444,15 +441,20 @@ export default function TutorProfile() {
             <div key={review.id} className="rounded-xl bg-muted/30 p-4 space-y-2">
               <div className="flex items-center gap-3">
                 <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-xs bg-primary/20 text-primary">É</AvatarFallback>
+                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                    {(review.student_name?.[0] || "É").toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <StarRating rating={review.rating} />
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(review.created_at).toLocaleDateString("fr-FR", {
-                      day: "numeric", month: "long", year: "numeric",
-                    })}
-                  </span>
+                  <p className="text-sm font-medium">{review.student_name}</p>
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={review.rating} />
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(review.created_at).toLocaleDateString("fr-FR", {
+                        day: "numeric", month: "long", year: "numeric",
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
               {review.comment && (
@@ -461,31 +463,13 @@ export default function TutorProfile() {
             </div>
           ))}
 
-          {/* Leave a review */}
+          {/* Note about verified reviews */}
           {user && hasRole("student") && (
             <>
               <Separator className="my-4" />
-              <form onSubmit={handleSubmitReview} className="space-y-3">
-                <p className="text-sm font-medium">Laisser un avis</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Note :</span>
-                  <StarRating rating={newRating} onRate={setNewRating} interactive />
-                </div>
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Partagez votre expérience avec ce professeur…"
-                  rows={3}
-                />
-                <Button
-                  type="submit"
-                  className="gradient-primary text-primary-foreground"
-                  disabled={!newRating || createReview.isPending}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  Publier l'avis
-                </Button>
-              </form>
+              <p className="text-sm text-muted-foreground text-center py-2">
+                Les avis sont vérifiés — vous pouvez noter un professeur après chaque cours complété.
+              </p>
             </>
           )}
         </CardContent>

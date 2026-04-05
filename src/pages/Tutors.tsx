@@ -1,5 +1,6 @@
 import { useState, useMemo, useDeferredValue } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,6 +256,11 @@ export default function Tutors() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 animate-fade-in pb-16">
+      <SEO
+        title="Trouver un Professeur"
+        description="Parcourez nos professeurs certifiés en mathématiques, français, physique, anglais et plus. Réservez un cours particulier en ligne en quelques clics."
+        path="/tutors"
+      />
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
