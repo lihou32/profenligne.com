@@ -492,6 +492,22 @@ export default function TutorProfile() {
           </Button>
         </div>
       )}
+      {!user && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
+          <h3 className="text-lg font-semibold">Envie de progresser avec {fullName} ?</h3>
+          <p className="text-sm text-muted-foreground">
+            Créez un compte gratuit pour réserver votre premier cours.
+          </p>
+          <Button
+            size="lg"
+            className="gradient-primary text-primary-foreground"
+            onClick={() => navigate("/signup")}
+          >
+            <Calendar className="mr-2 h-5 w-5" />
+            S'inscrire pour réserver
+          </Button>
+        </div>
+      )}
 
       {/* Booking modal */}
       {tutor && (

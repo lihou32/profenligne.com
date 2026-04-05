@@ -48,7 +48,7 @@ describe("Login page — rendu", () => {
 
   it("affiche un champ mot de passe", () => {
     renderLogin()
-    const input = screen.getByLabelText(/mot de passe|password/i)
+    const input = screen.getByPlaceholderText(/••••/)
     expect(input).toBeDefined()
   })
 
@@ -74,13 +74,13 @@ describe("Login page — rendu", () => {
 describe("Login page — toggle mot de passe", () => {
   it("le champ mot de passe est de type 'password' par défaut", () => {
     renderLogin()
-    const input = screen.getByLabelText(/mot de passe|password/i)
+    const input = screen.getByPlaceholderText(/••••/)
     expect((input as HTMLInputElement).type).toBe("password")
   })
 
   it("clique sur l'icône œil révèle le mot de passe", () => {
     renderLogin()
-    const input = screen.getByLabelText(/mot de passe|password/i)
+    const input = screen.getByPlaceholderText(/••••/)
     // Cherche le bouton toggle (icône œil)
     const toggleBtn = input.closest("div")?.querySelector("button[type=button]")
     if (toggleBtn) {
@@ -95,10 +95,10 @@ describe("Login page — soumission", () => {
     mockSignIn.mockResolvedValue(undefined)
     renderLogin()
 
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByPlaceholderText("votre@email.com"), {
       target: { value: "test@example.com" },
     })
-    fireEvent.change(screen.getByLabelText(/mot de passe|password/i), {
+    fireEvent.change(screen.getByPlaceholderText(/••••/), {
       target: { value: "motdepasse123" },
     })
     fireEvent.click(screen.getByRole("button", { name: /connexion|se connecter/i }))

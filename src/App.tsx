@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 
 // Eagerly loaded — needed immediately on first paint
 import Index from "./pages/Index";
@@ -103,6 +104,13 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
+      {/* ── Public discovery routes (no auth required) ── */}
+      <Route element={<PublicLayout />}>
+        <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
+        <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
+      </Route>
+
+      {/* ── Authenticated app routes ── */}
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/lessons" element={<Suspense fallback={<PageLoader />}><Lessons /></Suspense>} />
@@ -117,8 +125,6 @@ function AppRoutes() {
         {/* AI Tutor route removed */}
         <Route path="/profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
         <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
-        <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
-        <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
         <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ProtectedRoute>} />
         <Route path="/room/:id" element={<Suspense fallback={<PageLoader />}><LessonRoom /></Suspense>} />
         <Route path="/report/:id" element={<Suspense fallback={<PageLoader />}><LessonReport /></Suspense>} />

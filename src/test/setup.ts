@@ -1,5 +1,16 @@
 import "@testing-library/jest-dom"
 
+// ── ResizeObserver (jsdom ne l'implémente pas, requis par Radix UI) ──────────
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+});
+
 // ── matchMedia (jsdom ne l'implémente pas) ────────────────────────────────────
 Object.defineProperty(window, "matchMedia", {
   writable: true,

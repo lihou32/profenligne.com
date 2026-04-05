@@ -6,10 +6,10 @@
 ║                                                                            ║
 ║                          [1] CEO / PDG                                     ║
 ║                     (Stratégie & Décisions)                                ║
-║                      /                  \                                  ║
+║                      /                  \\                                 ║
 ║              [2] CTO                [3] CMO                                ║
 ║          (Architecture)          (Marketing)                               ║
-║           /          \                |                                    ║
+║           /          \\               |                                    ║
 ║    [4] Dev Front  [5] Dev Back   [6] Growth                               ║
 ║     (React/UI)   (Supabase)    (SEO/Réseaux)                              ║
 ║         |             |                                                    ║
@@ -34,7 +34,7 @@ from crewai import Agent, Task, Crew, Process
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
-MODEL = os.getenv("MODEL_NAME", "claude-sonnet-4-20250514")
+MODEL = "anthropic/" + os.getenv("MODEL_NAME", "claude-sonnet-4-20250514")
 VERBOSE = os.getenv("VERBOSE", "true").lower() == "true"
 
 CONTEXT = """
@@ -65,7 +65,7 @@ ceo = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=True,
-    memory=True,
+    memory=False,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -85,7 +85,7 @@ cto = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=True,
-    memory=True,
+    memory=False,
 )
 
 cmo = Agent(
@@ -100,7 +100,7 @@ cmo = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=True,
-    memory=True,
+    memory=False,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -119,7 +119,7 @@ dev_frontend = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=False,
-    memory=True,
+    memory=False,
 )
 
 dev_backend = Agent(
@@ -134,7 +134,7 @@ dev_backend = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=False,
-    memory=True,
+    memory=False,
 )
 
 growth_hacker = Agent(
@@ -149,7 +149,7 @@ growth_hacker = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=False,
-    memory=True,
+    memory=False,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -167,7 +167,7 @@ qa_tester = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=False,
-    memory=True,
+    memory=False,
 )
 
 devops = Agent(
@@ -182,14 +182,16 @@ devops = Agent(
     llm=MODEL,
     verbose=VERBOSE,
     allow_delegation=False,
-    memory=True,
+    memory=False,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LISTE COMPLÈTE DES AGENTS (ordre hiérarchique)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ALL_AGENTS = [ceo, cto, cmo, dev_frontend, dev_backend, growth_hacker, qa_tester, devops]
+# CEO is the manager_agent (separate from the workers list)
+WORKER_AGENTS = [cto, cmo, dev_frontend, dev_backend, growth_hacker, qa_tester, devops]
+ALL_AGENTS = [ceo] + WORKER_AGENTS  # for reference only
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MISSIONS PRÉDÉFINIES (templates de tâches courantes)
@@ -396,19 +398,19 @@ def run_mission(mission_name: str, custom_prompt: str = ""):
 ╔══════════════════════════════════════════════════════════════╗
 ║  🚀 PROF EN LIGNE — VIRTUAL COMPANY                        ║
 ║  Mission : {label:<49}║
-║  Agents  : {len(ALL_AGENTS)} agents en structure pyramidale            ║
+║  Agents  : {len(WORKER_AGENTS) + 1} agents en structure pyramidale            ║
 ║  Process : Hiérarchique (CEO → Managers → Spécialistes)     ║
 ╚══════════════════════════════════════════════════════════════╝
     """)
 
     crew = Crew(
-        agents=ALL_AGENTS,
+        agents=WORKER_AGENTS,
         tasks=tasks,
         process=Process.hierarchical,
         manager_agent=ceo,
         verbose=VERBOSE,
-        memory=True,
-        planning=True,
+        memory=False,
+        planning=False,
     )
 
     result = crew.kickoff()

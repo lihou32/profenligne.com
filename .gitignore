@@ -30,3 +30,9 @@ dist-ssr
 .env.production
 agents/.env
 agents/venv/
+
+# Worktrees & temp files
+.claude/worktrees/
+*.timestamp-*.mjs
+supabase/.temp/
+.github/workflows/
