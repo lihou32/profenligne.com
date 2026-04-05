@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -175,6 +175,7 @@ function LeaderboardRow({ tutor, rank, xp }: { tutor: any; rank: number; xp: num
 export default function Tutors() {
   useDocumentTitle("Trouver un Professeur");
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [subject, setSubject] = useState("all");
   const [maxPrice, setMaxPrice] = useState(200);
   const [minRating, setMinRating] = useState(0);
@@ -185,29 +186,34 @@ export default function Tutors() {
   const { data: tutors = [], isLoading } = useQuery({
     queryKey: ["tutors-search"],
     queryFn: async () => {
-      const { data: t, error } = await (supabase as any).from("tutors").select("*");
+      const { data: t, error } = await supabase.from("tutors").select("*");
       if (error) throw error;
 
       const userIds = [...new Set((t || []).map((x: any) => x.user_id))];
       if (!userIds.length) return [];
 
-      const { data: profiles } = await (supabase as any)
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, bio")
         .in("user_id", userIds);
 
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
       return (t || []).map((x: any) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
     },
   });
 
-  // Fetch XP for all tutors
+  // Fetch XP only for tutor user_ids (avoid loading ALL users)
+  const tutorUserIds = useMemo(() => tutors.map((t) => t.user_id), [tutors]);
   const { data: xpData = [] } = useQuery({
-    queryKey: ["all-user-xp"],
+    queryKey: ["tutor-xp", tutorUserIds],
+    enabled: tutorUserIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("user_xp").select("user_id, total_xp");
+      const { data, error } = await supabase
+        .from("user_xp")
+        .select("user_id, total_xp")
+        .in("user_id", tutorUserIds);
       if (error) throw error;
-      return (data ?? []) as any[];
+      return data ?? [];
     },
   });
 
@@ -222,7 +228,7 @@ export default function Tutors() {
     let result = tutors.filter((t) => {
       const profile = t.profiles;
       const name = `${profile?.first_name || ""} ${profile?.last_name || ""}`.toLowerCase();
-      if (search && !name.includes(search.toLowerCase())) return false;
+      if (deferredSearch && !name.includes(deferredSearch.toLowerCase())) return false;
       if (subject !== "all" && !(t.subjects || []).includes(subject)) return false;
       if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false;
       if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false;
@@ -328,7 +334,7 @@ export default function Tutors() {
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
                     <Filter className="h-3 w-3" /> Trier par
                   </Label>
-                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -383,7 +389,15 @@ export default function Tutors() {
             <div className="text-center py-20 text-muted-foreground">
               <Users className="mx-auto h-12 w-12 mb-3 opacity-20" />
               <p className="text-lg font-medium">Aucun professeur trouvé</p>
-              <p className="text-sm">Essayez de modifier vos filtres</p>
+              <p className="text-sm mb-4">Essayez de modifier vos critères de recherche</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => { setSearch(""); setSubject("all"); setMaxPrice(200); setMinRating(0); setOnlineOnly(false); }}
+              >
+                Réinitialiser les filtres
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
