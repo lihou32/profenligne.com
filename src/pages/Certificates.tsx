@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Award, BookOpen, Download, Star, Calendar, User } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import jsPDF from "jspdf"
 
 // ─── Certificate Card ─────────────────────────────────────────────────────────
 function CertificateCard({ cert }: { cert: any }) {
@@ -16,34 +17,93 @@ function CertificateCard({ cert }: { cert: any }) {
     ? format(new Date(cert.completed_at), "d MMMM yyyy", { locale: fr })
     : "Date inconnue"
 
-  const handlePrint = () => {
-    const printContent = `
-      <html><head><title>Certificat - ${cert.subject}</title>
-      <style>
-        body { font-family: 'Georgia', serif; padding: 60px; text-align: center; color: #1a1a2e; }
-        .border { border: 8px double #6366f1; padding: 40px; border-radius: 12px; }
-        h1 { font-size: 36px; color: #6366f1; margin-bottom: 8px; }
-        h2 { font-size: 28px; margin: 20px 0; }
-        p { font-size: 16px; color: #555; margin: 8px 0; }
-        .seal { font-size: 60px; margin: 20px; }
-        .subject { font-size: 22px; color: #6366f1; font-weight: bold; }
-      </style></head>
-      <body><div class="border">
-        <div class="seal">🏆</div>
-        <h1>Certificat de Réussite</h1>
-        <p>Ce certificat est décerné à</p>
-        <h2>${cert.student_name ?? "Étudiant"}</h2>
-        <p>pour avoir complété avec succès un cours de</p>
-        <div class="subject">${cert.subject}</div>
-        ${cert.topic ? `<p><em>${cert.topic}</em></p>` : ""}
-        <p style="margin-top:20px;">Professeur : <strong>${cert.tutor_name}</strong></p>
-        <p>Date : <strong>${completedDate}</strong></p>
-        ${cert.duration_minutes ? `<p>Durée : <strong>${cert.duration_minutes} minutes</strong></p>` : ""}
-        <p style="margin-top:30px; font-size:12px; color:#999;">Prof en Ligne — plateforme de cours particuliers</p>
-      </div></body></html>
-    `
-    const w = window.open("", "_blank")
-    if (w) { w.document.write(printContent); w.document.close(); w.print() }
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+    const w = doc.internal.pageSize.getWidth()
+    const h = doc.internal.pageSize.getHeight()
+
+    // Background
+    doc.setFillColor(250, 250, 255)
+    doc.rect(0, 0, w, h, "F")
+
+    // Double border
+    doc.setDrawColor(99, 102, 241)
+    doc.setLineWidth(1.5)
+    doc.rect(12, 12, w - 24, h - 24)
+    doc.setLineWidth(0.5)
+    doc.rect(16, 16, w - 32, h - 32)
+
+    // Decorative line
+    doc.setDrawColor(167, 139, 250)
+    doc.setLineWidth(0.3)
+    doc.line(50, 48, w - 50, 48)
+
+    // Title
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(32)
+    doc.setTextColor(99, 102, 241)
+    doc.text("CERTIFICAT DE REUSSITE", w / 2, 40, { align: "center" })
+
+    // "Décerné à"
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(14)
+    doc.setTextColor(100, 100, 100)
+    doc.text("Ce certificat est d\u00e9cern\u00e9 \u00e0", w / 2, 62, { align: "center" })
+
+    // Student name
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(26)
+    doc.setTextColor(30, 30, 50)
+    doc.text(cert.student_name ?? "Etudiant", w / 2, 78, { align: "center" })
+
+    // "pour avoir complété"
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(13)
+    doc.setTextColor(100, 100, 100)
+    doc.text("pour avoir compl\u00e9t\u00e9 avec succ\u00e8s un cours de", w / 2, 92, { align: "center" })
+
+    // Subject
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(22)
+    doc.setTextColor(99, 102, 241)
+    doc.text(cert.subject, w / 2, 106, { align: "center" })
+
+    // Topic
+    let yPos = 114
+    if (cert.topic) {
+      doc.setFont("helvetica", "italic")
+      doc.setFontSize(12)
+      doc.setTextColor(120, 120, 120)
+      doc.text(cert.topic, w / 2, yPos, { align: "center" })
+      yPos += 10
+    }
+
+    // Separator
+    doc.setDrawColor(167, 139, 250)
+    doc.setLineWidth(0.3)
+    doc.line(80, yPos + 2, w - 80, yPos + 2)
+    yPos += 14
+
+    // Details
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(12)
+    doc.setTextColor(80, 80, 80)
+    doc.text(`Professeur : ${cert.tutor_name}`, w / 2, yPos, { align: "center" })
+    yPos += 8
+    doc.text(`Date : ${completedDate}`, w / 2, yPos, { align: "center" })
+    yPos += 8
+    if (cert.duration_minutes) {
+      doc.text(`Dur\u00e9e : ${cert.duration_minutes} minutes`, w / 2, yPos, { align: "center" })
+    }
+
+    // Footer
+    doc.setFontSize(9)
+    doc.setTextColor(160, 160, 160)
+    doc.text("Prof en Ligne \u2014 plateforme de cours particuliers", w / 2, h - 22, { align: "center" })
+
+    // Download
+    const fileName = `certificat_${cert.subject.replace(/\s+/g, "_")}_${completedDate.replace(/\s+/g, "_")}.pdf`
+    doc.save(fileName)
   }
 
   return (
@@ -102,7 +162,7 @@ function CertificateCard({ cert }: { cert: any }) {
         <Button
           size="sm"
           variant="outline"
-          onClick={handlePrint}
+          onClick={handleDownloadPDF}
           className="h-7 text-xs gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <Download className="h-3 w-3" />

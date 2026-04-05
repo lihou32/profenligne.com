@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTutorStats, useTutorLessons, useUpdateTutorStatus, useTutorProfile } from "@/hooks/useData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +11,12 @@ import {
   DollarSign, BookOpen, Star, Users, Video, Clock, Calendar,
   TrendingUp, Sparkles, ArrowRight, Zap, CheckCircle2, XCircle,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachWeekOfInterval, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useUpdateLesson } from "@/hooks/useData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner";
 
@@ -30,12 +33,12 @@ export default function TutorDashboard() {
   const pendingLessons = (lessons || []).filter((l: any) => l.status === "pending");
   const upcomingLessons = (lessons || []).filter((l: any) => ["confirmed", "in_progress"].includes(l.status));
 
-  // Cours actif maintenant (démarré il y a moins de 2h ou en cours)
+  // Cours actif : in_progress, ou confirmed démarré depuis moins de duration_minutes
   const activeLesson = upcomingLessons.find((l: any) => {
     const start = new Date(l.scheduled_at).getTime();
     const now = Date.now();
-    const twoHours = 2 * 60 * 60 * 1000;
-    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + twoHours);
+    const durationMs = (l.duration_minutes || 120) * 60 * 1000;
+    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + durationMs);
   });
 
   const handleToggleStatus = () => {
@@ -61,13 +64,44 @@ export default function TutorDashboard() {
     { label: "Élèves actifs", value: String(stats?.activeStudents || 0), icon: Users, color: "from-info to-primary" },
   ];
 
-  // Mock chart data based on stats
-  const chartData = [
-    { week: "Sem 1", revenus: Math.round((stats?.monthlyRevenue || 0) * 0.15) },
-    { week: "Sem 2", revenus: Math.round((stats?.monthlyRevenue || 0) * 0.25) },
-    { week: "Sem 3", revenus: Math.round((stats?.monthlyRevenue || 0) * 0.30) },
-    { week: "Sem 4", revenus: Math.round((stats?.monthlyRevenue || 0) * 0.30) },
-  ];
+  // Real weekly earnings for the current month
+  const { data: earningsRaw } = useQuery({
+    queryKey: ["tutor-weekly-earnings", profile?.user_id],
+    enabled: !!profile?.user_id,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const { data, error } = await supabase
+        .from("tutor_earnings")
+        .select("amount, created_at")
+        .eq("tutor_id", profile!.user_id)
+        .gte("created_at", monthStart.toISOString())
+        .lte("created_at", monthEnd.toISOString())
+        .eq("status", "paid");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    const weeks = eachWeekOfInterval({ start: monthStart, end: monthEnd }, { weekStartsOn: 1 });
+
+    return weeks.map((weekStart, i) => {
+      const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : monthEnd;
+      const total = (earningsRaw ?? [])
+        .filter((e) => {
+          const d = new Date(e.created_at);
+          return isWithinInterval(d, { start: weekStart, end: weekEnd });
+        })
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+      return { week: `Sem ${i + 1}`, revenus: Math.round(total) };
+    });
+  }, [earningsRaw]);
 
   return (
     <div className="space-y-8 animate-fade-in">
