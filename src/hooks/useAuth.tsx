@@ -109,15 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // FIX: Flag pour éviter double-fetch (onAuthStateChange + getSession)
-    let initialSessionHandled = false;
-
     // Safety fallback: jamais bloquer l'UI plus de 5s
     const safetyTimer = setTimeout(() => setLoading(false), 5000);
 
+    // FIX: On s'appuie UNIQUEMENT sur onAuthStateChange.
+    // L'event INITIAL_SESSION fournit la session initiale — plus besoin de getSession().
+    // Cela élimine la race condition entre les deux appels concurrents.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
@@ -130,11 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSentryUser(null);
       }
 
-      // FIX: Si getSession a déjà géré cette session, on skip
-      if (
-        initialSessionHandled &&
-        newSession?.user?.id === session?.user?.id
-      ) {
+      // Ignorer TOKEN_REFRESHED — la session est la même, pas besoin de refetch
+      if (event === "TOKEN_REFRESHED") {
         return;
       }
 
@@ -151,24 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(safetyTimer);
         setLoading(false);
       }
-    });
-
-    // Session initiale
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      initialSessionHandled = true;
-      setSession(s);
-      setUser(s?.user ?? null);
-
-      if (s?.user) {
-        try {
-          await fetchProfileAndRoles(s.user.id);
-        } catch {
-          // Erreur non-critique
-        }
-      }
-
-      clearTimeout(safetyTimer);
-      setLoading(false);
     });
 
     return () => {
