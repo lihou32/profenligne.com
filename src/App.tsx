@@ -112,7 +112,7 @@ function AppRoutes() {
         <Route path="/buy-credits" element={<Navigate to="/credits" replace />} />
         <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
         <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
-        <Route path="/credits" element={<ProtectedRoute requiredRole="student"><Suspense fallback={<PageLoader />}><BuyCredits /></Suspense></ProtectedRoute>} />
+        <Route path="/credits" element={<Suspense fallback={<PageLoader />}><BuyCredits /></Suspense>} />
         {/* AI Tutor route removed */}
         <Route path="/profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
         <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
