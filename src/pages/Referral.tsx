@@ -77,7 +77,7 @@ export default function Referral() {
     queryKey: ["referral-stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("referrals")
         .select("id, referred_user_id, status, credits_awarded, created_at")
         .eq("referrer_id", user!.id)
@@ -107,7 +107,7 @@ export default function Referral() {
             <Gift className="h-10 w-10 text-primary" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight font-display">Parrainez vos amis</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Parrainez vos amis</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
           Invitez vos amis sur Prof en Ligne et gagnez <strong className="text-foreground">2 crédits</strong> à chaque fois qu'ils réservent leur premier cours !
         </p>

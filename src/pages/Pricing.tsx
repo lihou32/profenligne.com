@@ -70,7 +70,7 @@ export default function Pricing() {
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight font-display">Choisissez votre formule</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Choisissez votre formule</h1>
         <p className="mt-2 text-muted-foreground">Des tarifs adaptés à tous les niveaux d'ambition</p>
       </div>
 

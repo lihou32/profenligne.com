@@ -1,17 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, User, ImagePlus, Sparkles, X, Plus } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import "katex/dist/katex.min.css";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/lib/logger";
+
+// Lazy-load KaTeX + ReactMarkdown (391KB → loaded only when rendering messages)
+const MathRenderer = lazy(() => import("@/components/MathRenderer"));
 
 type MessageContent =
   | { type: "text"; text: string }
@@ -55,7 +55,7 @@ export default function AITutor() {
     if (!user) { setHistoryLoading(false); return; }
     (async () => {
       try {
-        const { data: conv } = await (supabase as any)
+        const { data: conv } = await supabase
           .from("ai_conversations")
           .select("id")
           .eq("user_id", user.id)
@@ -65,17 +65,21 @@ export default function AITutor() {
 
         if (!conv) { setHistoryLoading(false); return; }
 
-        const { data: msgs } = await (supabase as any)
+        const { data: msgs } = await supabase
           .from("ai_messages")
           .select("role, content")
           .eq("conversation_id", conv.id)
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: false })
+          .limit(100); // Limit to last 100 messages to prevent memory issues
+
+        // Reverse to get chronological order after limiting
+        msgs?.reverse();
 
         if (msgs && msgs.length > 0) {
           setConversationId(conv.id);
           setMessages([
             WELCOME,
-            ...msgs.map((m: any) => ({ role: m.role as "user" | "assistant", content: m.content })),
+            ...msgs.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
           ]);
         }
       } catch {
@@ -157,7 +161,7 @@ export default function AITutor() {
       // Ensure a conversation exists in DB (create lazily on first real message)
       let convId = conversationId;
       if (!convId && user) {
-        const { data: newConv } = await (supabase as any)
+        const { data: newConv } = await supabase
           .from("ai_conversations")
           .insert({ user_id: user.id, title: userMsg.content.slice(0, 60) || "Nouvelle conversation" })
           .select("id")
@@ -170,7 +174,7 @@ export default function AITutor() {
 
       // Save user message to DB (text only — images are transient)
       if (convId) {
-        await (supabase as any).from("ai_messages").insert({
+        await supabase.from("ai_messages").insert({
           conversation_id: convId,
           role: "user",
           content: userMsg.content,
@@ -252,14 +256,14 @@ export default function AITutor() {
 
       // Persist assistant response
       if (convId && assistantSoFar) {
-        await (supabase as any).from("ai_messages").insert({
+        await supabase.from("ai_messages").insert({
           conversation_id: convId,
           role: "assistant",
           content: assistantSoFar,
         });
       }
     } catch (e) {
-      console.error("Stream error:", e);
+      logger.error("AI stream error", e);
       toast.error("Erreur de connexion à l'IA");
     } finally {
       setIsLoading(false);
@@ -331,14 +335,9 @@ export default function AITutor() {
                       />
                     )}
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
+                      <Suspense fallback={<div className="text-muted-foreground text-sm">Chargement...</div>}>
+                        <MathRenderer content={msg.content} />
+                      </Suspense>
                     ) : (
                       msg.content
                     )}

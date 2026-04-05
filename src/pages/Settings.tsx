@@ -37,18 +37,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any)
+    supabase
       .from("profiles")
       .select("notify_lesson_reminder, notify_new_message, notify_lesson_cancelled, theme")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }: any) => {
+      .then(({ data }) => {
         if (data) {
-          setNotifyLessonReminder((data as any).notify_lesson_reminder ?? true);
-          setNotifyNewMessage((data as any).notify_new_message ?? true);
-          setNotifyLessonCancelled((data as any).notify_lesson_cancelled ?? true);
+          setNotifyLessonReminder(data?.notify_lesson_reminder ?? true);
+          setNotifyNewMessage(data?.notify_new_message ?? true);
+          setNotifyLessonCancelled(data?.notify_lesson_cancelled ?? true);
           // Apply saved theme on mount only — setTheme is stable so no dep needed
-          const savedTheme = (data as any).theme;
+          const savedTheme = data?.theme;
           if (savedTheme) setTheme(savedTheme);
         }
       });
@@ -59,7 +59,7 @@ export default function SettingsPage() {
     if (!user) return;
     setIsSavingNotifs(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update({
           notify_lesson_reminder: notifyLessonReminder,
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
     if (!user) return;
-    await (supabase as any)
+    await supabase
       .from("profiles")
       .update({ theme: newTheme })
       .eq("user_id", user.id);
@@ -129,7 +129,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold font-display gradient-text flex items-center gap-2">
           <Settings className="h-6 w-6" />
@@ -166,17 +166,18 @@ export default function SettingsPage() {
                 theme === "dark" ? "gradient-primary text-primary-foreground" : "bg-secondary/50 border-border/50"
               }`}
             >
-              <Moon className="h-4 w-4" />
+              <Moon className="h-4 w-4" aria-hidden="true" />
               Sombre
             </Button>
             <Button
               variant={theme === "light" ? "default" : "outline"}
               onClick={() => handleThemeChange("light")}
+              aria-label="Theme clair"
               className={`flex-1 h-12 rounded-xl font-semibold gap-2 ${
                 theme === "light" ? "gradient-primary text-primary-foreground" : "bg-secondary/50 border-border/50"
               }`}
             >
-              <Sun className="h-4 w-4" />
+              <Sun className="h-4 w-4" aria-hidden="true" />
               Clair
             </Button>
           </div>

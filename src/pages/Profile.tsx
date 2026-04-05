@@ -35,19 +35,19 @@ export default function Profile() {
     if (profile) {
       setFirstName(profile.first_name || "");
       setLastName(profile.last_name || "");
-      setBio((profile as any).bio || "");
-      setGradeLevel((profile as any).grade_level || "");
-      setSchoolType((profile as any).school_type || "");
+      setBio(profile?.bio || "");
+      setGradeLevel(profile?.grade_level || "");
+      setSchoolType(profile?.school_type || "");
       setAvatarUrl(profile.avatar_url);
     }
     // Load subjects: for tutors from tutors table, for students from user metadata
     if (isTutor && user) {
-      (supabase as any)
+      supabase
         .from("tutors")
         .select("subjects")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }: any) => {
+        .then(({ data }) => {
           if (data?.subjects) setSelectedSubjects(data.subjects);
         });
     } else if (user?.user_metadata?.subjects) {
@@ -83,7 +83,7 @@ export default function Profile() {
       const url = `${publicUrl}?t=${Date.now()}`;
       setAvatarUrl(url);
 
-      await (supabase as any)
+      await supabase
         .from("profiles")
         .update({ avatar_url: url })
         .eq("user_id", user.id);
@@ -112,7 +112,7 @@ export default function Profile() {
         updates.school_type = schoolType || null;
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("profiles")
         .update(updates)
         .eq("user_id", user.id);
@@ -121,7 +121,7 @@ export default function Profile() {
 
       // Update subjects: for tutors save to tutors table, for students to user metadata
       if (isTutor) {
-        const { error: tutorError } = await (supabase as any)
+        const { error: tutorError } = await supabase
           .from("tutors")
           .update({ subjects: selectedSubjects })
           .eq("user_id", user.id);
@@ -143,7 +143,7 @@ export default function Profile() {
   const initials = `${(firstName?.[0] || "").toUpperCase()}${(lastName?.[0] || "").toUpperCase()}` || "U";
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold font-display gradient-text">Mon Profil</h1>
         <p className="text-sm text-muted-foreground mt-1">Modifiez vos informations personnelles</p>

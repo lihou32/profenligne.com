@@ -28,6 +28,8 @@ export default defineConfig(({ mode }) => ({
           "vendor-query": ["@tanstack/react-query"],
           // Supabase SDK
           "vendor-supabase": ["@supabase/supabase-js"],
+          // Sentry error monitoring — isolated so it doesn't bloat main bundle
+          "vendor-sentry": ["@sentry/react"],
           // Radix UI primitives (bulk of Shadcn) — large but stable
           "vendor-radix": [
             "@radix-ui/react-dialog",

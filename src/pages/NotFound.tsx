@@ -2,13 +2,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.error("404 — Route inexistante :", location.pathname);
+    logger.warn("404 — Route inexistante", { path: location.pathname });
   }, [location.pathname]);
 
   return (

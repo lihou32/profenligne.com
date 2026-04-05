@@ -4,6 +4,7 @@ import { Bell, BookOpen, Video, Bot, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications, useMarkNotificationsRead } from "@/hooks/useData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -19,6 +20,7 @@ export default function Notifications() {
   useDocumentTitle("Notifications");
   const { data: notifications, isLoading } = useNotifications();
   const markRead = useMarkNotificationsRead();
+  const navigate = useNavigate();
 
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
@@ -26,13 +28,16 @@ export default function Notifications() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight font-display flex items-center gap-2">
+            <Bell className="h-7 w-7 text-primary" />
+            <span className="gradient-text">Notifications</span>
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
             {unreadCount > 0 ? `${unreadCount} non lue(s)` : "Aucune nouvelle notification"}
           </p>
         </div>
         {unreadCount > 0 && (
-          <Button variant="outline" size="sm" onClick={() => markRead.mutate()} disabled={markRead.isPending}>
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => markRead.mutate()} disabled={markRead.isPending}>
             Tout marquer comme lu
           </Button>
         )}
@@ -49,7 +54,11 @@ export default function Notifications() {
             return (
               <div
                 key={notif.id}
-                className={`flex items-start gap-4 p-4 transition-colors hover:bg-muted/50 ${!notif.read ? "bg-primary/5" : ""}`}
+                role={notif.link ? "button" : undefined}
+                tabIndex={notif.link ? 0 : undefined}
+                onClick={() => notif.link && navigate(notif.link)}
+                onKeyDown={(e) => e.key === "Enter" && notif.link && navigate(notif.link)}
+                className={`flex items-start gap-4 p-4 transition-colors hover:bg-muted/50 ${!notif.read ? "bg-primary/5" : ""} ${notif.link ? "cursor-pointer" : ""}`}
               >
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${!notif.read ? "gradient-primary" : "bg-muted"}`}>
                   <Icon className={`h-5 w-5 ${!notif.read ? "text-primary-foreground" : "text-muted-foreground"}`} />

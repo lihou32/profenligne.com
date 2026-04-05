@@ -49,7 +49,7 @@ export default function LiveConnect() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">LiveConnect</h1>
+          <h1 className="text-2xl font-bold tracking-tight font-display"><span className="gradient-text">LiveConnect</span></h1>
           <p className="text-muted-foreground">Rejoignez un cours en direct ou réservez avec un tuteur</p>
         </div>
         <BookLessonDialog />
