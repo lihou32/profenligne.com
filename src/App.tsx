@@ -41,6 +41,7 @@ const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const Referral = lazy(() => import("./pages/Referral"));
+const TutorOnboarding = lazy(() => import("./pages/TutorOnboarding"));
 
 // Shared page-level loading fallback
 const PageLoader = () => (
@@ -125,6 +126,7 @@ function AppRoutes() {
         <Route path="/referral" element={<Suspense fallback={<PageLoader />}><Referral /></Suspense>} />
       </Route>
 
+      <Route path="/become-tutor" element={<Suspense fallback={<PageLoader />}><TutorOnboarding /></Suspense>} />
       <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense>} />
         <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><PaymentCancel /></Suspense>} />
         <Route path="*" element={<NotFound />} />

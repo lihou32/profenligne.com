@@ -3,7 +3,7 @@ import { useDashboardStats, useTutors } from "@/hooks/useData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Clock, TrendingUp, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap, CheckCircle2, CircleDashed, UserCircle } from "lucide-react";
+import { BookOpen, Clock, TrendingUp, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap, CheckCircle2, CircleDashed, UserCircle, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -71,21 +71,21 @@ export default function StudentDashboard() {
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("user_xp")
         .select("total_xp")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return (data as any)?.total_xp ?? 0;
+      return data?.total_xp ?? 0;
     },
   });
 
-  // Cours actif en ce moment (confirmed ou in_progress commencé il y a moins de 2h)
+  // Cours actif : in_progress, ou confirmed démarré depuis moins de duration_minutes
   const activeLesson = (stats?.upcomingLessons || []).find((l) => {
     const start = new Date(l.scheduled_at).getTime();
     const now = Date.now();
-    const twoHours = 2 * 60 * 60 * 1000;
-    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + twoHours);
+    const durationMs = (l.duration_minutes || 120) * 60 * 1000;
+    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + durationMs);
   });
 
   const statCards = [
@@ -124,14 +124,14 @@ export default function StudentDashboard() {
               Bienvenue sur <span className="gold-text">Prof en Ligne</span>
             </h2>
             <p className="text-primary-foreground/70 mt-2 max-w-lg text-sm">
-              Réservez des cours avec les meilleurs tuteurs, utilisez l'IA pour vos devoirs et progressez chaque jour !
+              Réservez des cours avec les meilleurs tuteurs et progressez chaque jour !
             </p>
             <div className="flex gap-3 mt-5">
               <Button asChild className="rounded-xl bg-primary-foreground/15 backdrop-blur border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/25 transition-all">
                 <Link to="/lessons" className="flex items-center gap-2"><BookOpen className="h-4 w-4" /> Mes cours</Link>
               </Button>
               <Button asChild className="rounded-xl bg-primary-foreground/15 backdrop-blur border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/25 transition-all">
-                <Link to="/ai-tutor" className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI Tutor</Link>
+                <Link to="/tutors" className="flex items-center gap-2"><Users className="h-4 w-4" /> Trouver un prof</Link>
               </Button>
             </div>
           </div>
@@ -178,6 +178,27 @@ export default function StudentDashboard() {
       </div>
 
       <ProfileCompletion profile={profile} />
+
+      {/* CTA Devenir professeur */}
+      <Card className="glass-card border-accent/20 animate-fade-in overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex items-center gap-4 p-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-primary shadow-lg">
+              <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Vous êtes expert dans une matière ?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Partagez vos connaissances et gagnez de l'argent en devenant professeur sur la plateforme.</p>
+            </div>
+            <Button asChild size="sm" className="rounded-xl gradient-primary text-primary-foreground btn-glow shrink-0">
+              <Link to="/become-tutor" className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                Devenir prof
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="glass-card lg:col-span-2">
