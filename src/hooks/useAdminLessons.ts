@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from "@/lib/logger";
 
 export type LessonStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'all';
 
@@ -87,7 +88,7 @@ export function useAdminLessons(): UseAdminLessonsResult {
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erreur inconnue');
       setError(error);
-      console.error('Erreur lors de la récupération des cours:', error);
+      logger.error('Erreur récupération cours', error);
     } finally {
       setIsLoading(false);
     }

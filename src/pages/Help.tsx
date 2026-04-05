@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 const faqs = [
   { q: "Comment réserver un cours ?", a: "Rendez-vous dans la section 'Mes Cours' et cliquez sur 'Réserver un cours'. Sélectionnez le tuteur, la matière et le créneau qui vous convient." },
   { q: "Comment fonctionne le LiveConnect ?", a: "LiveConnect vous permet de rejoindre des cours en visioconférence. Vous pouvez voir les sessions en cours ou en démarrer une nouvelle." },
-  { q: "Comment utiliser l'AI Tutor ?", a: "L'AI Tutor est un assistant intelligent qui peut vous aider avec vos devoirs. Posez-lui vos questions ou envoyez une photo de votre exercice." },
   { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Les annulations sont gratuites jusqu'à 24h avant le cours." },
-  { q: "Quels sont les moyens de paiement acceptés ?", a: "Nous acceptons les cartes bancaires (Visa, Mastercard), PayPal et les virements bancaires." },
+  { q: "Comment fonctionne le système de crédits ?", a: "Les crédits permettent de réserver des cours. Vous pouvez en acheter via la section 'Acheter des crédits'. Chaque cours coûte un certain nombre de crédits selon la durée et le tuteur." },
+  { q: "Comment gagner des points XP ?", a: "Vous gagnez de l'XP en complétant des cours et en laissant des avis. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
+  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent et complètent leur premier cours, vous recevez tous les deux des crédits bonus." },
+  { q: "Quels sont les moyens de paiement acceptés ?", a: "Nous acceptons les cartes bancaires (Visa, Mastercard) via notre partenaire de paiement sécurisé Stripe." },
 ];
 
 export default function Help() {
@@ -18,8 +20,8 @@ export default function Help() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Centre d'aide</h1>
-        <p className="text-muted-foreground">Trouvez des réponses à vos questions</p>
+        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Centre d'aide</h1>
+        <p className="mt-2 text-muted-foreground">Trouvez des réponses à vos questions</p>
       </div>
 
       <Card className="glass-card">

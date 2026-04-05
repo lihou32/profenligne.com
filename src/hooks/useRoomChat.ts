@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-const db = supabase as any;
+// Typed via Database - no cast needed
 
 type ChatMessage = {
   id: string;
@@ -26,7 +26,7 @@ export function useRoomChat(roomId: string) {
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true })
-      .then(({ data }: any) => {
+      .then(({ data }) => {
         if (data) setMessages(data as ChatMessage[]);
       });
   }, [roomId]);
@@ -64,7 +64,7 @@ export function useRoomChat(roomId: string) {
     const senderName =
       [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Utilisateur";
 
-    await db.from("room_messages").insert({
+    await supabase.from("room_messages").insert({
       room_id: roomId,
       user_id: user.id,
       sender_name: senderName,

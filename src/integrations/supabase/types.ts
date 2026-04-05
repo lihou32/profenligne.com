@@ -155,6 +155,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          link: string | null
           message: string
           read: boolean
           title: string
@@ -164,6 +165,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          link?: string | null
           message: string
           read?: boolean
           title: string
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          link?: string | null
           message?: string
           read?: boolean
           title?: string
@@ -201,6 +204,54 @@ export type Database = {
           role?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          id: string
+          referrer_id: string
+          referred_user_id: string | null
+          referral_code: string
+          status: string
+          credits_awarded: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          referrer_id: string
+          referred_user_id?: string | null
+          referral_code: string
+          status?: string
+          credits_awarded?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          referrer_id?: string
+          referred_user_id?: string | null
+          referral_code?: string
+          status?: string
+          credits_awarded?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

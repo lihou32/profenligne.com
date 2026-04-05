@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { logger } from "@/lib/logger";
 
 export function AdminTutorsTab() {
   const { data: tutors, isLoading, error, approveTutor, suspendTutor } = useAdminTutors();
@@ -19,7 +20,7 @@ export function AdminTutorsTab() {
     try {
       isSuspended ? await approveTutor(id) : await suspendTutor(id);
     } catch (err) {
-      console.error('Erreur:', err);
+      logger.error('AdminTutorsTab erreur', err);
     } finally {
       setLoadingIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
     }

@@ -158,18 +158,49 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    /* Safe area insets for notched devices (iPhone, Android) */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    /* Prevent text size inflation on mobile orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Better mobile tap experience */
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+    /* Balanced wrapping for headings */
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Better focus rings for accessibility */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Better selection color */
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -177,9 +208,21 @@
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--muted));
     border-radius: 100px;
+    transition: background 0.2s;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    background: hsl(var(--muted-foreground) / 0.6);
+  }
+
+  /* Ensure minimum touch target size on mobile */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* But allow small inline buttons to override */
+  .touch-small {
+    min-height: unset;
+    min-width: unset;
   }
 }
 

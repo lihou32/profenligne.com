@@ -120,7 +120,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
             <Select value={tutorId} onValueChange={setTutorId}>
               <SelectTrigger><SelectValue placeholder="Choisir un tuteur" /></SelectTrigger>
               <SelectContent>
-                {(tutors || []).map((t: any) => (
+                {(tutors || []).map((t) => (
                   <SelectItem key={t.user_id} value={t.user_id}>
                     {t.profiles?.first_name
                       ? `${t.profiles.first_name} ${t.profiles.last_name || ""} — ${(t.subjects || []).join(", ")}`

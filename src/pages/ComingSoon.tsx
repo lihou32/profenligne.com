@@ -6,8 +6,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Rocket, GraduationCap, BookOpen, CheckCircle, Mail } from "lucide-react";
+import { logger } from "@/lib/logger";
 
-const LAUNCH_DATE = new Date("2026-04-01T00:00:00");
+// Date dynamique : utilisée uniquement si COMING_SOON_MODE=true (mode maintenance)
+const LAUNCH_DATE = new Date("2026-06-01T00:00:00");
 
 function useCountdown(target: Date) {
   const [timeLeft, setTimeLeft] = useState(getTimeLeft(target));
@@ -43,7 +45,7 @@ const ComingSoon = () => {
 
     setLoading(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("preregistrations")
         .insert([{ email: email.trim().toLowerCase(), role }]);
 
@@ -59,7 +61,7 @@ const ComingSoon = () => {
       }
     } catch (err: any) {
       toast.error("Erreur lors de la préinscription");
-      console.error(err);
+      logger.error("ComingSoon error", err);
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,7 @@ const ComingSoon = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Lancement prévu le 1er avril 2026 · Aucun spam, promis ✨
+          Nous travaillons sur des améliorations · Aucun spam, promis
         </p>
       </div>
     </div>

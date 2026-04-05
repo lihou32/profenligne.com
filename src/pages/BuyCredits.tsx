@@ -1,10 +1,13 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { Button } from "@/components/ui/button"
-import { Loader2, Check } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, Check, Coins, Zap, Crown, ShieldCheck } from "lucide-react"
 
 interface CreditPack {
   credits: number
@@ -12,15 +15,18 @@ interface CreditPack {
   priceEuros: number
   description: string
   popular?: boolean
+  icon: typeof Coins
+  color: string
 }
 
 const CREDIT_PACKS: CreditPack[] = [
-  { credits: 5,  price: 2500, priceEuros: 25, description: "Parfait pour essayer" },
-  { credits: 10, price: 4500, priceEuros: 45, description: "Le plus populaire", popular: true },
-  { credits: 20, price: 8000, priceEuros: 80, description: "Meilleure valeur" },
+  { credits: 5,  price: 2500, priceEuros: 25, description: "Parfait pour essayer", icon: Coins, color: "from-info to-primary" },
+  { credits: 10, price: 4500, priceEuros: 45, description: "Le plus populaire", popular: true, icon: Zap, color: "from-primary to-accent" },
+  { credits: 20, price: 8000, priceEuros: 80, description: "Meilleure valeur", icon: Crown, color: "from-gold to-warning" },
 ]
 
 export default function BuyCredits() {
+  useDocumentTitle("Acheter des crédits")
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast } = useToast()
@@ -28,10 +34,10 @@ export default function BuyCredits() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Veuillez vous connecter</h1>
-          <Button onClick={() => navigate("/login")}>Aller à la connexion</Button>
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold font-display">Veuillez vous connecter</h1>
+          <Button onClick={() => navigate("/login")} className="rounded-xl gradient-primary text-primary-foreground">Aller à la connexion</Button>
         </div>
       </div>
     )
@@ -63,47 +69,50 @@ export default function BuyCredits() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Acheter des crédits</h1>
-          <p className="text-lg text-gray-400">Choisissez un pack pour accéder aux tuteurs</p>
-        </div>
+    <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Acheter des crédits</h1>
+        <p className="mt-2 text-muted-foreground">Choisissez un pack pour accéder aux tuteurs</p>
+      </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {CREDIT_PACKS.map((pack) => (
-            <div
-              key={pack.credits}
-              className={`relative rounded-lg border transition-all duration-300 ${
-                pack.popular
-                  ? "border-blue-500 shadow-lg shadow-blue-500/20 md:scale-105"
-                  : "border-gray-700 hover:border-gray-600"
-              } bg-gray-900 p-8`}
-            >
-              {pack.popular && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <span className="inline-block bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                    Populaire
-                  </span>
-                </div>
-              )}
+      <div className="grid gap-6 md:grid-cols-3">
+        {CREDIT_PACKS.map((pack) => (
+          <Card
+            key={pack.credits}
+            className={`glass-card relative transition-all hover:shadow-xl ${
+              pack.popular ? "border-gold ring-2 ring-gold/30" : ""
+            }`}
+          >
+            {pack.popular && (
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-black font-bold text-xs px-3">
+                LE PLUS POPULAIRE
+              </Badge>
+            )}
 
-              <div className="text-center mb-8">
-                <div className="text-5xl font-bold text-white mb-2">{pack.credits}</div>
-                <div className="text-gray-400 text-sm mb-4">crédits</div>
-                <div className="text-3xl font-bold text-white mb-2">{pack.priceEuros}€</div>
-                <p className="text-gray-500 text-sm">{pack.description}</p>
+            <CardHeader className="text-center pb-2">
+              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-xl mb-3 bg-gradient-to-br ${pack.color} shadow-lg`}>
+                <pack.icon className="h-7 w-7 text-primary-foreground" />
               </div>
-
-              <div className="text-center mb-6 text-gray-400 text-xs">
+              <CardTitle className="font-display">
+                <span className="text-4xl font-bold">{pack.credits}</span>
+                <span className="text-muted-foreground text-base ml-1">crédits</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">{pack.description}</p>
+              <div className="mt-3">
+                <span className="text-3xl font-bold">{pack.priceEuros}</span>
+                <span className="text-muted-foreground">€</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {(pack.priceEuros / pack.credits).toFixed(2)}€ par crédit
-              </div>
+              </p>
+            </CardHeader>
 
-              <ul className="space-y-3 mb-8">
+            <CardContent className="space-y-4">
+              <ul className="space-y-2.5">
                 {["Crédits non expirables", "Paiement sécurisé Stripe", "Accès immédiat"].map((b) => (
-                  <li key={b} className="flex items-center text-gray-300 text-sm">
-                    <Check className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
-                    {b}
+                  <li key={b} className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 shrink-0 text-success" />
+                    <span>{b}</span>
                   </li>
                 ))}
               </ul>
@@ -111,19 +120,25 @@ export default function BuyCredits() {
               <Button
                 onClick={() => handleBuy(pack)}
                 disabled={loadingPack !== null}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
+                className={`w-full rounded-xl font-semibold h-11 ${
+                  pack.popular
+                    ? "gradient-primary text-primary-foreground btn-glow"
+                    : ""
+                }`}
+                variant={pack.popular ? "default" : "outline"}
               >
                 {loadingPack === pack.credits ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Traitement...</>
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Traitement...</span>
                 ) : "Acheter maintenant"}
               </Button>
-            </div>
-          ))}
-        </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-        <div className="mt-12 text-center text-gray-400 text-sm">
-          <p>Paiement sécurisé par <span className="text-white font-semibold">Stripe</span></p>
-        </div>
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <ShieldCheck className="h-4 w-4" />
+        <p>Paiement sécurisé par <span className="font-semibold text-foreground">Stripe</span></p>
       </div>
     </div>
   )

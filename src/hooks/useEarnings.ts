@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-const db = supabase as any;
+// Typed via Database - no cast needed
 
 export function useTutorEarnings() {
   const { user } = useAuth();
@@ -10,7 +10,7 @@ export function useTutorEarnings() {
     queryKey: ["tutor-earnings", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("tutor_earnings")
         .select("*")
         .eq("tutor_id", user!.id)
@@ -27,7 +27,7 @@ export function useEarningsBalance() {
     queryKey: ["earnings-balance", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("tutor_earnings")
         .select("amount, status")
         .eq("tutor_id", user!.id);
@@ -48,7 +48,7 @@ export function useWithdrawalRequests() {
     queryKey: ["withdrawal-requests", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("withdrawal_requests")
         .select("*")
         .eq("tutor_id", user!.id)
@@ -65,7 +65,7 @@ export function useRequestWithdrawal() {
   return useMutation({
     mutationFn: async (amount: number) => {
       if (!user) throw new Error("Not authenticated");
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("withdrawal_requests")
         .insert({ tutor_id: user.id, amount })
         .select()

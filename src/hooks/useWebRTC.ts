@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/lib/logger";
 
-const db = supabase as any;
+// Typed via Database - no cast needed
 
 const ICE_SERVERS = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -34,7 +35,7 @@ export function useWebRTC(roomId: string) {
 
     pc.onicecandidate = async (event) => {
       if (event.candidate && user) {
-        await db.from("webrtc_signals").insert([{
+        await supabase.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "ice-candidate",
@@ -61,7 +62,7 @@ export function useWebRTC(roomId: string) {
       setLocalStream(stream);
       return stream;
     } catch (err) {
-      console.error("Failed to get media:", err);
+      logger.error("Failed to get media", err);
       // Try audio only
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -69,7 +70,7 @@ export function useWebRTC(roomId: string) {
         setLocalStream(stream);
         return stream;
       } catch {
-        console.error("No media available");
+        logger.error("No media available");
         return null;
       }
     }
@@ -92,7 +93,7 @@ export function useWebRTC(roomId: string) {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       if (user) {
-        await db.from("webrtc_signals").insert([{
+        await supabase.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "offer",
@@ -115,7 +116,7 @@ export function useWebRTC(roomId: string) {
     politenessRef.current = "impolite";
 
     // Fetch existing offer
-    const { data: offers } = await db
+    const { data: offers } = await supabase
       .from("webrtc_signals")
       .select("*")
       .eq("room_id", roomId)
@@ -129,7 +130,7 @@ export function useWebRTC(roomId: string) {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       if (user) {
-        await db.from("webrtc_signals").insert([{
+        await supabase.from("webrtc_signals").insert([{
           room_id: roomId,
           sender_id: user.id,
           signal_type: "answer",
@@ -138,7 +139,7 @@ export function useWebRTC(roomId: string) {
       }
 
       // Process existing ICE candidates
-      const { data: candidates } = await db
+      const { data: candidates } = await supabase
         .from("webrtc_signals")
         .select("*")
         .eq("room_id", roomId)
@@ -150,7 +151,7 @@ export function useWebRTC(roomId: string) {
           try {
             await pc.addIceCandidate(new RTCIceCandidate(c.signal_data as unknown as RTCIceCandidateInit));
           } catch (e) {
-            console.warn("Failed to add ICE candidate:", e);
+            logger.warn("Failed to add ICE candidate", { error: String(e) });
           }
         }
       }
@@ -172,7 +173,7 @@ export function useWebRTC(roomId: string) {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const signal = payload.new as any;
+          const signal = payload.new;
           if (signal.sender_id === user.id) return;
 
           const pc = pcRef.current;
@@ -184,13 +185,13 @@ export function useWebRTC(roomId: string) {
                 new RTCSessionDescription(signal.signal_data)
               );
             } catch (e) {
-              console.warn("Failed to set remote description:", e);
+              logger.warn("Failed to set remote description", { error: String(e) });
             }
           } else if (signal.signal_type === "ice-candidate") {
             try {
               await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
             } catch (e) {
-              console.warn("Failed to add ICE candidate:", e);
+              logger.warn("Failed to add ICE candidate", { error: String(e) });
             }
           } else if (signal.signal_type === "offer") {
             // Handle renegotiation
@@ -201,7 +202,7 @@ export function useWebRTC(roomId: string) {
                 );
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
-                await db.from("webrtc_signals").insert([{
+                await supabase.from("webrtc_signals").insert([{
                   room_id: roomId,
                   sender_id: user.id,
                   signal_type: "answer",
@@ -211,7 +212,7 @@ export function useWebRTC(roomId: string) {
                   },
                 }]);
               } catch (e) {
-                console.warn("Failed to handle offer:", e);
+                logger.warn("Failed to handle offer", { error: String(e) });
               }
             }
           }
@@ -250,7 +251,7 @@ export function useWebRTC(roomId: string) {
         };
       }
     } catch (e) {
-      console.error("Screen share failed:", e);
+      logger.error("Screen share failed", e);
     }
   }, []);
 

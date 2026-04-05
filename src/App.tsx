@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -25,14 +25,14 @@ const Lessons = lazy(() => import("./pages/Lessons"));
 const LiveConnect = lazy(() => import("./pages/LiveConnect"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Help = lazy(() => import("./pages/Help"));
-const Pricing = lazy(() => import("./pages/Pricing"));
+// Pricing (abonnements) removed — modèle basé sur crédits uniquement
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const LessonRoom = lazy(() => import("./pages/LessonRoom"));
 const LessonReport = lazy(() => import("./pages/LessonReport"));
 const TutorReviews = lazy(() => import("./pages/TutorReviews"));
 const TutorEarnings = lazy(() => import("./pages/TutorEarnings"));
 const BuyCredits = lazy(() => import("./pages/BuyCredits"));
-const AITutor = lazy(() => import("./pages/AITutor")); // heavy: includes KaTeX
+// AI Tutor removed — feature supprimée du produit
 const Profile = lazy(() => import("./pages/Profile"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const TutorProfile = lazy(() => import("./pages/TutorProfile"));
@@ -60,8 +60,8 @@ const queryClient = new QueryClient({
 });
 
 // Contrôlé par la variable d'environnement VITE_COMING_SOON_MODE
-// Mettre VITE_COMING_SOON_MODE=false dans .env pour ouvrir l'app à tous
-const COMING_SOON_MODE = import.meta.env.VITE_COMING_SOON_MODE !== "false";
+// Mettre VITE_COMING_SOON_MODE=true dans .env pour activer le mode maintenance
+const COMING_SOON_MODE = import.meta.env.VITE_COMING_SOON_MODE === "true";
 
 /**
  * Wrapper that shows Coming Soon to regular visitors,
@@ -108,11 +108,12 @@ function AppRoutes() {
         <Route path="/live" element={<Suspense fallback={<PageLoader />}><LiveConnect /></Suspense>} />
         <Route path="/notifications" element={<Suspense fallback={<PageLoader />}><Notifications /></Suspense>} />
         <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
-        <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
+        <Route path="/pricing" element={<Navigate to="/credits" replace />} />
+        <Route path="/buy-credits" element={<Navigate to="/credits" replace />} />
         <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
         <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
         <Route path="/credits" element={<ProtectedRoute requiredRole="student"><Suspense fallback={<PageLoader />}><BuyCredits /></Suspense></ProtectedRoute>} />
-        <Route path="/ai-tutor" element={<Suspense fallback={<PageLoader />}><AITutor /></Suspense>} />
+        {/* AI Tutor route removed */}
         <Route path="/profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
         <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
         <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />

@@ -123,7 +123,7 @@ export default function Certificates() {
     enabled: !!user,
     queryFn: async () => {
       // Fetch completed lessons for this student
-      const { data: ls, error } = await (supabase as any)
+      const { data: ls, error } = await supabase
         .from("lessons")
         .select("id, subject, topic, scheduled_at, duration_minutes, status, tutor_id, student_id")
         .eq("student_id", user!.id)
@@ -133,14 +133,14 @@ export default function Certificates() {
       if (!ls || ls.length === 0) return []
 
       // Fetch tutor profiles
-      const tutorIds = [...new Set((ls as any[]).map((l: any) => l.tutor_id))]
-      const { data: profiles } = await (supabase as any)
+      const tutorIds = [...new Set((ls ?? []).map((l) => l.tutor_id))]
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("id, first_name, last_name")
         .in("user_id", tutorIds)
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]))
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]))
 
-      return (ls as any[]).map((l: any) => {
+      return (ls ?? []).map((l) => {
         const p = profileMap.get(l.tutor_id)
         const tutorName = p
           ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Professeur"
@@ -188,7 +188,7 @@ export default function Certificates() {
               <BookOpen className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-2xl font-bold">
-                  {[...new Set(lessons.map((l: any) => l.subject))].length}
+                  {[...new Set(lessons.map((l) => l.subject))].length}
                 </p>
                 <p className="text-xs text-muted-foreground">Matières</p>
               </div>
@@ -233,7 +233,7 @@ export default function Certificates() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {(lessons as any[]).map((cert) => (
+          {(lessons ?? []).map((cert) => (
             <CertificateCard key={cert.id} cert={cert} />
           ))}
         </div>

@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Video, Bell, HelpCircle,
-  LogOut, GraduationCap, Shield, Zap, Star, Crown,
-  DollarSign, CreditCard, Settings, Bot, Users, Award, Gift,
+  LogOut, GraduationCap, Shield, Zap, Star,
+  DollarSign, CreditCard, Settings, Users, Award, Gift,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,13 +25,11 @@ const studentPrincipalNav = [
 
 const studentApprentissageNav = [
   { title: "Cours en direct", icon: Video, path: "/live" },
-  { title: "AI Tutor", icon: Bot, path: "/ai-tutor" },
   { title: "Trouver un prof", icon: Users, path: "/tutors" },
   { title: "Avis Profs", icon: Star, path: "/reviews" },
   { title: "Mes Certificats", icon: Award, path: "/certificates" },
   { title: "Parrainage", icon: Gift, path: "/referral" },
   { title: "Acheter des crédits", icon: CreditCard, path: "/credits" },
-  { title: "Club Prestige", icon: Crown, path: "/pricing" },
 ];
 
 const tutorPrincipalNav = [
@@ -65,12 +63,12 @@ export function AppSidebar() {
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("user_xp")
         .select("total_xp")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return (data as any)?.total_xp ?? 0;
+      return data?.total_xp ?? 0;
     },
   });
 
@@ -79,7 +77,7 @@ export function AppSidebar() {
     queryKey: ["unread-notifications", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { count } = await (supabase as any)
+      const { count } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user!.id)
@@ -94,7 +92,7 @@ export function AppSidebar() {
     const channel = supabase
       .channel("sidebar-notifications")
       .on(
-        "postgres_changes" as any,
+        "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         () => { queryClient.invalidateQueries({ queryKey: ["unread-notifications", user.id] }); }
       )
@@ -122,7 +120,7 @@ export function AppSidebar() {
 
   const roleLabel = isTutor ? "Professeur" : "Étudiant";
 
-  const renderNavItems = (items: { title: string; icon: any; path: string }[]) =>
+  const renderNavItems = (items: { title: string; icon: React.ComponentType<{ className?: string }>; path: string }[]) =>
     items.map((item) => {
       const isActive = location.pathname === item.path;
       const badge = item.path === "/notifications" && unreadCount > 0 ? unreadCount : null;
@@ -138,11 +136,11 @@ export function AppSidebar() {
                 : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
             }`}
           >
-            <Link to={item.path} className="flex items-center w-full gap-2">
-              <item.icon className="h-4 w-4 shrink-0" />
+            <Link to={item.path} aria-label={item.title} aria-current={isActive ? "page" : undefined} className="flex items-center w-full gap-2">
+              <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="font-medium flex-1">{item.title}</span>
               {badge !== null && (
-                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
+                <span aria-label={`${badge} notifications non lues`} className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
                   {badge > 99 ? "99+" : badge}
                 </span>
               )}
@@ -157,11 +155,11 @@ export function AppSidebar() {
   const secondaryLabel = isTutor ? "Activité" : "Apprentissage";
 
   return (
-    <Sidebar className="border-r-0">
+    <Sidebar className="border-r-0" aria-label="Navigation principale">
       <SidebarHeader className="p-5">
-        <Link to="/dashboard" className="flex items-center gap-3 group">
+        <Link to="/dashboard" aria-label="Prof en Ligne - Retour au tableau de bord" className="flex items-center gap-3 group">
           <div className="gradient-primary flex h-11 w-11 items-center justify-center rounded-xl glow transition-transform group-hover:scale-105 group-hover:rotate-3">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            <GraduationCap className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tight text-sidebar-foreground font-display">
@@ -233,7 +231,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-3">
         <SidebarSeparator className="opacity-30" />
-        <Link to="/profile" className="flex items-center gap-3 rounded-xl p-3 mt-2 bg-sidebar-accent/40 border border-sidebar-border/50 hover:bg-sidebar-accent/60 transition-colors cursor-pointer">
+        <Link to="/profile" aria-label={`Profil de ${displayName}`} className="flex items-center gap-3 rounded-xl p-3 mt-2 bg-sidebar-accent/40 border border-sidebar-border/50 hover:bg-sidebar-accent/60 transition-colors cursor-pointer">
           <Avatar className="h-9 w-9">
             <AvatarFallback className="gradient-primary text-primary-foreground text-xs font-bold">
               {initials}

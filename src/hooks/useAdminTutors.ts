@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from "@/lib/logger";
 
 export interface Tutor {
   id: string;
@@ -45,7 +46,7 @@ export function useAdminTutors(): UseAdminTutorsResult {
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erreur inconnue');
       setError(error);
-      console.error('Erreur lors de la récupération des tuteurs:', error);
+      logger.error('Erreur récupération tuteurs', error);
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +64,7 @@ export function useAdminTutors(): UseAdminTutorsResult {
       setData((prev) => prev.map((t) => t.id === id ? { ...t, is_suspended: false } : t));
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Erreur lors de l'activation");
-      console.error(error);
+      logger.error('AdminTutors action error', error);
       throw error;
     }
   };
@@ -80,7 +81,7 @@ export function useAdminTutors(): UseAdminTutorsResult {
       setData((prev) => prev.map((t) => t.id === id ? { ...t, is_suspended: true } : t));
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erreur lors de la suspension');
-      console.error(error);
+      logger.error("AdminTutors action error", error);
       throw error;
     }
   };

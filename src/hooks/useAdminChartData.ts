@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const db = supabase as any;
+// Typed via Database - no cast needed
 
 export function useAdminChartData(months = 6) {
   return useQuery({

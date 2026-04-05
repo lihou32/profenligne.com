@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const db = supabase as any;
+// Typed via Database - no cast needed
 
 export function useAdminStats() {
   return useQuery({
@@ -13,12 +13,12 @@ export function useAdminStats() {
 
       const [profilesRes, lessonsRes, lastMonthLessonsRes, earningsRes, lastMonthEarningsRes, reviewsRes] =
         await Promise.all([
-          db.from("profiles").select("id", { count: "exact", head: true }),
-          db.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfMonth),
-          db.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfLastMonth).lt("scheduled_at", startOfMonth),
-          db.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfMonth),
-          db.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfLastMonth).lt("created_at", startOfMonth),
-          db.from("tutor_reviews").select("rating"),
+          supabase.from("profiles").select("id", { count: "exact", head: true }),
+          supabase.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfMonth),
+          supabase.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfLastMonth).lt("scheduled_at", startOfMonth),
+          supabase.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfMonth),
+          supabase.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfLastMonth).lt("created_at", startOfMonth),
+          supabase.from("tutor_reviews").select("rating"),
         ]);
 
       const totalUsers = profilesRes.count ?? 0;

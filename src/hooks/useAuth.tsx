@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  ReactNode,
+} from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,7 +25,11 @@ interface AuthContextType {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: Record<string, string>) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    metadata?: Record<string, string>,
+  ) => Promise<User | null>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
@@ -33,62 +44,129 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ── FIX: AbortController pour éviter les race conditions ──
+  const fetchControllerRef = useRef<AbortController | null>(null);
+
   const fetchProfileAndRoles = async (userId: string) => {
-    const [profileRes, rolesRes] = await Promise.all([
-      (supabase as any).from("profiles").select("*").eq("user_id", userId).single(),
-      (supabase as any).from("user_roles").select("role").eq("user_id", userId),
+    // Annuler toute requête précédente encore en cours
+    if (fetchControllerRef.current) {
+      fetchControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    fetchControllerRef.current = controller;
+
+    // FIX: Promise.allSettled au lieu de Promise.all
+    // → si une requête échoue, l'autre continue
+    const [profileResult, rolesResult] = await Promise.allSettled([
+      supabase
+        .from("profiles")
+        .select("id, user_id, first_name, last_name, avatar_url")
+        .eq("user_id", userId)
+        .single(),
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId),
     ]);
 
-    // Si le profil n'existe pas encore (trigger DB pas encore exécuté après signup),
-    // on réessaie une fois après 1s. PGRST116 = "not found" avec single()
-    const notFound = !profileRes.data && profileRes.error?.code === "PGRST116";
-    if (notFound) {
-      await new Promise((r) => setTimeout(r, 1000));
-      const retry = await (supabase as any).from("profiles").select("*").eq("user_id", userId).single();
-      if (retry.data) setProfile(retry.data as unknown as Profile);
-    } else if (profileRes.data) {
-      setProfile(profileRes.data as Profile);
+    // Si annulé entre-temps (nouvelle session arrivée), on ignore
+    if (controller.signal.aborted) return;
+
+    // Traitement du profil
+    if (profileResult.status === "fulfilled") {
+      const { data, error } = profileResult.value;
+      const notFound = !data && error?.code === "PGRST116";
+
+      if (notFound) {
+        // FIX: Retry avec limite (1 seul retry, pas de boucle infinie)
+        await new Promise((r) => setTimeout(r, 1500));
+        if (controller.signal.aborted) return;
+
+        const retry = await supabase
+          .from("profiles")
+          .select("id, user_id, first_name, last_name, avatar_url")
+          .eq("user_id", userId)
+          .single();
+
+        if (!controller.signal.aborted && retry.data) {
+          setProfile(retry.data as Profile);
+        }
+      } else if (data) {
+        setProfile(data as Profile);
+      }
     }
 
-    if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole));
+    // Traitement des rôles
+    if (rolesResult.status === "fulfilled" && rolesResult.value.data) {
+      if (!controller.signal.aborted) {
+        setRoles(
+          rolesResult.value.data.map(
+            (r: { role: string }) => r.role as AppRole,
+          ),
+        );
+      }
+    }
   };
 
   useEffect(() => {
-    // Safety fallback: never block the UI for more than 5 s due to auth hanging
+    // FIX: Flag pour éviter double-fetch (onAuthStateChange + getSession)
+    let initialSessionHandled = false;
+
+    // Safety fallback: jamais bloquer l'UI plus de 5s
     const safetyTimer = setTimeout(() => setLoading(false), 5000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        try {
-          if (session?.user) {
-            await fetchProfileAndRoles(session.user.id);
-          } else {
-            setProfile(null);
-            setRoles([]);
-          }
-        } catch (err) {
-          console.warn("Auth state change error:", err);
-        } finally {
-          clearTimeout(safetyTimer);
-          setLoading(false);
-        }
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Must await so roles are populated before setLoading(false),
-        // otherwise ProtectedRoute sees roles=[] and redirects prematurely.
+      // Sentry: identifier l'utilisateur pour le suivi d'erreurs
+      if (newSession?.user) {
+        const { setUser: setSentryUser } = await import("@sentry/react");
+        setSentryUser({ id: newSession.user.id, email: newSession.user.email });
+      } else {
+        const { setUser: setSentryUser } = await import("@sentry/react");
+        setSentryUser(null);
+      }
+
+      // FIX: Si getSession a déjà géré cette session, on skip
+      if (
+        initialSessionHandled &&
+        newSession?.user?.id === session?.user?.id
+      ) {
+        return;
+      }
+
+      try {
+        if (newSession?.user) {
+          await fetchProfileAndRoles(newSession.user.id);
+        } else {
+          setProfile(null);
+          setRoles([]);
+        }
+      } catch {
+        // Auth state change non-critique : on ne crash pas l'app
+      } finally {
+        clearTimeout(safetyTimer);
+        setLoading(false);
+      }
+    });
+
+    // Session initiale
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      initialSessionHandled = true;
+      setSession(s);
+      setUser(s?.user ?? null);
+
+      if (s?.user) {
         try {
-          await fetchProfileAndRoles(session.user.id);
-        } catch (err) {
-          console.warn("getSession fetchProfileAndRoles error:", err);
+          await fetchProfileAndRoles(s.user.id);
+        } catch {
+          // Erreur non-critique
         }
       }
+
       clearTimeout(safetyTimer);
       setLoading(false);
     });
@@ -96,27 +174,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
       clearTimeout(safetyTimer);
+      // Annuler les requêtes en cours au démontage
+      if (fetchControllerRef.current) {
+        fetchControllerRef.current.abort();
+      }
     };
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: Record<string, string>) => {
-    const { error } = await supabase.auth.signUp({
+  // ── Sanitize metadata pour éviter XSS via signup ──
+  const sanitize = (val: string): string =>
+    val
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;");
+
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata?: Record<string, string>,
+  ) => {
+    // FIX: Validation + sanitisation des métadonnées utilisateur
+    const cleanMeta = metadata
+      ? Object.fromEntries(
+          Object.entries(metadata).map(([k, v]) => [
+            sanitize(k),
+            sanitize(String(v).slice(0, 500)), // Limite 500 chars par champ
+          ]),
+        )
+      : undefined;
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: metadata,
+        data: cleanMeta,
       },
+    });
+    if (error) throw error;
+    return data.user;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
     if (error) throw error;
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  };
-
   const signOut = async () => {
+    // Nettoyer l'état local avant le signOut pour éviter flash
+    setProfile(null);
+    setRoles([]);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
@@ -124,7 +235,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (role: AppRole) => roles.includes(role);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, roles, loading, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        profile,
+        roles,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        hasRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
