@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Coins, Plus, AlertTriangle } from "lucide-react";
+import { Coins, Plus, AlertTriangle, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateLesson, useTutors } from "@/hooks/useData";
 import { useUserCredits } from "@/hooks/useCredits";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
 import {
-  LESSON_DURATIONS, FREE_CANCEL_HOURS, lessonPriceEur, formatEur, friendlyError,
+  LESSON_DURATIONS, FREE_CANCEL_HOURS, LATE_START_HOUR, LATE_SURCHARGE_EUR, lateSurchargeEur, lessonPriceEur, formatEur, friendlyError,
 } from "@/lib/credits";
 
 interface BookLessonDialogProps {
@@ -20,6 +20,8 @@ interface BookLessonDialogProps {
   defaultOpen?: boolean;
   onClose?: () => void;
   trigger?: React.ReactNode;
+  /** Cours en direct : il commence maintenant (prof en ligne), sans choisir de date. */
+  instant?: boolean;
 }
 
 const todayLocal = () => {
@@ -28,7 +30,7 @@ const todayLocal = () => {
   return d.toISOString().split("T")[0];
 };
 
-export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose, trigger }: BookLessonDialogProps = {}) {
+export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose, trigger, instant = false }: BookLessonDialogProps = {}) {
   const [open, setOpen] = useState(defaultOpen);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
@@ -66,7 +68,8 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
   }, [selectedTutor, subject]);
 
   const durationMin = parseInt(duration, 10);
-  const price = lessonPriceEur(durationMin);
+  const surcharge = lateSurchargeEur(instant);
+  const price = lessonPriceEur(durationMin) + surcharge;
   const balance = credits?.balanceEur ?? 0;
   const missing = Math.max(0, Math.round((price - balance) * 100) / 100);
 
@@ -90,11 +93,11 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
       toast.error("Connectez-vous pour réserver un cours");
       return;
     }
-    if (!subject || !date || !time || !tutorId) {
+    if (!subject || (!instant && (!date || !time)) || !tutorId) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-    const scheduledAt = new Date(`${date}T${time}`);
+    const scheduledAt = instant ? new Date(Date.now() + 60_000) : new Date(`${date}T${time}`);
     if (Number.isNaN(scheduledAt.getTime()) || scheduledAt <= new Date()) {
       toast.error("La date et l'heure doivent être dans le futur");
       return;
@@ -111,7 +114,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: durationMin,
       });
-      toast.success("Demande envoyée ! Le professeur doit maintenant la confirmer.");
+      toast.success(instant ? "Demande envoyée ! Le prof l'accepte et la salle s'ouvre." : "Demande envoyée ! Le professeur doit maintenant la confirmer.");
       setOpen(false);
       onClose?.();
       resetForm();
@@ -135,7 +138,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Réserver un cours</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{instant ? <><Zap className="h-5 w-5" /> Cours en direct</> : "Réserver un cours"}</DialogTitle>
           <DialogDescription>
             Le prix est débité de ton solde à la réservation et remboursé si le professeur refuse,
             ou si tu annules plus de {FREE_CANCEL_HOURS} h avant.
@@ -178,6 +181,12 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
             <Input id="book-topic" value={topic} maxLength={200} onChange={(e) => setTopic(e.target.value)} placeholder="Ex : Intégrales, chapitre 5…" />
           </div>
 
+          {instant ? (
+            <p className="rounded-xl border-2 border-ink-2 bg-sun-soft p-3 text-sm font-semibold">
+              ⚡ Le cours commence maintenant, dès que le prof accepte.
+              {surcharge > 0 ? ` Après ${LATE_START_HOUR} h, un cours en direct coûte ${LATE_SURCHARGE_EUR} € de plus.` : ""}
+            </p>
+          ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="book-date">Date *</Label>
@@ -188,6 +197,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
               <Input id="book-time" type="time" step={900} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
           </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="book-duration">Durée</Label>
@@ -208,6 +218,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
                   <Coins className="h-4 w-4 text-gold" />
                   Prix du cours : {formatEur(price)}
                 </span>
+                {surcharge > 0 && <span className="text-xs font-semibold text-muted-foreground">dont {formatEur(surcharge)} après {LATE_START_HOUR} h</span>}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">Ton solde : {formatEur(balance)}</p>
               {missing > 0 && (

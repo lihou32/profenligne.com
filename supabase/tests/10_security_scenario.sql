@@ -43,7 +43,7 @@ SELECT 'T19 eleve modifie notes ok'; UPDATE lessons SET notes='ma note';
 SELECT 'T20 eleve annule pending → rembourse'; SELECT (cancel_lesson(id)).status FROM lessons WHERE status='pending';
 SELECT 'T21 solde (attendu 5000):', balance FROM user_credits WHERE user_id=auth.uid();
 -- Nouveau cours, qui commence dans 5 minutes
-SELECT 'T22 resa 2:', (book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Suites', now()+interval '5 minutes', 30)).price_cents;
+SELECT 'T22 resa 2 en direct (attendu 2500 hors supplement de nuit | t):', (l).price_cents - (l).surcharge_cents, (l).is_instant FROM (SELECT book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Suites', now()+interval '5 minutes', 30) AS l) s;
 SELECT 'T23 eleve demarre avant confirmation (attendu erreur)'; SELECT start_lesson(id) FROM lessons WHERE status='pending';
 RESET ROLE;
 
@@ -51,7 +51,7 @@ SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111
 SELECT 'T24 prof confirme:', (confirm_lesson(id)).status FROM lessons WHERE status='pending';
 SELECT 'T25 prof demarre:', (start_lesson(id)).status FROM lessons WHERE status='confirmed';
 SELECT 'T26 prof termine:', (complete_lesson(id)).status FROM lessons WHERE status='in_progress';
-SELECT 'T27 gain prof (25 € x 80 % = 20.00):', amount FROM tutor_earnings;
+SELECT 'T27 gain prof = 80 % du prix payé (attendu t):', bool_and(e.amount = round(l.price_cents / 100.0 * 0.8, 2)) FROM tutor_earnings e JOIN lessons l ON l.id = e.lesson_id;
 SELECT 'T28 retrait trop gros (attendu erreur)'; SELECT request_withdrawal(500);
 SELECT 'T29 retrait sous minimum (attendu erreur)'; SELECT request_withdrawal(10);
 RESET ROLE;
@@ -79,7 +79,7 @@ SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111
 SELECT (confirm_lesson(id)).status, (start_lesson(id)).status, (complete_lesson(id)).status FROM lessons WHERE student_id='44444444-4444-4444-4444-444444444444';
 RESET ROLE;
 SELECT 'T37 parrainage:', status, credits_awarded FROM referrals;
-SELECT 'T38 solde parrain (attendu 5000-2500+1000=3500):', balance FROM user_credits WHERE user_id='22222222-2222-2222-2222-222222222222';
+SELECT 'T38 solde parrain = 5000 - prix du cours + 1000 (attendu t):', balance = 6000 - (SELECT price_cents FROM lessons WHERE student_id='22222222-2222-2222-2222-222222222222' AND status='completed') FROM user_credits WHERE user_id='22222222-2222-2222-2222-222222222222';
 SET ROLE anon; SELECT set_config('request.jwt.claim.sub','',false);
 SELECT 'T39 visiteur voit les profs (attendu 1):', count(*) FROM tutors;
 SELECT 'T40 visiteur voit profil prof (attendu 1):', count(*) FROM profiles;
@@ -114,7 +114,7 @@ SELECT 'T50 eleve lit solde d''un prof (attendu erreur)'; SELECT tutor_available
 SELECT 'T51 eleve renomme la matiere (attendu erreur)'; UPDATE lessons SET subject='Hack' WHERE student_id=auth.uid();
 RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
-SELECT 'T52 prof lit son propre solde (attendu 40.00 = 2 cours de 30 min):', tutor_available_balance(auth.uid());
+SELECT 'T52 prof lit son propre solde = somme de ses gains (attendu t):', tutor_available_balance(auth.uid()) = (SELECT sum(amount) FROM tutor_earnings WHERE tutor_id=auth.uid());
 RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','55555555-5555-5555-5555-555555555555',false);
 SELECT 'T53 CA reel (45 paye, pas 50):', revenue_this_month FROM admin_stats();

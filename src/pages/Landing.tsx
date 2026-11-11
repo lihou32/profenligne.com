@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import {
-  ArrowRight, CalendarCheck, Check, ChevronDown, GraduationCap, MessageCircle,
+  ArrowRight, CalendarCheck, Check, ChevronDown, MessageCircle, Zap,
   MonitorPlay, PenLine, Search, ShieldCheck, Star, TrendingUp, Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,14 +12,14 @@ import { useReveal } from "@/hooks/useReveal"
 import { useTutors } from "@/hooks/useTutors"
 import { SUBJECTS } from "@/lib/constants"
 import {
-  FREE_CANCEL_HOURS, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR, MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION,
-  TOPUP_PACKS, WITHDRAWAL_FEE_RATE, formatEur, lessonPriceEur, tutorShareEur,
+  FREE_CANCEL_HOURS, LATE_END_HOUR, LATE_START_HOUR, LATE_SURCHARGE_EUR, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR,
+  MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION, TOPUP_PACKS, WITHDRAWAL_FEE_RATE, formatEur, tutorShareEur,
 } from "@/lib/credits"
 import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
-  { href: "#comment", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
+  { href: "#comment", label: "Comment ça marche" },
   { href: "#profs", label: "Les profs" },
   { href: "#devenir-prof", label: "Devenir prof" },
   { href: "#faq", label: "FAQ" },
@@ -52,12 +52,13 @@ export default function Landing() {
       <PublicNav loggedIn={false} links={NAV_LINKS} />
       <main className="overflow-x-clip">
         <Hero />
+        <KeyFacts />
         <SubjectsStrip />
+        <TwoWays />
         <HowItWorks />
-        <Prices />
         <TutorsShowcase />
-        <ForTutors />
         <Topups />
+        <ForTutors />
         <Faq />
         <FinalCta />
       </main>
@@ -66,124 +67,79 @@ export default function Landing() {
   )
 }
 
-/* ─── 1. Hero : gros titre + collage d'« autocollants » qui suit la souris ── */
+/* ─── 1. Hero : ce que c'est, combien ça coûte, comment commencer ──────── */
+
+const ROW_BG = ["bg-mint-soft", "bg-sky-soft", "bg-pink-soft", "bg-sun-soft", "bg-hl-soft", "bg-peri-soft"]
 
 function Hero() {
-  const art = useRef<HTMLDivElement>(null)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const { data: tutors } = useTutors()
-  const tutor = useMemo(() => (tutors ?? []).filter((t) => t.profiles?.first_name)
-    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0], [tutors])
-
-  useEffect(() => {
-    const el = art.current
-    if (!el || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect()
-      setTilt({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 })
-    }
-    window.addEventListener("pointermove", onMove, { passive: true })
-    return () => window.removeEventListener("pointermove", onMove)
-  }, [])
-  const layer = (d: number) => ({ transform: `translate3d(${tilt.x * d}px, ${tilt.y * d}px, 0)`, transition: "transform .35s cubic-bezier(.2,.8,.2,1)" })
-
-  const name = tutor ? `${tutor.profiles?.first_name ?? ""} ${tutor.profiles?.last_name?.[0] ? tutor.profiles.last_name[0] + "." : ""}`.trim() : null
-  const initials = tutor ? `${tutor.profiles?.first_name?.[0] ?? ""}${tutor.profiles?.last_name?.[0] ?? ""}`.toUpperCase() : "CL"
-  const reviews = tutor?.total_reviews ?? 0
-
   return (
-    <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 [&>*]:min-w-0">
+    <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pt-16 [&>*]:min-w-0">
       <div className="reveal">
         <span className="eyebrow">🎓 Du collège au master</span>
-        <h1 className="mt-6 text-[clamp(2.9rem,7vw,5.2rem)]">
-          Le bon prof,<br />pour <span className="hl-mark">chaque</span> élève.
+        <h1 className="mt-6 text-[clamp(2.7rem,6.2vw,4.7rem)]">
+          Des cours particuliers en visio, <span className="hl-mark">dès {MIN_LESSON_PRICE_EUR} €</span>.
         </h1>
-        <p className="mt-6 max-w-[30em] text-[1.15rem] leading-relaxed text-ink-2/75 sm:text-[1.22rem]">
-          Des cours particuliers en visio avec des profs choisis un par un.
-          Un seul prix pour tous, dès {MIN_LESSON_PRICE_EUR} € le cours.
+        <p className="mt-6 max-w-[32em] text-[1.15rem] leading-relaxed text-ink-2/80 sm:text-[1.2rem]">
+          Prends un cours <b className="text-ink-2">tout de suite</b> avec un prof en ligne, ou <b className="text-ink-2">réserve un créneau</b>.
+          Le prix est le même chez tous les profs.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="h-14 px-7 text-base"><Link to="/tutors"><Search /> Trouver mon prof</Link></Button>
-          <Button asChild size="lg" variant="outline" className="h-14 px-7 text-base"><Link to="/signup?role=tutor"><GraduationCap /> Je suis prof</Link></Button>
+          <Button asChild size="lg" variant="highlight" className="h-14 px-7 text-base"><Link to="/live"><Zap className="fill-ink-2" /> Cours en direct</Link></Button>
+          <Button asChild size="lg" className="h-14 px-7 text-base"><Link to="/tutors"><Search /> Réserver un prof</Link></Button>
         </div>
-        <ul className="mt-9 flex flex-wrap gap-2.5 text-sm font-bold text-ink-2">
-          {[["bg-mint-soft", "✅", `Annulation gratuite ${FREE_CANCEL_HOURS} h avant`], ["bg-sky-soft", "💳", "Sans abonnement"], ["bg-pink-soft", "🖥️", "Rien à installer"]].map(([bg, e, t]) => (
-            <li key={t} className={cn("sticker-sm rounded-full px-3.5 py-1.5", bg)}>{e} {t}</li>
-          ))}
-        </ul>
+        <p className="mt-5 text-sm font-semibold text-ink-2/70">
+          Tu es prof ? <Link to="/signup?role=tutor" className="font-bold text-ink underline underline-offset-4">Donne des cours ici <ArrowRight className="inline h-3.5 w-3.5" /></Link>
+        </p>
       </div>
 
-      <div ref={art} className="relative h-[460px] sm:h-[520px]" aria-hidden="true">
-        {/* Fond coloré */}
-        <div className="absolute inset-x-4 inset-y-6 rotate-2 rounded-[2rem] border-2 border-ink-2 bg-peri sm:inset-x-8" />
-        <div className="absolute inset-x-4 inset-y-6 -rotate-1 rounded-[2rem] border-2 border-ink-2 bg-sun-soft sm:inset-x-8" />
-
-        {/* Carte prof */}
-        <div style={layer(-16)} className="absolute left-0 top-2 z-20 w-[250px] sm:left-2">
-          <div className="sticker floaty rounded-2xl bg-white p-4" style={{ ["--r" as string]: "-3deg" }}>
-            <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-ink-2 bg-hl-soft font-display text-lg font-extrabold">{initials}</span>
-              <div className="min-w-0">
-                <p className="truncate font-display text-lg font-extrabold leading-tight">{name ?? "Camille L."}</p>
-                <p className="truncate text-xs font-semibold text-muted-foreground">{(tutor?.subjects ?? ["Maths", "Physique"]).slice(0, 2).join(" · ")}</p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="flex items-center gap-1 text-sm font-bold">
-                {reviews > 0 ? <><Star className="h-4 w-4 fill-sun text-ink-2" />{Number(tutor!.rating).toFixed(1).replace(".", ",")}</> : "✨ Nouveau"}
-              </span>
-              <span className="rounded-full border-2 border-ink-2 bg-mint-soft px-2.5 py-0.5 text-xs font-bold">Dispo</span>
-            </div>
-            {!tutor && <p className="mt-2 text-[11px] font-semibold text-muted-foreground">Exemple de profil</p>}
+      <div id="prix" className="reveal relative">
+        <div className="sticker overflow-hidden rounded-[1.75rem] bg-white">
+          <div className="flex items-center justify-between border-b-2 border-ink-2 bg-peri px-6 py-4 text-white">
+            <p className="font-display text-2xl font-extrabold">Les prix</p>
+            <span className="rounded-full border-2 border-ink-2 bg-white px-3 py-0.5 text-xs font-extrabold text-ink-2">Même prix chez tous les profs</span>
           </div>
-        </div>
-
-        {/* Réservation */}
-        <div style={layer(22)} className="absolute right-0 top-[120px] z-30 w-[270px] sm:right-2">
-          <div className="sticker rounded-2xl bg-white p-4 rotate-2">
-            <p className="font-display text-lg font-extrabold">Mercredi · 18 h</p>
-            <p className="text-sm font-semibold text-muted-foreground">Dérivées · 1 h</p>
-            <div className="mt-3 grid grid-cols-4 gap-1.5">
-              {["16:00", "17:00", "18:00", "19:00"].map((h) => (
-                <span key={h} className={cn("rounded-lg border-2 border-ink-2 py-1.5 text-center text-xs font-bold", h === "18:00" ? "bg-peri text-white" : "bg-white")}>{h}</span>
+          <table className="w-full text-left">
+            <thead className="sr-only"><tr><th>Durée</th><th>Prix</th></tr></thead>
+            <tbody>
+              {LESSON_DURATIONS.map((d, i) => (
+                <tr key={d.value} className={cn("border-b-2 border-ink-2/10", ROW_BG[i])}>
+                  <td className="px-6 py-3 text-[1.05rem] font-bold">{d.label}</td>
+                  <td className="px-6 py-3 text-right font-display text-2xl font-extrabold tabular">{d.priceEur} €</td>
+                </tr>
               ))}
-            </div>
-            <div className="mt-3 flex items-center justify-between rounded-xl border-2 border-ink-2 bg-sun px-3 py-2">
-              <span className="text-sm font-bold">Cours d'1 h</span>
-              <span className="font-display text-lg font-extrabold">{formatEur(lessonPriceEur(60))}</span>
-            </div>
+            </tbody>
+          </table>
+          <div className="flex items-center gap-3 border-t-2 border-ink-2 bg-sun px-6 py-3.5">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink-2 bg-white" aria-hidden><Zap className="h-4 w-4 fill-ink-2" /></span>
+            <p className="text-[0.98rem] font-bold leading-snug">Cours en direct après {LATE_START_HOUR} h : <span className="whitespace-nowrap">+{LATE_SURCHARGE_EUR} €</span>, quelle que soit la durée.</p>
           </div>
         </div>
+        <span aria-hidden className="sticker floaty absolute -right-3 -top-5 hidden rounded-2xl sm:block bg-hl px-3 py-1.5 font-display text-lg font-extrabold text-white" style={{ ["--r" as string]: "8deg" }}>Sans abonnement</span>
+      </div>
+    </section>
+  )
+}
 
-        {/* Tableau blanc */}
-        <div style={layer(10)} className="absolute bottom-6 left-3 z-10 w-[290px] sm:left-6">
-          <div className="sticker -rotate-2 rounded-2xl bg-ink-2 p-3">
-            <div className="flex items-center justify-between px-1 pb-2 text-xs font-bold text-white">
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 animate-pulse rounded-full bg-hl" /> En direct</span>
-              <span>Tableau blanc</span>
-            </div>
-            <div className="rounded-xl bg-white p-3">
-              <svg viewBox="0 0 260 84" className="h-[84px] w-full">
-                <path d="M8 70 C 60 70, 70 16, 120 18 S 196 68, 252 14" fill="none" stroke="#6B4EFF" strokeWidth="4" strokeLinecap="round" />
-                <path d="M8 78 H 252 M 18 6 V 80" stroke="#17162B" strokeOpacity=".25" strokeWidth="2" />
-                <rect x="132" y="8" width="70" height="14" rx="4" fill="#FFC53D" />
-                <text x="138" y="19" fontSize="12" fontWeight="800" fill="#17162B">f′(x) = 0</text>
-              </svg>
-            </div>
+/* ─── 1 bis. L'essentiel en quatre cases ─────────────────────────────── */
+
+const FACTS = [
+  { e: "⚡", bg: "bg-sun-soft", t: "En direct ou sur réservation", d: "Un prof est en ligne ? Tu commences tout de suite. Sinon, tu choisis ton créneau." },
+  { e: "💶", bg: "bg-mint-soft", t: `Dès ${MIN_LESSON_PRICE_EUR} € le cours`, d: "Le prix dépend seulement de la durée, pas du prof." },
+  { e: "↩️", bg: "bg-sky-soft", t: `Annulation gratuite ${FREE_CANCEL_HOURS} h avant`, d: "Et toujours remboursé si le prof annule." },
+  { e: "🎁", bg: "bg-pink-soft", t: "Jusqu'à +25 € offerts", d: "Recharge ton solde : plus la recharge est grosse, plus on t'en offre." },
+]
+
+function KeyFacts() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pb-16" aria-label="L'essentiel">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+        {FACTS.map((f, i) => (
+          <div key={f.t} className={cn("sticker reveal rounded-2xl p-5", f.bg)} style={{ transitionDelay: `${i * 60}ms` }}>
+            <span className="text-3xl" aria-hidden>{f.e}</span>
+            <p className="mt-2 font-display text-[1.25rem] font-extrabold leading-tight">{f.t}</p>
+            <p className="mt-1.5 text-[0.95rem] text-ink-2/75">{f.d}</p>
           </div>
-        </div>
-
-        {/* XP */}
-        <div style={layer(-28)} className="absolute bottom-20 right-4 z-40">
-          <div className="sticker floaty rounded-2xl bg-hl px-4 py-3 text-white" style={{ ["--r" as string]: "6deg" }}>
-            <p className="text-[11px] font-bold uppercase tracking-wider">Après le cours</p>
-            <p className="font-display text-3xl font-extrabold leading-none">+100 XP</p>
-          </div>
-        </div>
-
-        {/* Pastilles matières */}
-        <span style={layer(30)} className="sticker-sm absolute right-16 top-0 z-30 rotate-6 rounded-full bg-mint-soft px-3 py-1 text-sm font-bold">🧪 Physique</span>
-        <span style={layer(-24)} className="sticker-sm absolute bottom-0 left-1/2 z-30 -rotate-3 rounded-full bg-sky-soft px-3 py-1 text-sm font-bold">🇬🇧 Anglais</span>
+        ))}
       </div>
     </section>
   )
@@ -239,34 +195,54 @@ function HowItWorks() {
   )
 }
 
-/* ─── 4. Prix : une grille unique, à cliquer ─────────────────────────── */
+/* ─── 3 bis. Deux façons de prendre un cours ─────────────────────────── */
 
-const DURATION_BG = ["bg-mint-soft", "bg-sky-soft", "bg-pink-soft", "bg-sun", "bg-hl-soft", "bg-peri-soft"]
-
-function Prices() {
-  const [duration, setDuration] = useState(60)
-  const price = lessonPriceEur(duration)
-  const hourly = Math.round(price / duration * 60 * 100) / 100
-
+function TwoWays() {
   return (
     <section id="tarifs" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-28">
-      <SectionHead eyebrow="💶 Tarifs" title={<>Un prix clair, <span className="hl-mark">le même</span> pour tous.</>} sub="Le prix dépend seulement de la durée du cours, quel que soit le prof. Clique pour voir." />
-      <div className="reveal grid gap-6 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {LESSON_DURATIONS.map((d, i) => (
-            <button key={d.value} type="button" onClick={() => setDuration(d.value)} aria-pressed={duration === d.value}
-              className={cn("rounded-2xl border-2 border-ink-2 p-4 text-left transition-all duration-150", DURATION_BG[i],
-                duration === d.value ? "-translate-x-0.5 -translate-y-0.5 shadow-[5px_5px_0_0_hsl(var(--ink-2))]" : "hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--ink-2))]")}>
-              <span className="block text-sm font-bold text-ink-2/70">{d.label}</span>
-              <span className="font-display text-[2rem] font-extrabold leading-tight">{d.priceEur} €</span>
-            </button>
-          ))}
-        </div>
-        <div className="sticker flex flex-col justify-center rounded-[1.75rem] bg-peri p-8 text-center text-white">
-          <p className="text-sm font-bold uppercase tracking-wider text-white/80">Ce cours te coûte</p>
-          <p className="mt-2 font-display text-[4rem] font-extrabold leading-none tabular">{formatEur(price)}</p>
-          <p className="mx-auto mt-4 max-w-xs text-white/85">soit {formatEur(hourly)} de l'heure. Plus le cours est long, moins l'heure coûte cher.</p>
-        </div>
+      <SectionHead eyebrow="💶 Tarifs" title={<>Deux façons d'avoir <span className="hl-mark">ton prof</span>.</>} sub="Le prix dépend seulement de la durée du cours. Il est débité de ton solde au moment où tu demandes le cours." />
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
+        <article className="sticker reveal flex flex-col rounded-[1.75rem] bg-sun-soft p-7">
+          <span className="flex w-fit items-center gap-1.5 rounded-full border-2 border-ink-2 bg-white px-3 py-1 text-sm font-extrabold"><Zap className="h-4 w-4 fill-sun" /> En direct</span>
+          <h3 className="mt-4 text-[2rem]">Maintenant, sans réserver</h3>
+          <p className="mt-2 text-ink-2/75">Tu choisis un prof marqué « en ligne », il accepte et la salle s'ouvre. Idéal la veille d'un contrôle.</p>
+          <ul className="mt-5 space-y-2 font-semibold">
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Même grille de prix que sur réservation</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />De {LATE_START_HOUR} h à {LATE_END_HOUR} h : <b>+{LATE_SURCHARGE_EUR} €</b>, quelle que soit la durée</li>
+          </ul>
+          <div className="mt-6 grid grid-cols-3 gap-2 text-center">
+            {[20, 60, 120].map((m) => {
+              const d = LESSON_DURATIONS.find((x) => x.value === m)!
+              return (
+                <div key={m} className="rounded-xl border-2 border-ink-2 bg-white p-2.5">
+                  <p className="text-xs font-bold text-ink-2/70">{d.label}</p>
+                  <p className="font-display text-xl font-extrabold">{d.priceEur} €</p>
+                  <p className="text-[11px] font-bold text-hl">{d.priceEur + LATE_SURCHARGE_EUR} € après {LATE_START_HOUR} h</p>
+                </div>
+              )
+            })}
+          </div>
+          <Button asChild size="lg" variant="highlight" className="mt-7 w-fit"><Link to="/live">Voir les profs en ligne <ArrowRight /></Link></Button>
+        </article>
+
+        <article className="sticker reveal flex flex-col rounded-[1.75rem] bg-peri-soft p-7">
+          <span className="w-fit rounded-full border-2 border-ink-2 bg-white px-3 py-1 text-sm font-extrabold">📅 Sur réservation</span>
+          <h3 className="mt-4 text-[2rem]">Le créneau qui t'arrange</h3>
+          <p className="mt-2 text-ink-2/75">Tu choisis ton prof, ta date et ta durée. Le prof confirme, et tu reçois un rappel avant le cours.</p>
+          <ul className="mt-5 space-y-2 font-semibold">
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Aucun supplément, même le soir</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Annulation gratuite jusqu'à {FREE_CANCEL_HOURS} h avant</li>
+          </ul>
+          <div className="mt-6 grid grid-cols-3 gap-2 text-center">
+            {LESSON_DURATIONS.map((d) => (
+              <div key={d.value} className="rounded-xl border-2 border-ink-2 bg-white p-2.5">
+                <p className="text-xs font-bold text-ink-2/70">{d.label}</p>
+                <p className="font-display text-xl font-extrabold">{d.priceEur} €</p>
+              </div>
+            ))}
+          </div>
+          <Button asChild size="lg" className="mt-7 w-fit"><Link to="/tutors">Réserver un prof <ArrowRight /></Link></Button>
+        </article>
       </div>
     </section>
   )
@@ -407,7 +383,8 @@ function Topups() {
 
 const FAQ = [
   ["Comment se passe un cours ?", "En visio, directement dans le navigateur : caméra, micro, partage d'écran et tableau blanc. La salle ouvre 15 minutes avant l'heure prévue. Rien à installer."],
-  ["Combien coûte un cours ?", `Le même prix chez tous les profs : ${LESSON_DURATIONS.map((d) => `${d.label} ${d.priceEur} €`).join(", ")}.`],
+  ["Combien coûte un cours ?", `Le même prix chez tous les profs : ${LESSON_DURATIONS.map((d) => `${d.label} ${d.priceEur} €`).join(", ")}. Un cours en direct (sans réservation) coûte ${LATE_SURCHARGE_EUR} € de plus s'il commence entre ${LATE_START_HOUR} h et ${LATE_END_HOUR} h.`],
+  ["C'est quoi un cours en direct ?", "Tu choisis un prof marqué « en ligne » et tu demandes un cours tout de suite, sans réserver. Dès qu'il accepte, la salle s'ouvre."],
   ["Comment je paie ?", "Tu recharges ton solde par WhatsApp, virement ou Revolut (à partir de 50 €, un bonus est offert). Le prix du cours est débité à la réservation, et ton solde n'expire jamais."],
   ["Et si je dois annuler ?", `Tant que le prof n'a pas confirmé, ou jusqu'à ${FREE_CANCEL_HOURS} h avant le cours, tu es remboursé intégralement. Si c'est le prof qui annule, tu es toujours remboursé.`],
   ["Quels niveaux ?", "Du collège au master : chaque prof indique ses matières et ses niveaux sur son profil."],

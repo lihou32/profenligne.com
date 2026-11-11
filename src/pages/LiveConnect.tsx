@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useTutors, useLessons, useTutorLessons } from "@/hooks/useData";
 import { useAuth } from "@/hooks/useAuth";
-import { isRoomOpen } from "@/lib/credits";
+import { LATE_START_HOUR, LATE_SURCHARGE_EUR, isRoomOpen } from "@/lib/credits";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 
@@ -18,14 +18,8 @@ const statusColors: Record<string, string> = {
   offline: "bg-muted-foreground",
 };
 
-const statusLabels: Record<string, string> = {
-  online: "En ligne",
-  busy: "Occupé",
-  offline: "Hors ligne",
-};
-
 export default function LiveConnect() {
-  useDocumentTitle("LiveConnect");
+  useDocumentTitle("Cours en direct");
   const { data: tutors } = useTutors();
   const { hasRole } = useAuth();
   const isTutor = hasRole("tutor");
@@ -34,6 +28,7 @@ export default function LiveConnect() {
   const lessons = isTutor ? tutorLessons : studentLessons;
   const [search, setSearch] = useState("");
   const [bookingTutorId, setBookingTutorId] = useState<string | null>(null);
+  const [bookingInstant, setBookingInstant] = useState(false);
 
   // Cours en cours, ou confirmés dont la salle est ouverte
   const activeLessons = (lessons || []).filter(
@@ -57,7 +52,7 @@ export default function LiveConnect() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle="Rejoins ton cours quand la salle est ouverte, ou réserve avec un prof disponible." actions={<BookLessonDialog />} />
+      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle={<>Prends un cours tout de suite avec un prof en ligne (⚡ En direct), ou réserve un créneau. Après {LATE_START_HOUR} h, un cours en direct coûte {LATE_SURCHARGE_EUR} € de plus.</>} actions={<BookLessonDialog />} />
 
       {/* Sessions en cours */}
       <Card className="glass-card">
@@ -147,14 +142,15 @@ export default function LiveConnect() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={tutor.status === "online" ? "default" : "secondary"}
-                  disabled={tutor.status === "offline"}
-                  onClick={() => tutor.status !== "offline" && setBookingTutorId(tutor.user_id)}
-                >
-                  {statusLabels[tutor.status] === "En ligne" ? "Réserver" : statusLabels[tutor.status] || "Hors ligne"}
-                </Button>
+                {tutor.status === "online" ? (
+                  <Button size="sm" onClick={() => { setBookingInstant(true); setBookingTutorId(tutor.user_id) }}>
+                    ⚡ En direct
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => { setBookingInstant(false); setBookingTutorId(tutor.user_id) }}>
+                    Réserver
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -166,6 +162,7 @@ export default function LiveConnect() {
         <BookLessonDialog
           defaultTutorId={bookingTutorId}
           defaultOpen={true}
+          instant={bookingInstant}
           onClose={() => setBookingTutorId(null)}
         />
       )}

@@ -45,6 +45,25 @@ export const LESSON_DURATIONS = [
 /** Prix le plus bas (pour « dès 15 € »). */
 export const MIN_LESSON_PRICE_EUR = LESSON_DURATIONS[0].priceEur;
 
+/** Cours en direct (sans réservation) : supplément le soir — même règle que public.late_surcharge_cents. */
+export const LATE_SURCHARGE_EUR = 5;
+export const LATE_START_HOUR = 21;
+export const LATE_END_HOUR = 6;
+/** Un cours « en direct » commence dans les N minutes. */
+export const INSTANT_WINDOW_MINUTES = 15;
+
+/** Heure de Paris (0–23) d'un instant donné. */
+export function parisHour(at: Date = new Date()): number {
+  return Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Paris" }).format(at));
+}
+
+/** Supplément d'un cours en direct (5 € entre 21 h et 6 h, heure de Paris), 0 sinon. */
+export function lateSurchargeEur(instant: boolean, at: Date = new Date()): number {
+  if (!instant) return 0;
+  const h = parisHour(at);
+  return h >= LATE_START_HOUR || h < LATE_END_HOUR ? LATE_SURCHARGE_EUR : 0;
+}
+
 /** Prix d'un cours selon sa durée (0 si la durée n'existe pas). */
 export function lessonPriceEur(durationMinutes: number): number {
   return LESSON_DURATIONS.find((d) => d.value === durationMinutes)?.priceEur ?? 0;

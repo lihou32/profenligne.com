@@ -120,6 +120,9 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
                   {formatEur(lessonPaidEur(lesson))}
                 </span>
               )}
+              {lesson.is_instant && (
+                <span className="rounded-full border-[1.5px] border-ink-2 bg-sun px-2 py-px text-[11px] font-bold text-ink-2">⚡ En direct</span>
+              )}
             </div>
           </div>
         </div>

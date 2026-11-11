@@ -196,6 +196,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -205,6 +206,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string
@@ -216,6 +218,7 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_instant?: boolean
           notes?: string | null
           price_cents?: number
           rating?: number | null
@@ -225,6 +228,7 @@ export type Database = {
           status?: string
           student_id: string
           subject: string
+          surcharge_cents?: number
           topic?: string | null
           tutor_id: string
           updated_at?: string
@@ -236,6 +240,7 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_instant?: boolean
           notes?: string | null
           price_cents?: number
           rating?: number | null
@@ -245,6 +250,7 @@ export type Database = {
           status?: string
           student_id?: string
           subject?: string
+          surcharge_cents?: number
           topic?: string | null
           tutor_id?: string
           updated_at?: string
@@ -977,6 +983,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -986,6 +993,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string
@@ -1014,6 +1022,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -1023,6 +1032,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string
@@ -1045,6 +1055,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -1054,6 +1065,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string
@@ -1076,6 +1088,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -1085,6 +1098,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string
@@ -1102,6 +1116,13 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      late_surcharge_cents: {
+        Args: {
+          _starts_at: string
+          _instant: boolean
+        }
+        Returns: number
       }
       lesson_price_cents: {
         Args: {
@@ -1182,6 +1203,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_instant: boolean
           notes: string | null
           price_cents: number
           rating: number | null
@@ -1191,6 +1213,7 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
           updated_at: string

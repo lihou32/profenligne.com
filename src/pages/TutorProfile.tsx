@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { SEO } from "@/components/SEO"
-import { FREE_CANCEL_HOURS, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR, formatEur, lessonPriceEur } from "@/lib/credits"
+import { FREE_CANCEL_HOURS, LATE_START_HOUR, LATE_SURCHARGE_EUR, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR, formatEur, lessonPriceEur } from "@/lib/credits"
 import { cn } from "@/lib/utils"
 
 const STATUS: Record<string, { label: string; cls: string; dot: string }> = {
@@ -33,6 +33,7 @@ export default function TutorProfile() {
   const navigate = useNavigate()
   const { user, hasRole } = useAuth()
   const [bookingOpen, setBookingOpen] = useState(false)
+  const [instantOpen, setInstantOpen] = useState(false)
   const [params, setParams] = useSearchParams()
   const [duration, setDuration] = useState(60)
 
@@ -97,6 +98,7 @@ export default function TutorProfile() {
   const dist = [5, 4, 3, 2, 1].map((n) => ({ n, c: reviews.filter((r) => r.rating === n).length }))
   const seoSubjects = (tutor.subjects ?? []).slice(0, 3).join(", ")
 
+  const isOnline = tutor.status === "online"
   const book = () => {
     // Après inscription ou connexion, on revient ici et la réservation s'ouvre (?book=1)
     if (!user) { navigate("/signup", { state: { from: `/tutors/${tutor.user_id}?book=1` } }); return }
@@ -211,9 +213,17 @@ export default function TutorProfile() {
           ) : user && !isStudent ? (
             <p className="mt-5 rounded-2xl bg-white/60 p-3 text-center text-sm text-muted-foreground">La réservation est réservée aux comptes élèves.</p>
           ) : (
-            <Button size="lg" className="mt-5 w-full" onClick={book} disabled={!!user && !canBook}>
-              <CalendarCheck /> {user ? "Réserver un cours" : "Créer un compte pour réserver"}
-            </Button>
+            <>
+              {isOnline && canBook && (
+                <Button size="lg" variant="highlight" className="mt-5 w-full" onClick={() => setInstantOpen(true)}>
+                  ⚡ Cours en direct maintenant
+                </Button>
+              )}
+              <Button size="lg" variant={isOnline && canBook ? "outline" : "default"} className={cn("w-full", isOnline && canBook ? "mt-2.5" : "mt-5")} onClick={book} disabled={!!user && !canBook}>
+                <CalendarCheck /> {user ? "Réserver un créneau" : "Créer un compte pour réserver"}
+              </Button>
+              {isOnline && <p className="mt-2 text-center text-xs text-muted-foreground">En direct après {LATE_START_HOUR} h : +{LATE_SURCHARGE_EUR} €</p>}
+            </>
           )}
           <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground">
             <li className="flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-mint" />Annulation gratuite jusqu'à {FREE_CANCEL_HOURS} h avant</li>
@@ -224,6 +234,7 @@ export default function TutorProfile() {
       </div>
 
       {canBook && <BookLessonDialog defaultTutorId={tutor.user_id} defaultOpen={bookingOpen} onClose={() => setBookingOpen(false)} trigger={<span className="hidden" />} />}
+      {canBook && instantOpen && <BookLessonDialog instant defaultTutorId={tutor.user_id} defaultOpen onClose={() => setInstantOpen(false)} trigger={<span className="hidden" />} />}
     </div>
   )
 }
