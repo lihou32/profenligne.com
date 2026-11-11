@@ -13,8 +13,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Instrument Sans Variable"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Bricolage Grotesque Variable"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -42,12 +42,24 @@ export default {
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
         warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
         info: { DEFAULT: "hsl(var(--info))", foreground: "hsl(var(--info-foreground))" },
-        gold: { DEFAULT: "hsl(var(--gold))", foreground: "hsl(var(--gold-foreground))" },
+        gold: { DEFAULT: "hsl(var(--gold))", foreground: "hsl(var(--gold-foreground))", soft: "hsl(var(--gold-soft))" },
+        ink: { DEFAULT: "hsl(var(--ink))", 2: "hsl(var(--ink-2))", 3: "hsl(var(--ink-3))" },
+        hl: { DEFAULT: "hsl(var(--hl))", soft: "hsl(var(--hl-soft))" },
+        peri: { DEFAULT: "hsl(var(--peri))", soft: "hsl(var(--peri-soft))" },
+        mint: { DEFAULT: "hsl(var(--mint))", soft: "hsl(var(--mint-soft))" },
+        rose: { DEFAULT: "hsl(var(--rose))", soft: "hsl(var(--rose-soft))" },
+        sky: { DEFAULT: "hsl(var(--sky))", soft: "hsl(var(--sky-soft))" },
       },
       borderRadius: {
+        "4xl": "2rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
+        ink: "0 8px 22px hsl(233 52% 20% / 0.22)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

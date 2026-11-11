@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -128,11 +129,8 @@ export default function AdminPanel() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Panel Admin</h1>
-        <p className="text-muted-foreground">Gérez votre plateforme</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader eyebrow="Administration" title="Pilotage" subtitle="Paiements à valider, profs, cours et inscrits." />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (

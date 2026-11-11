@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,15 +55,9 @@ export default function LiveConnect() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display"><span className="gradient-text">LiveConnect</span></h1>
-          <p className="text-muted-foreground">Rejoignez un cours en direct ou réservez avec un tuteur</p>
-        </div>
-        <BookLessonDialog />
-      </div>
+      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle="Rejoins ton cours quand la salle est ouverte, ou réserve avec un prof disponible." actions={<BookLessonDialog />} />
 
       {/* Sessions en cours */}
       <Card className="glass-card">

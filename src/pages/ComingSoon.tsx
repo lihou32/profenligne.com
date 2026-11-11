@@ -75,15 +75,15 @@ const ComingSoon = () => {
   ];
 
   return (
-    <div className="min-h-screen mesh-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-[120px] float" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-accent/10 blur-[120px] float" style={{ animationDelay: "3s" }} />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-[120px]" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-accent/10 blur-[120px]" style={{ animationDelay: "3s" }} />
 
       <div className="relative z-10 w-full max-w-lg flex flex-col items-center gap-8">
         {/* Logo / Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center glow">
+          <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
             <Rocket className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -173,7 +173,7 @@ const ComingSoon = () => {
                 </RadioGroup>
               </div>
 
-              <Button type="submit" className="w-full gradient-primary btn-glow" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Inscription…" : "Je me préinscris"}
               </Button>
             </form>

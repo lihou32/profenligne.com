@@ -15,11 +15,11 @@ import { useCancelLesson, useConfirmLesson, type Lesson } from "@/hooks/useData"
 import { FREE_CANCEL_HOURS, ROOM_OPEN_MINUTES_BEFORE, friendlyError, isFreeCancellation, isRoomOpen } from "@/lib/credits";
 
 export const LESSON_STATUS: Record<string, { label: string; className: string }> = {
-  pending: { label: "En attente", className: "bg-warning/15 text-warning border-warning/30" },
-  confirmed: { label: "Confirmé", className: "bg-info/15 text-info border-info/30" },
-  in_progress: { label: "En cours", className: "bg-primary/15 text-primary border-primary/30" },
-  completed: { label: "Terminé", className: "bg-success/15 text-success border-success/30" },
-  cancelled: { label: "Annulé", className: "bg-muted-foreground/15 text-muted-foreground border-muted-foreground/30" },
+  pending: { label: "En attente", className: "border-transparent bg-hl-soft text-gold-foreground" },
+  confirmed: { label: "Confirmé", className: "border-transparent bg-peri-soft text-ink" },
+  in_progress: { label: "En cours", className: "border-transparent bg-rose-soft text-rose" },
+  completed: { label: "Terminé", className: "border-transparent bg-mint-soft text-success" },
+  cancelled: { label: "Annulé", className: "border-transparent bg-ink/5 text-muted-foreground" },
 };
 
 export function formatDuration(minutes: number) {
@@ -82,26 +82,23 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
   const cancelLabel = viewer === "tutor" && lesson.status === "pending" ? "Refuser" : "Annuler";
 
   return (
-    <Card
-      className="glass-card transition-all duration-200 hover:border-primary/20 group animate-fade-in"
-      style={{ animationDelay: `${index * 60}ms` }}
-    >
+    <Card className="reveal lift group" style={{ transitionDelay: `${Math.min(index, 6) * 50}ms` }}>
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           {counterpart !== undefined ? (
-            <Avatar className="h-12 w-12 shrink-0">
+            <Avatar className="h-12 w-12 shrink-0 rounded-2xl">
               {counterpart?.avatar_url && <AvatarImage src={counterpart.avatar_url} alt={name} />}
-              <AvatarFallback className="gradient-primary text-primary-foreground font-bold">
+              <AvatarFallback className="rounded-2xl bg-peri-soft font-display font-extrabold text-ink">
                 {(counterpart?.first_name?.[0] || fallbackName[0]).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           ) : (
-            <div className="gradient-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-md">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-hl-soft">
+              <BookOpen className="h-6 w-6 text-ink" />
             </div>
           )}
           <div className="min-w-0">
-            <h3 className="truncate font-semibold">
+            <h3 className="truncate text-base font-extrabold">
               {lesson.subject}
               {counterpart !== undefined && (
                 <span className="font-normal text-muted-foreground"> · {name || fallbackName}</span>
@@ -131,7 +128,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           <Badge className={`rounded-full px-3 ${status.className}`} variant="outline">{status.label}</Badge>
 
           {viewer === "tutor" && lesson.status === "pending" && !isPast && (
-            <Button size="sm" className="rounded-xl gradient-primary text-primary-foreground text-xs" onClick={handleConfirm} disabled={busy}>
+            <Button size="sm" className="text-xs" onClick={handleConfirm} disabled={busy}>
               <CheckCircle2 className="mr-1 h-3 w-3" /> Accepter
             </Button>
           )}
@@ -139,7 +136,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           {canCancel && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="rounded-xl text-destructive hover:bg-destructive/10 text-xs" disabled={busy}>
+                <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 text-xs" disabled={busy}>
                   <XCircle className="mr-1 h-3 w-3" /> {cancelLabel}
                 </Button>
               </AlertDialogTrigger>
@@ -165,7 +162,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           )}
 
           {canJoin && (
-            <Button size="sm" className="rounded-xl gradient-primary text-primary-foreground btn-glow text-xs" asChild>
+            <Button size="sm" className="text-xs" asChild>
               <Link to={`/room/${lesson.id}`}>
                 <Video className="mr-1 h-3 w-3" /> {viewer === "tutor" && lesson.status === "confirmed" ? "Démarrer" : "Rejoindre"}
               </Link>
@@ -178,7 +175,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           )}
 
           {lesson.status === "completed" && (
-            <Button size="sm" variant="ghost" className="rounded-xl text-primary hover:text-primary/80" asChild>
+            <Button size="sm" variant="ghost" className="text-primary hover:text-primary/80" asChild>
               <Link to={`/report/${lesson.id}`}>{viewer === "student" ? "Rapport & avis" : "Rapport"}</Link>
             </Button>
           )}

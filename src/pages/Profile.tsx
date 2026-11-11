@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,11 +146,8 @@ export default function Profile() {
   const initials = `${(firstName?.[0] || "").toUpperCase()}${(lastName?.[0] || "").toUpperCase()}` || "U";
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold font-display gradient-text">Mon Profil</h1>
-        <p className="text-sm text-muted-foreground mt-1">Modifiez vos informations personnelles</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader eyebrow="Profil" title="Ton profil" subtitle="Ce que les profs et les élèves voient de toi." />
 
       {/* Avatar Section */}
       <Card className="glass-card">
@@ -277,7 +275,7 @@ export default function Profile() {
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+            className="w-full h-12"
           >
             {isSaving ? (
               <span className="flex items-center gap-2">

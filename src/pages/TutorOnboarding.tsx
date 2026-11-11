@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Backdrop } from "@/components/brand/Backdrop";
+import { Logo } from "@/components/brand/Logo";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,20 +84,14 @@ export default function TutorOnboarding() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden mesh-bg">
-      <div className="absolute top-[-10%] left-[-10%] h-[450px] w-[450px] rounded-full bg-gradient-to-br from-accent/15 to-primary/10 blur-[90px] float" />
-      <div className="absolute bottom-[-10%] right-[-10%] h-[400px] w-[400px] rounded-full bg-gradient-to-tr from-info/15 to-primary/10 blur-[80px] float" style={{ animationDelay: "3s" }} />
-
-      <div className="relative w-full max-w-lg animate-scale-in">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <Backdrop variant="landing" />
+      <div className="relative w-full max-w-lg animate-[fadeup_.6s_cubic-bezier(.2,.7,.2,1)]">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 gradient-primary inline-flex h-16 w-16 items-center justify-center rounded-2xl glow">
-            <GraduationCap className="h-9 w-9 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold font-display gradient-text">Devenir Professeur</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Complétez votre profil pour apparaître dans la marketplace
-          </p>
+          <div className="mb-6 flex justify-center"><Logo /></div>
+          <h1 className="text-[2rem] leading-tight">Ton profil de <span className="hl-mark">prof</span></h1>
+          <p className="mt-1 text-muted-foreground">Trois étapes, et tu apparais dans la liste des profs.</p>
         </div>
 
         {/* Stepper */}
@@ -105,10 +101,10 @@ export default function TutorOnboarding() {
               <div
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   i === step
-                    ? "gradient-primary text-primary-foreground shadow-lg"
+                    ? "bg-primary text-white shadow-ink"
                     : i < step
-                    ? "bg-success/20 text-success"
-                    : "bg-secondary/50 text-muted-foreground"
+                    ? "bg-mint-soft text-success"
+                    : "bg-white/60 text-muted-foreground"
                 }`}
               >
                 {i < step ? (
@@ -125,11 +121,11 @@ export default function TutorOnboarding() {
           ))}
         </div>
 
-        <Card className="glass-card">
+        <Card className="glass-strong">
           <CardContent className="p-6 md:p-8">
             {/* Step 0: Subjects */}
             {step === 0 && (
-              <div className="space-y-5 animate-fade-in">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Quelles matières enseignez-vous ?</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -172,7 +168,7 @@ export default function TutorOnboarding() {
 
             {/* Step 1: Hourly Rate */}
             {step === 1 && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-6">
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Quel est votre tarif horaire ?</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -182,7 +178,7 @@ export default function TutorOnboarding() {
 
                 <div className="flex flex-col items-center gap-6 py-4">
                   <div className="text-center">
-                    <span className="text-5xl font-bold gradient-text tabular-nums">{hourlyRate}</span>
+                    <span className="display text-5xl text-ink-2 tabular-nums">{hourlyRate}</span>
                     <span className="text-2xl text-muted-foreground ml-1">€/h</span>
                   </div>
 
@@ -229,7 +225,7 @@ export default function TutorOnboarding() {
 
             {/* Step 2: Bio */}
             {step === 2 && (
-              <div className="space-y-5 animate-fade-in">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Présentez-vous aux élèves</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -285,7 +281,7 @@ export default function TutorOnboarding() {
                 <Button
                   onClick={() => setStep(step + 1)}
                   disabled={!canNext()}
-                  className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+                  className="flex-1" size="lg"
                 >
                   Suivant
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -294,7 +290,7 @@ export default function TutorOnboarding() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!canNext() || isSubmitting}
-                  className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+                  className="flex-1 h-12"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, Mail, MessageCircle } from "lucide-react";
@@ -18,11 +19,8 @@ const faqs = [
 export default function Help() {
   useDocumentTitle("Centre d'aide");
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Centre d'aide</h1>
-        <p className="mt-2 text-muted-foreground">Trouvez des réponses à vos questions</p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader eyebrow="Aide" title="Comment on peut t'aider ?" subtitle="Les réponses aux questions les plus fréquentes." />
 
       <Card className="glass-card">
         <CardHeader>
@@ -56,7 +54,7 @@ export default function Help() {
                 Email
               </a>
             </Button>
-            <Button className="gradient-primary text-primary-foreground" asChild>
+            <Button asChild>
               <a href="mailto:support@profenligne.fr?subject=Aide - Prof en Ligne">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Nous contacter

@@ -1,382 +1,218 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-  Star,
-  BookOpen,
-  Clock,
-  Euro,
-  CheckCircle,
-  ChevronLeft,
-  Calendar,
-  MessageSquare,
-} from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { SEO } from "@/components/SEO";
+import { useState } from "react"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
+import { CalendarCheck, ChevronLeft, MessageSquareQuote, ShieldCheck, Star, Video } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
+import { BookLessonDialog } from "@/components/lessons/BookLessonDialog"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { SEO } from "@/components/SEO"
+import { CREDIT_VALUE_EUR, FREE_CANCEL_HOURS, LESSON_DURATIONS, lessonCreditCost } from "@/lib/credits"
+import { cn } from "@/lib/utils"
 
-// ─── Star rating ─────────────────────────────────────────
-
-function StarRating({
-  rating,
-  onRate,
-  interactive = false,
-}: {
-  rating: number;
-  onRate?: (r: number) => void;
-  interactive?: boolean;
-}) {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i <= rating ? "fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" : "text-muted-foreground/30"
-          } ${interactive ? "cursor-pointer hover:scale-110 transition-transform" : ""}`}
-          onClick={() => interactive && onRate?.(i)}
-        />
-      ))}
-    </div>
-  );
+const STATUS: Record<string, { label: string; cls: string; dot: string }> = {
+  online: { label: "Disponible maintenant", cls: "bg-mint-soft text-success", dot: "bg-mint" },
+  busy: { label: "Occupé", cls: "bg-hl-soft text-gold-foreground", dot: "bg-hl" },
+  offline: { label: "Hors ligne", cls: "bg-ink/5 text-muted-foreground", dot: "bg-ink/30" },
 }
 
-// ─── Status badge ─────────────────────────────────────────
-
-const statusConfig: Record<string, { label: string; className: string }> = {
-  online: { label: "Disponible", className: "bg-[hsl(var(--success)/0.15)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.3)]" },
-  busy: { label: "Occupé", className: "bg-[hsl(var(--warning)/0.15)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)]" },
-  offline: { label: "Hors ligne", className: "bg-muted text-muted-foreground border-border" },
-  suspended: { label: "Suspendu", className: "bg-destructive/10 text-destructive border-destructive/30" },
-};
+function Stars({ value, size = "h-4 w-4" }: { value: number; size?: string }) {
+  return (
+    <span className="flex gap-0.5" aria-label={`${value} sur 5`}>
+      {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={cn(size, i <= Math.round(value) ? "fill-hl text-hl" : "text-ink/15")} />)}
+    </span>
+  )
+}
 
 export default function TutorProfile() {
-  useDocumentTitle("Profil du professeur");
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  useDocumentTitle("Profil du prof")
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { user, hasRole } = useAuth()
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [duration, setDuration] = useState(60)
 
-  const [bookingOpen, setBookingOpen] = useState(false);
-
-  // Fetch tutor + profile
   const { data: tutor, isLoading, isFetching } = useQuery({
     queryKey: ["public-tutor", id],
     enabled: !!id,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: t, error } = await supabase
-        .from("tutors")
-        .select("*")
-        .eq("user_id", id!)
-        .maybeSingle();
-      if (error) throw error;
-      if (!t) return null;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id, first_name, last_name, avatar_url, bio")
-        .eq("user_id", id!)
-        .maybeSingle();
-
-      return { ...t, profile };
+      const { data: t, error } = await supabase.from("tutors").select("*").eq("user_id", id!).maybeSingle()
+      if (error) throw error
+      if (!t) return null
+      const { data: profile } = await supabase.from("profiles").select("user_id, first_name, last_name, avatar_url, bio").eq("user_id", id!).maybeSingle()
+      return { ...t, profile }
     },
-  });
+  })
 
-  // Fetch reviews for this tutor with student names
-  const { data: reviews } = useQuery({
+  const { data: reviews = [] } = useQuery({
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("id, rating, comment, created_at, student_id")
-        .eq("tutor_id", id!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      if (!data || data.length === 0) return [];
-
-      // Fetch student names
-      const studentIds = [...new Set(data.map((r) => r.student_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, first_name")
-        .in("user_id", studentIds);
-      const nameMap = new Map((profiles ?? []).map((p) => [p.user_id, p.first_name || "Élève"]));
-
-      return data.map((r) => ({
-        ...r,
-        student_name: nameMap.get(r.student_id) || "Élève",
-      }));
+      const { data, error } = await supabase.from("reviews").select("id, rating, comment, created_at, student_id")
+        .eq("tutor_id", id!).order("created_at", { ascending: false })
+      if (error) throw error
+      if (!data?.length) return []
+      const ids = [...new Set(data.map((r) => r.student_id))]
+      const { data: profiles } = await supabase.from("profiles").select("user_id, first_name").in("user_id", ids)
+      const names = new Map((profiles ?? []).map((p) => [p.user_id, p.first_name || "Élève"]))
+      return data.map((r) => ({ ...r, student_name: names.get(r.student_id) || "Élève" }))
     },
-  });
+  })
 
-  const avgRating = reviews?.length
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-    : 0;
-
-  // ── Loading / not found ──────────────────────────────────
-
-  // Only show spinner when actively fetching (avoids infinite spinner if query is disabled or id is missing)
   if (!id || (isLoading && isFetching)) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+    return <div className="grid gap-4 pt-6 lg:grid-cols-[1fr_360px] [&>*]:min-w-0"><div className="glass h-80 animate-pulse" /><div className="glass h-80 animate-pulse" /></div>
   }
-
   if (!tutor) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <p className="text-muted-foreground text-lg">Professeur introuvable.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          <ChevronLeft className="mr-2 h-4 w-4" />Retour
-        </Button>
+      <div className="flex flex-col items-center gap-4 py-28 text-center">
+        <h1 className="text-2xl">Prof introuvable</h1>
+        <p className="text-muted-foreground">Ce profil n'existe pas ou n'est plus visible.</p>
+        <Button asChild variant="outline"><Link to="/tutors">Voir les profs</Link></Button>
       </div>
-    );
+    )
   }
 
-  const profile = tutor.profile;
-  const fullName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-    : "Professeur";
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "P";
-  const statusInfo = statusConfig[tutor.status] ?? statusConfig.offline;
-  const isStudent = user && hasRole("student");
-  const seoSubjects = (tutor.subjects || []).slice(0, 3).join(", ");
+  const p = tutor.profile
+  const fullName = [p?.first_name, p?.last_name].filter(Boolean).join(" ") || "Prof"
+  const initials = `${p?.first_name?.[0] ?? "P"}${p?.last_name?.[0] ?? ""}`.toUpperCase()
+  const status = STATUS[tutor.status] ?? STATUS.offline
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
+  const rate = Number(tutor.hourly_rate) || 0
+  const cost = lessonCreditCost(rate, duration)
+  const isStudent = !!user && hasRole("student")
+  const isSelf = user?.id === tutor.user_id
+  const canBook = isStudent && !tutor.is_suspended && !isSelf
+  const dist = [5, 4, 3, 2, 1].map((n) => ({ n, c: reviews.filter((r) => r.rating === n).length }))
+  const seoSubjects = (tutor.subjects ?? []).slice(0, 3).join(", ")
+
+  const book = () => {
+    if (!user) { navigate("/signup", { state: { from: `/tutors/${tutor.user_id}` } }); return }
+    setBookingOpen(true)
+  }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-fade-in pb-16">
-      <SEO
-        title={`${fullName} — Professeur ${seoSubjects}`}
-        description={`Réservez un cours avec ${fullName}. ${seoSubjects ? `Matières : ${seoSubjects}.` : ""} Note : ${avgRating.toFixed(1)}/5 (${reviews?.length ?? 0} avis). À partir de ${tutor.hourly_rate || "–"}€/h.`}
-        path={`/tutor/${id}`}
-        type="profile"
-      />
-      {/* Back */}
-      <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => navigate(-1)}>
-        <ChevronLeft className="h-4 w-4" />
-        Retour
-      </Button>
+    <div className="space-y-6 pb-12">
+      <SEO title={`${fullName} — prof de ${seoSubjects}`} path={`/tutors/${id}`} type="profile"
+        description={`Réserve un cours avec ${fullName}.${seoSubjects ? ` Matières : ${seoSubjects}.` : ""} ${rate ? `${rate} € de l'heure.` : ""}`} />
 
-      {/* Hero card */}
-      <Card className="glass-card overflow-hidden">
-        {/* Gradient banner */}
-        <div className="h-28 gradient-primary opacity-60" />
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-ink-2">
+        <ChevronLeft className="h-4 w-4" /> Retour
+      </button>
 
-        <CardContent className="relative pt-0 pb-6 px-6">
-          {/* Avatar */}
-          <div className="absolute -top-12 left-6 ring-4 ring-card rounded-full">
-            <Avatar className="h-24 w-24 text-3xl">
-              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={fullName} />}
-              <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-2xl">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-
-          {/* CTA */}
-          <div className="flex justify-end mb-2">
-            {isStudent && !tutor.is_suspended && (
-              <Button
-                className="gradient-primary text-primary-foreground shadow-lg"
-                onClick={() => setBookingOpen(true)}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Réserver un cours
-              </Button>
-            )}
-            {!user && (
-              <Button
-                className="gradient-primary text-primary-foreground"
-                onClick={() => navigate("/login")}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Se connecter pour réserver
-              </Button>
-            )}
-          </div>
-
-          {/* Identity */}
-          <div className="mt-8 space-y-1">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold font-display">{fullName || "Professeur"}</h1>
-              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusInfo.className}`}>
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                {statusInfo.label}
-              </span>
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_360px] [&>*]:min-w-0">
+        <div className="space-y-5">
+          {/* Identité */}
+          <section className="glass reveal overflow-hidden rounded-[1.75rem]">
+            <div className="h-28 bg-gradient-to-br from-peri-soft via-hl-soft to-mint-soft" />
+            <div className="px-6 pb-6 sm:px-8">
+              <div className="-mt-12 flex flex-wrap items-end gap-4">
+                {p?.avatar_url
+                  ? <img src={p.avatar_url} alt="" className="h-24 w-24 rounded-3xl object-cover ring-4 ring-white" />
+                  : <span className="grid h-24 w-24 place-items-center rounded-3xl bg-white font-display text-3xl font-extrabold text-ink ring-4 ring-white [&>*]:min-w-0">{initials}</span>}
+                <span className={cn("mb-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold", status.cls)}>
+                  <span className={cn("h-2 w-2 rounded-full", status.dot)} />{status.label}
+                </span>
+              </div>
+              <h1 className="mt-4 text-[2rem] leading-tight">{fullName}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                {reviews.length > 0
+                  ? <span className="flex items-center gap-2"><Stars value={avg} /><b className="text-ink-2">{avg.toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">· {reviews.length} avis</span></span>
+                  : <span className="rounded-full bg-peri-soft px-2.5 py-1 text-xs font-bold text-ink">Nouveau sur Prof en Ligne</span>}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {(tutor.subjects ?? []).map((s) => <Link key={s} to={`/tutors?subject=${encodeURIComponent(s)}`} className="rounded-full bg-white/80 px-3 py-1.5 text-sm font-bold text-ink hover:bg-hl-soft">{s}</Link>)}
+              </div>
+              {p?.bio && <p className="mt-5 whitespace-pre-line leading-relaxed text-ink/80">{p.bio}</p>}
             </div>
+          </section>
 
-            {/* Stars */}
-            <div className="flex items-center gap-2">
-              <StarRating rating={Math.round(avgRating)} />
-              <span className="text-sm text-muted-foreground">
-                {avgRating.toFixed(1)} · {reviews?.length ?? 0} avis
-              </span>
-            </div>
-          </div>
-
-          {/* Bio */}
-          {profile?.bio && (
-            <p className="mt-4 text-muted-foreground leading-relaxed">{profile.bio}</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="glass-card">
-          <CardContent className="flex flex-col items-center justify-center gap-1 py-5">
-            <Euro className="h-5 w-5 text-primary mb-1" />
-            <span className="text-2xl font-bold">
-              {tutor.hourly_rate ? `${tutor.hourly_rate}€` : "–"}
-            </span>
-            <span className="text-xs text-muted-foreground">/ heure</span>
-          </CardContent>
-        </Card>
-        <Card className="glass-card">
-          <CardContent className="flex flex-col items-center justify-center gap-1 py-5">
-            <Star className="h-5 w-5 text-[hsl(var(--gold))] mb-1" />
-            <span className="text-2xl font-bold">{avgRating.toFixed(1)}</span>
-            <span className="text-xs text-muted-foreground">{reviews?.length ?? 0} avis</span>
-          </CardContent>
-        </Card>
-        <Card className="glass-card">
-          <CardContent className="flex flex-col items-center justify-center gap-1 py-5">
-            <BookOpen className="h-5 w-5 text-accent mb-1" />
-            <span className="text-2xl font-bold">{(tutor.subjects || []).length}</span>
-            <span className="text-xs text-muted-foreground">matières</span>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Subjects */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <BookOpen className="h-4 w-4 text-primary" />
-            Matières enseignées
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {(tutor.subjects || []).map((s: string) => (
-            <Badge key={s} variant="secondary" className="rounded-full px-3 py-1 text-sm">
-              <CheckCircle className="mr-1.5 h-3 w-3 text-primary" />
-              {s}
-            </Badge>
-          ))}
-          {(!tutor.subjects || tutor.subjects.length === 0) && (
-            <p className="text-sm text-muted-foreground">Aucune matière renseignée</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Reviews */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MessageSquare className="h-4 w-4 text-primary" />
-            Avis élèves
-            <span className="ml-auto text-sm font-normal text-muted-foreground">
-              {reviews?.length ?? 0} avis · {avgRating.toFixed(1)} / 5
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {(reviews ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Aucun avis pour le moment. Soyez le premier à laisser un avis !
-            </p>
-          )}
-          {(reviews ?? []).map((review) => (
-            <div key={review.id} className="rounded-xl bg-muted/30 p-4 space-y-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                    {(review.student_name?.[0] || "É").toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{review.student_name}</p>
-                  <div className="flex items-center gap-2">
-                    <StarRating rating={review.rating} />
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(review.created_at).toLocaleDateString("fr-FR", {
-                        day: "numeric", month: "long", year: "numeric",
-                      })}
-                    </span>
+          {/* Avis */}
+          <section className="glass reveal p-6 sm:p-8">
+            <h2 className="flex items-center gap-2 text-xl"><MessageSquareQuote className="h-5 w-5 text-peri" /> Avis des élèves</h2>
+            {reviews.length === 0 ? (
+              <p className="mt-4 rounded-2xl bg-white/50 px-4 py-8 text-center text-sm text-muted-foreground">
+                Pas encore d'avis. Seuls les élèves qui ont terminé un cours avec {p?.first_name ?? "ce prof"} peuvent en laisser un.
+              </p>
+            ) : (
+              <>
+                <div className="mt-5 grid gap-6 sm:grid-cols-[150px_1fr]">
+                  <div className="text-center sm:text-left">
+                    <p className="display text-5xl text-ink-2">{avg.toFixed(1).replace(".", ",")}</p>
+                    <Stars value={avg} />
+                    <p className="mt-1 text-sm text-muted-foreground">{reviews.length} avis vérifiés</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {dist.map(({ n, c }) => (
+                      <div key={n} className="flex items-center gap-3 text-sm">
+                        <span className="w-3 font-bold text-ink-2">{n}</span>
+                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-ink/8 bg-ink/[0.07]"><span className="block h-full rounded-full bg-hl" style={{ width: `${(c / reviews.length) * 100}%` }} /></span>
+                        <span className="w-6 text-right text-muted-foreground">{c}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-              {review.comment && (
-                <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
-              )}
-            </div>
-          ))}
+                <ul className="mt-6 space-y-3">
+                  {reviews.map((r) => (
+                    <li key={r.id} className="rounded-2xl bg-white/60 p-4">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-sm font-extrabold text-ink [&>*]:min-w-0">{r.student_name[0]?.toUpperCase()}</span>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-ink-2">{r.student_name}</p>
+                          <p className="text-xs text-muted-foreground">{format(new Date(r.created_at), "d MMMM yyyy", { locale: fr })}</p>
+                        </div>
+                        <Stars value={r.rating} size="h-3.5 w-3.5" />
+                      </div>
+                      {r.comment && <p className="mt-3 text-sm leading-relaxed text-ink/80">{r.comment}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </div>
 
-          {/* Note about verified reviews */}
-          {user && hasRole("student") && (
+        {/* Réservation */}
+        <aside className="glass-strong reveal rounded-[1.75rem] p-6 lg:sticky lg:top-24">
+          <p className="display text-4xl text-ink-2">{rate ? `${rate} €` : "—"}<span className="text-base font-semibold text-muted-foreground"> / heure</span></p>
+          {rate > 0 && (
             <>
-              <Separator className="my-4" />
-              <p className="text-sm text-muted-foreground text-center py-2">
-                Les avis sont vérifiés — vous pouvez noter un professeur après chaque cours complété.
-              </p>
+              <p className="mt-5 text-sm font-semibold text-ink-2">Durée</p>
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
+                {LESSON_DURATIONS.map((d) => (
+                  <button key={d.value} onClick={() => setDuration(d.value)}
+                    className={cn("rounded-xl py-2 text-sm font-bold transition", duration === d.value ? "bg-primary text-white" : "bg-white/70 text-ink hover:bg-white")}>
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-2xl bg-hl-soft px-4 py-3">
+                <span className="text-sm text-muted-foreground">Coût du cours</span>
+                <span className="text-right"><b className="font-display text-lg text-ink-2">{cost} crédit{cost > 1 ? "s" : ""}</b><span className="block text-xs text-muted-foreground">{cost * CREDIT_VALUE_EUR} €</span></span>
+              </div>
             </>
           )}
-        </CardContent>
-      </Card>
+          {isSelf ? (
+            <Button asChild variant="outline" size="lg" className="mt-5 w-full"><Link to="/profile">Modifier mon profil</Link></Button>
+          ) : user && !isStudent ? (
+            <p className="mt-5 rounded-2xl bg-white/60 p-3 text-center text-sm text-muted-foreground">La réservation est réservée aux comptes élèves.</p>
+          ) : (
+            <Button size="lg" className="mt-5 w-full" onClick={book} disabled={!!user && !canBook}>
+              <CalendarCheck /> {user ? "Réserver un cours" : "Créer un compte pour réserver"}
+            </Button>
+          )}
+          <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground">
+            <li className="flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-mint" />Annulation gratuite jusqu'à {FREE_CANCEL_HOURS} h avant</li>
+            <li className="flex gap-2"><Video className="h-4 w-4 shrink-0 text-peri" />En visio, avec tableau blanc</li>
+            <li className="flex gap-2"><Star className="h-4 w-4 shrink-0 text-gold" />Tu pourras noter le cours ensuite</li>
+          </ul>
+        </aside>
+      </div>
 
-      {/* Bottom CTA */}
-      {isStudent && !tutor.is_suspended && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
-          <h3 className="text-lg font-semibold">Prêt à apprendre avec {fullName} ?</h3>
-          <p className="text-sm text-muted-foreground">
-            Réservez votre premier cours en quelques clics.
-          </p>
-          <Button
-            size="lg"
-            className="gradient-primary text-primary-foreground"
-            onClick={() => setBookingOpen(true)}
-          >
-            <Clock className="mr-2 h-5 w-5" />
-            Réserver maintenant
-          </Button>
-        </div>
-      )}
-      {!user && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
-          <h3 className="text-lg font-semibold">Envie de progresser avec {fullName} ?</h3>
-          <p className="text-sm text-muted-foreground">
-            Créez un compte gratuit pour réserver votre premier cours.
-          </p>
-          <Button
-            size="lg"
-            className="gradient-primary text-primary-foreground"
-            onClick={() => navigate("/signup")}
-          >
-            <Calendar className="mr-2 h-5 w-5" />
-            S'inscrire pour réserver
-          </Button>
-        </div>
-      )}
-
-      {/* Booking modal */}
-      {tutor && (
-        <BookLessonDialog
-          defaultTutorId={tutor.user_id}
-          defaultOpen={bookingOpen}
-          onClose={() => setBookingOpen(false)}
-        />
-      )}
+      {canBook && <BookLessonDialog defaultTutorId={tutor.user_id} defaultOpen={bookingOpen} onClose={() => setBookingOpen(false)} trigger={<span className="hidden" />} />}
     </div>
-  );
+  )
 }

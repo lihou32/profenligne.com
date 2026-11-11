@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -119,7 +120,7 @@ function PendingReview({ lessonId, title, subtitle }: { lessonId: string; title:
         placeholder="Qu'avez-vous pensé du cours ? (facultatif)"
         className="min-h-[70px]"
       />
-      <Button size="sm" className="gradient-primary text-primary-foreground" disabled={rating === 0 || createReview.isPending} onClick={submit}>
+      <Button size="sm" disabled={rating === 0 || createReview.isPending} onClick={submit}>
         {createReview.isPending ? "Envoi…" : "Publier mon avis"}
       </Button>
     </div>
@@ -144,11 +145,8 @@ export default function TutorReviews() {
     const reviews = received.data ?? [];
     const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
     return (
-      <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Mes avis</h1>
-          <p className="mt-1 text-muted-foreground">Ce que vos élèves disent de vos cours</p>
-        </div>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <PageHeader eyebrow="Avis" title="Ce que disent tes élèves" />
         <Card className="glass-card">
           <CardContent className="flex flex-wrap items-center gap-6 p-6">
             <div className="text-center">
@@ -181,14 +179,8 @@ export default function TutorReviews() {
 
   const myReviews = given.data ?? [];
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display">Mes avis sur les profs</h1>
-        <p className="mt-1 text-muted-foreground">
-          Notez vos cours terminés. Les avis des autres élèves sont visibles sur chaque{" "}
-          <Link to="/tutors" className="text-primary underline-offset-4 hover:underline">profil de prof</Link>.
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader eyebrow="Avis" title="Note tes cours" subtitle={<>Une note par cours terminé. Elle s'affiche sur le <Link to="/tutors" className="font-semibold text-peri hover:underline">profil du prof</Link>.</>} />
 
       <Card className="glass-card">
         <CardHeader className="pb-3">

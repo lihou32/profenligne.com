@@ -127,7 +127,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       ) : !defaultTutorId ? (
         <DialogTrigger asChild>
-          <Button className="gradient-primary text-primary-foreground">
+          <Button>
             <Plus className="mr-2 h-4 w-4" />
             Réserver un cours
           </Button>
@@ -229,7 +229,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
           <Button
             type="submit"
-            className="w-full gradient-primary text-primary-foreground"
+            className="w-full"
             disabled={createLesson.isPending || missing > 0}
           >
             {createLesson.isPending ? "Réservation…" : cost !== null ? `Réserver pour ${cost} crédit${cost > 1 ? "s" : ""}` : "Confirmer la réservation"}

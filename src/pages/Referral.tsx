@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -96,19 +97,9 @@ export default function Referral() {
   const referrals = stats?.referrals ?? []
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in pb-16">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="flex justify-center mb-4">
-          <div className="rounded-2xl bg-primary/10 p-5">
-            <Gift className="h-10 w-10 text-primary" />
-          </div>
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Parrainez vos amis</h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Invitez vos amis sur Prof en Ligne et gagnez <strong className="text-foreground">{REFERRAL_BONUS_CREDITS} crédits</strong> chacun dès qu'ils terminent leur premier cours !
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6 pb-16">
+      <PageHeader eyebrow="Parrainage" title={<>Invite tes amis, <span className="hl-mark">gagnez des crédits</span>.</>}
+        subtitle={<>{REFERRAL_BONUS_CREDITS} crédits chacun dès que ton ami termine son premier cours.</>} />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

@@ -48,7 +48,7 @@ export default function PaymentSuccess() {
   }, [confirmed, queryClient])
 
   return (
-    <div className="flex items-center justify-center px-4 py-16 animate-fade-in">
+    <div className="flex items-center justify-center px-4 py-16">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="flex justify-center">
           <div className="rounded-full bg-success/10 p-5">
@@ -89,7 +89,7 @@ export default function PaymentSuccess() {
         <div className="space-y-3">
           <Button
             onClick={() => navigate("/dashboard")}
-            className="w-full h-11 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+            className="w-full"
           >
             Retour au Dashboard
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -97,7 +97,7 @@ export default function PaymentSuccess() {
           <Button
             onClick={() => navigate("/tutors")}
             variant="outline"
-            className="w-full h-11 rounded-xl"
+            className="w-full"
           >
             <Users className="mr-2 h-4 w-4" />
             Trouver un tuteur

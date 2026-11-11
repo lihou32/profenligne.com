@@ -1,278 +1,156 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
-  LayoutDashboard, BookOpen, Video, Bell, HelpCircle,
-  LogOut, GraduationCap, Shield, Zap, Star,
-  DollarSign, CreditCard, Settings, Users, Award, Gift,
-} from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { XPBadge } from "@/components/gamification/XPBadge";
-import { useEffect } from "react";
+  LayoutDashboard, BookOpen, Video, HelpCircle, LogOut, Shield, Star,
+  Wallet, Coins, Settings, Search, Award, Gift, UserRound,
+} from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 import {
-  Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
-  SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator, useSidebar,
-} from "@/components/ui/sidebar";
-import { useUserCredits } from "@/hooks/useCredits";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
+} from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/useAuth"
+import { Logo } from "@/components/brand/Logo"
+import { cn } from "@/lib/utils"
 
-const studentPrincipalNav = [
-  { title: "Tableau de bord", icon: LayoutDashboard, path: "/dashboard" },
-  { title: "Mes Leçons", icon: BookOpen, path: "/lessons" },
-  { title: "Notifications", icon: Bell, path: "/notifications" },
-];
+type Item = { title: string; icon: React.ComponentType<{ className?: string }>; path: string }
 
-const studentApprentissageNav = [
-  { title: "Cours en direct", icon: Video, path: "/live" },
-  { title: "Trouver un prof", icon: Users, path: "/tutors" },
-  { title: "Avis Profs", icon: Star, path: "/reviews" },
-  { title: "Mes Certificats", icon: Award, path: "/certificates" },
-  { title: "Parrainage", icon: Gift, path: "/referral" },
-  { title: "Mes crédits", icon: CreditCard, path: "/credits" },
-];
+const STUDENT: { label: string; items: Item[] }[] = [
+  { label: "Apprendre", items: [
+    { title: "Accueil", icon: LayoutDashboard, path: "/dashboard" },
+    { title: "Trouver un prof", icon: Search, path: "/tutors" },
+    { title: "Mes cours", icon: BookOpen, path: "/lessons" },
+    { title: "Salle de cours", icon: Video, path: "/live" },
+  ] },
+  { label: "Mon compte", items: [
+    { title: "Crédits", icon: Coins, path: "/credits" },
+    { title: "Certificats", icon: Award, path: "/certificates" },
+    { title: "Avis", icon: Star, path: "/reviews" },
+    { title: "Parrainage", icon: Gift, path: "/referral" },
+  ] },
+]
 
-const tutorPrincipalNav = [
-  { title: "Tableau de bord", icon: LayoutDashboard, path: "/dashboard" },
-  { title: "Mes Cours", icon: BookOpen, path: "/lessons" },
-  { title: "Notifications", icon: Bell, path: "/notifications" },
-];
+const TUTOR: { label: string; items: Item[] }[] = [
+  { label: "Enseigner", items: [
+    { title: "Accueil", icon: LayoutDashboard, path: "/dashboard" },
+    { title: "Mes cours", icon: BookOpen, path: "/lessons" },
+    { title: "Salle de cours", icon: Video, path: "/live" },
+    { title: "Mes revenus", icon: Wallet, path: "/earnings" },
+  ] },
+  { label: "Ma vitrine", items: [
+    { title: "Mes avis", icon: Star, path: "/reviews" },
+    { title: "Les profs", icon: Search, path: "/tutors" },
+    { title: "Parrainage", icon: Gift, path: "/referral" },
+  ] },
+]
 
-const tutorActiviteNav = [
-  { title: "Mes Revenus", icon: DollarSign, path: "/earnings" },
-  { title: "Mes Avis", icon: Star, path: "/reviews" },
-  { title: "Cours en direct", icon: Video, path: "/live" },
-  { title: "Classement profs", icon: Users, path: "/tutors" },
-  { title: "Parrainage", icon: Gift, path: "/referral" },
-];
-
-const generalNav = [
-  { title: "Paramètres", icon: Settings, path: "/settings" },
+const GENERAL: Item[] = [
+  { title: "Profil", icon: UserRound, path: "/profile" },
+  { title: "Réglages", icon: Settings, path: "/settings" },
   { title: "Aide", icon: HelpCircle, path: "/help" },
-];
+]
 
 export function AppSidebar() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { signOut, profile, hasRole, user } = useAuth();
-  const isTutor = hasRole("tutor");
-  const queryClient = useQueryClient();
-  const { isMobile, setOpenMobile } = useSidebar();
-  const { data: credits } = useUserCredits();
-  // Sur mobile, la sidebar est un tiroir : on le ferme après navigation
-  const closeOnMobile = () => { if (isMobile) setOpenMobile(false); };
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { signOut, profile, hasRole, user } = useAuth()
+  const isTutor = hasRole("tutor")
+  const queryClient = useQueryClient()
+  const { isMobile, setOpenMobile } = useSidebar()
+  const close = () => { if (isMobile) setOpenMobile(false) }
 
-  // Fetch current user's XP
-  const { data: xpData } = useQuery({
+  const { data: xp } = useQuery({
     queryKey: ["my-xp", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("user_xp")
-        .select("total_xp")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      return data?.total_xp ?? 0;
+      const { data } = await supabase.from("user_xp").select("total_xp").eq("user_id", user!.id).maybeSingle()
+      return data?.total_xp ?? 0
     },
-  });
+  })
 
-  // Fetch unread notification count
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ["unread-notifications", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user!.id)
-        .eq("read", false);
-      return count ?? 0;
-    },
-  });
-
-  // Realtime subscription for new notifications
+  // Pastille de notifications en temps réel (badge dans la barre du haut)
   useEffect(() => {
-    if (!user) return;
+    if (!user) return
     const channel = supabase
       .channel("sidebar-notifications")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => { queryClient.invalidateQueries({ queryKey: ["unread-notifications", user.id] }); }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, queryClient]);
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => queryClient.invalidateQueries({ queryKey: ["unread-notifications", user.id] }))
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user, queryClient])
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast.success("Déconnexion réussie");
-      navigate("/login");
-    } catch {
-      toast.error("Erreur lors de la déconnexion");
-    }
-  };
+    try { await signOut(); toast.success("À bientôt !"); navigate("/login") }
+    catch { toast.error("Déconnexion impossible") }
+  }
 
-  const displayName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Utilisateur"
-    : "Utilisateur";
+  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Mon compte"
+  const initials = `${profile?.first_name?.[0] ?? ""}${profile?.last_name?.[0] ?? ""}`.toUpperCase() || "?"
+  const groups = isTutor ? TUTOR : STUDENT
 
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "U";
-
-  const roleLabel = isTutor ? "Professeur" : "Étudiant";
-
-  const renderNavItems = (items: { title: string; icon: React.ComponentType<{ className?: string }>; path: string }[]) =>
-    items.map((item) => {
-      const isActive = location.pathname === item.path;
-      const badge = item.path === "/notifications" && unreadCount > 0 ? unreadCount : null;
-      const creditBadge = item.path === "/credits" && credits ? credits.balance : null;
-      return (
-        <SidebarMenuItem key={item.path}>
-          <SidebarMenuButton
-            asChild
-            isActive={isActive}
-            tooltip={item.title}
-            className={`rounded-xl mx-1 my-0.5 h-10 transition-all duration-200 ${
-              isActive
-                ? "gradient-primary text-primary-foreground shadow-lg"
-                : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
-            }`}
-          >
-            <Link to={item.path} onClick={closeOnMobile} aria-label={item.title} aria-current={isActive ? "page" : undefined} className="flex items-center w-full gap-2">
-              <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="font-medium flex-1">{item.title}</span>
-              {badge !== null && (
-                <span aria-label={`${badge} notifications non lues`} className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
-                  {badge > 99 ? "99+" : badge}
-                </span>
-              )}
-              {creditBadge !== null && (
-                <span aria-label={`${creditBadge} crédits`} className="ml-auto rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold tabular-nums">
-                  {creditBadge}
-                </span>
-              )}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      );
-    });
-
-  const principalNav = isTutor ? tutorPrincipalNav : studentPrincipalNav;
-  const secondaryNav = isTutor ? tutorActiviteNav : studentApprentissageNav;
-  const secondaryLabel = isTutor ? "Activité" : "Apprentissage";
+  const NavItem = ({ item }: { item: Item }) => {
+    const active = location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"))
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={active} tooltip={item.title}
+          className={cn(
+            "h-10 rounded-full px-3 font-semibold transition-all",
+            active ? "!bg-primary !text-primary-foreground shadow-ink" : "text-ink/75 hover:!bg-ink/[0.06] hover:text-ink",
+          )}>
+          <Link to={item.path} onClick={close} aria-current={active ? "page" : undefined}>
+            <item.icon className="h-[18px] w-[18px]" />
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
 
   return (
-    <Sidebar className="border-r-0" aria-label="Navigation principale">
-      <SidebarHeader className="p-5">
-        <Link to="/dashboard" onClick={closeOnMobile} aria-label="Prof en Ligne - Retour au tableau de bord" className="flex items-center gap-3 group">
-          <div className="gradient-primary flex h-11 w-11 items-center justify-center rounded-xl glow transition-transform group-hover:scale-105 group-hover:rotate-3">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight text-sidebar-foreground font-display">
-              PROF EN LIGNE
-            </span>
-            <span className="text-[10px] font-medium text-sidebar-foreground/35 flex items-center gap-1">
-              <Zap className="h-2.5 w-2.5 text-gold" />
-              Tutorat Interactif
-            </span>
-          </div>
-        </Link>
+    <Sidebar variant="floating" className="p-3" aria-label="Navigation principale">
+      <SidebarHeader className="px-4 pb-2 pt-5">
+        <Logo to="/dashboard" />
       </SidebarHeader>
 
-      <SidebarSeparator className="opacity-30" />
-
-      <SidebarContent>
+      <SidebarContent className="px-1">
+        {groups.map((g) => (
+          <SidebarGroup key={g.label}>
+            <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80">{g.label}</SidebarGroupLabel>
+            <SidebarGroupContent><SidebarMenu className="gap-0.5">{g.items.map((i) => <NavItem key={i.path} item={i} />)}</SidebarMenu></SidebarGroupContent>
+          </SidebarGroup>
+        ))}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/25 px-3">
-            Principal
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80">Général</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderNavItems(principalNav)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator className="opacity-30" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/25 px-3">
-            {secondaryLabel}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderNavItems(secondaryNav)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator className="opacity-30" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/25 px-3">
-            Général
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {renderNavItems(generalNav)}
-              {hasRole("admin") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === "/admin"}
-                    tooltip="Admin"
-                    className={`rounded-xl mx-1 my-0.5 h-10 transition-all duration-200 ${
-                      location.pathname === "/admin"
-                        ? "gradient-primary text-primary-foreground shadow-lg"
-                        : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                    }`}
-                  >
-                    <Link to="/admin" onClick={closeOnMobile}>
-                      <Shield className="h-4 w-4" />
-                      <span className="font-medium">Administration</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+            <SidebarMenu className="gap-0.5">
+              {GENERAL.map((i) => <NavItem key={i.path} item={i} />)}
+              {hasRole("admin") && <NavItem item={{ title: "Administration", icon: Shield, path: "/admin" }} />}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        <SidebarSeparator className="opacity-30" />
-        <Link to="/profile" aria-label={`Profil de ${displayName}`} className="flex items-center gap-3 rounded-xl p-3 mt-2 bg-sidebar-accent/40 border border-sidebar-border/50 hover:bg-sidebar-accent/60 transition-colors cursor-pointer">
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="gradient-primary text-primary-foreground text-xs font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">{displayName}</p>
-            {xpData !== undefined && xpData > 0 ? (
-              <XPBadge xp={xpData} size="sm" showLabel className="mt-0.5" />
-            ) : (
-              <p className="truncate text-[10px] text-sidebar-foreground/35 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />
-                {roleLabel}
-              </p>
-            )}
-          </div>
-        </Link>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleSignOut}
-              tooltip="Déconnexion"
-              className="rounded-xl mx-1 hover:bg-destructive/15 hover:text-destructive text-sidebar-foreground/50 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="font-medium">Déconnexion</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex items-center gap-3 rounded-2xl bg-white/70 p-2.5 ring-1 ring-ink/5">
+          <Link to="/profile" onClick={close} className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-extrabold text-ink">
+              {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-xl object-cover" /> : initials}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-ink-2">{name}</span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {isTutor ? "Professeur" : "Élève"}{xp ? ` · ${xp.toLocaleString("fr-FR")} XP` : ""}
+              </span>
+            </span>
+          </Link>
+          <button onClick={handleSignOut} aria-label="Se déconnecter"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-rose-soft hover:text-rose">
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             )}
           </div>
-          <Button onClick={this.handleReset} className="gradient-primary text-primary-foreground">
+          <Button onClick={this.handleReset}>
             Retour au tableau de bord
           </Button>
         </div>

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,16 +22,8 @@ export default function StudentLessons() {
   const completed = filtered.filter((l) => l.status === "completed");
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" /> Mes Cours
-          </h1>
-          <p className="text-muted-foreground">Gérez vos cours et votre planning</p>
-        </div>
-        <BookLessonDialog />
-      </div>
+    <div className="space-y-6">
+      <PageHeader eyebrow="Mes cours" title="Ton planning" subtitle="Tes réservations, à venir et passées." actions={<BookLessonDialog />} />
 
       {subjects.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -39,7 +32,7 @@ export default function StudentLessons() {
             size="sm"
             variant={subjectFilter === "all" ? "default" : "outline"}
             onClick={() => setSubjectFilter("all")}
-            className={`rounded-xl h-7 text-xs ${subjectFilter === "all" ? "gradient-primary text-primary-foreground" : ""}`}
+            className="h-8 text-xs"
           >
             Toutes
           </Button>
@@ -49,7 +42,7 @@ export default function StudentLessons() {
               size="sm"
               variant={subjectFilter === s ? "default" : "outline"}
               onClick={() => setSubjectFilter(s)}
-              className={`rounded-xl h-7 text-xs ${subjectFilter === s ? "gradient-primary text-primary-foreground" : ""}`}
+              className="h-8 text-xs"
             >
               {s}
             </Button>
@@ -58,12 +51,12 @@ export default function StudentLessons() {
       )}
 
       <Tabs defaultValue="all">
-        <TabsList className="bg-secondary/50 rounded-xl border border-border/30">
-          <TabsTrigger value="all" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Tous ({filtered.length})</TabsTrigger>
-          <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">À venir ({upcoming.length})</TabsTrigger>
-          <TabsTrigger value="completed" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Terminés ({completed.length})</TabsTrigger>
+        <TabsList className="h-auto flex-wrap">
+          <TabsTrigger value="all">Tous ({filtered.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">À venir ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="completed">Terminés ({completed.length})</TabsTrigger>
           {cancelled.length > 0 && (
-            <TabsTrigger value="cancelled" className="rounded-lg data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">Annulés ({cancelled.length})</TabsTrigger>
+            <TabsTrigger value="cancelled">Annulés ({cancelled.length})</TabsTrigger>
           )}
         </TabsList>
 

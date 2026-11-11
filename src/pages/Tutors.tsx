@@ -1,435 +1,206 @@
-import { useState, useMemo, useDeferredValue } from "react";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { SEO } from "@/components/SEO";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Search, Star, Euro, BookOpen, Trophy, Filter, ChevronRight,
-  Wifi, Users, } from "lucide-react";
-import { XPBadge } from "@/components/gamification/XPBadge";
-import { useTutors, type TutorWithProfile } from "@/hooks/useData";
+import { useDeferredValue, useMemo, useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { ArrowRight, Search, SlidersHorizontal, Star, Users, X } from "lucide-react"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { SEO } from "@/components/SEO"
+import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTutors, type TutorWithProfile } from "@/hooks/useData"
+import { SUBJECTS } from "@/lib/constants"
+import { lessonCreditCost } from "@/lib/credits"
+import { EmptyState } from "@/components/brand/PageHeader"
+import { cn } from "@/lib/utils"
 
-const ALL_SUBJECTS = [
-  "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
-  "Histoire", "Géographie", "SVT", "Informatique", "Philosophie",
-];
+type SortKey = "rating" | "price_asc" | "price_desc" | "reviews"
+const SORTS: { value: SortKey; label: string }[] = [
+  { value: "rating", label: "Mieux notés" },
+  { value: "reviews", label: "Plus d'avis" },
+  { value: "price_asc", label: "Prix croissant" },
+  { value: "price_desc", label: "Prix décroissant" },
+]
 
-const statusConfig: Record<string, { dot: string; label: string }> = {
-  online:    { dot: "bg-[hsl(var(--success))]",   label: "Disponible" },
-  busy:      { dot: "bg-[hsl(var(--warning))]",   label: "Occupé" },
-  offline:   { dot: "bg-muted-foreground/40",      label: "Hors ligne" },
-  suspended: { dot: "bg-destructive",              label: "Suspendu" },
-};
-
-// ─── Tutor card ───────────────────────────────────────────────────────────────
-
-function TutorCard({ tutor, xp }: { tutor: TutorWithProfile; xp: number }) {
-  const navigate = useNavigate();
-  const profile = tutor.profiles;
-  const fullName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-    : "Professeur";
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "P";
-  const status = statusConfig[tutor.status] ?? statusConfig.offline;
-
-
-  const avgRating = Number(tutor.rating) || 0;
-
-  return (
-    <Card
-      className="glass-card group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_32px_hsl(var(--primary)/0.2)] hover:border-primary/30"
-      onClick={() => navigate(`/tutors/${tutor.user_id}`)}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <Avatar className="h-14 w-14 ring-2 ring-border group-hover:ring-primary/50 transition-all">
-              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={fullName} />}
-              <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-lg">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <span
-              className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card ${status.dot}`}
-              title={status.label}
-            />
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold truncate">{fullName || "Professeur"}</h3>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-            </div>
-
-            {/* Stars */}
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className={`h-3 w-3 ${i <= Math.round(avgRating) ? "fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" : "text-muted-foreground/20"}`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {avgRating.toFixed(1)} · {tutor.total_reviews ?? 0} avis
-              </span>
-            </div>
-
-            {/* XP Badge */}
-            <div className="mt-1.5">
-              <XPBadge xp={xp} size="sm" showLabel />
-            </div>
-
-            {/* Subjects */}
-            <div className="mt-2 flex flex-wrap gap-1">
-              {(tutor.subjects || []).slice(0, 3).map((s: string) => (
-                <Badge key={s} variant="secondary" className="rounded-full text-[10px] px-2 py-0">
-                  {s}
-                </Badge>
-              ))}
-              {(tutor.subjects || []).length > 3 && (
-                <Badge variant="outline" className="rounded-full text-[10px] px-2 py-0 text-muted-foreground">
-                  +{(tutor.subjects || []).length - 3}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
-          <span className="flex items-center gap-1 text-sm font-semibold">
-            <Euro className="h-3.5 w-3.5 text-primary" />
-            {tutor.hourly_rate ? `${tutor.hourly_rate}€/h` : "Tarif à définir"}
-          </span>
-          <span className={`text-xs font-medium flex items-center gap-1`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-            {status.label}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
-  );
+const STATUS: Record<string, { dot: string; label: string }> = {
+  online: { dot: "bg-mint", label: "Disponible" },
+  busy: { dot: "bg-hl", label: "Occupé" },
+  offline: { dot: "bg-ink/25", label: "Hors ligne" },
 }
 
-// ─── Leaderboard row ──────────────────────────────────────────────────────────
-
-function LeaderboardRow({ tutor, rank, xp }: { tutor: TutorWithProfile; rank: number; xp: number }) {
-  const navigate = useNavigate();
-  const profile = tutor.profiles;
-  const fullName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-    : "Professeur";
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "P";
-
-  const rankIcon = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
-
-  return (
-    <div
-      className="flex items-center gap-4 rounded-xl p-3 cursor-pointer hover:bg-muted/30 transition-colors"
-      onClick={() => navigate(`/tutors/${tutor.user_id}`)}
-    >
-      <div className="w-8 text-center text-sm font-bold text-muted-foreground">
-        {rankIcon ?? `#${rank}`}
-      </div>
-      <Avatar className="h-10 w-10">
-        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={fullName} />}
-        <AvatarFallback className="gradient-primary text-primary-foreground text-sm font-bold">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground">{(tutor.subjects || []).slice(0, 2).join(", ")}</p>
-      </div>
-      <div className="flex flex-col items-end gap-1">
-        <XPBadge xp={xp} size="sm" showLabel={false} />
-        <div className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Star key={i} className={`h-2.5 w-2.5 ${i <= Math.round(Number(tutor.rating) || 0) ? "fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" : "text-muted-foreground/20"}`} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
-
-type SortKey = "rating" | "price_asc" | "price_desc" | "xp";
-const SORT_KEYS: SortKey[] = ["rating", "price_asc", "price_desc", "xp"];
+const AVATAR_TONES = ["bg-peri-soft", "bg-hl-soft", "bg-mint-soft", "bg-rose-soft", "bg-sky-soft"]
 
 export default function Tutors() {
-  useDocumentTitle("Trouver un Professeur");
-  const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
-  const [subject, setSubject] = useState("all");
-  const [maxPrice, setMaxPrice] = useState(200);
-  const [minRating, setMinRating] = useState(0);
-  const [sortBy, setSortBy] = useState<SortKey>("rating");
-  const [onlineOnly, setOnlineOnly] = useState(false);
+  useDocumentTitle("Trouver un prof")
+  const [params, setParams] = useSearchParams()
+  const [search, setSearch] = useState("")
+  const deferred = useDeferredValue(search)
+  const subject = params.get("subject") ?? "all"
+  const [maxPrice, setMaxPrice] = useState(150)
+  const [minRating, setMinRating] = useState(0)
+  const [sortBy, setSortBy] = useState<SortKey>("rating")
+  const [onlineOnly, setOnlineOnly] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const { data: tutors = [], isLoading } = useTutors()
 
-  // Fetch tutors with profiles
-  const { data: tutors = [], isLoading } = useTutors();
+  const setSubject = (s: string) => {
+    const p = new URLSearchParams(params)
+    if (s === "all") p.delete("subject"); else p.set("subject", s)
+    setParams(p, { replace: true })
+  }
 
-  // Fetch XP only for tutor user_ids (avoid loading ALL users)
-  const tutorUserIds = useMemo(() => tutors.map((t) => t.user_id), [tutors]);
-  const { data: xpData = [] } = useQuery({
-    queryKey: ["tutor-xp", tutorUserIds],
-    enabled: tutorUserIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_xp")
-        .select("user_id, total_xp")
-        .in("user_id", tutorUserIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const xpMap = useMemo(() => {
-    const m = new Map<string, number>();
-    xpData.forEach((x) => m.set(x.user_id, x.total_xp));
-    return m;
-  }, [xpData]);
-
-  // Filter + sort
   const filtered = useMemo(() => {
-    let result = tutors.filter((t) => {
-      const profile = t.profiles;
-      const name = `${profile?.first_name || ""} ${profile?.last_name || ""}`.toLowerCase();
-      if (deferredSearch && !name.includes(deferredSearch.toLowerCase())) return false;
-      if (subject !== "all" && !(t.subjects || []).includes(subject)) return false;
-      if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false;
-      if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false;
-      if (onlineOnly && t.status !== "online") return false;
-      return true;
-    });
+    const q = deferred.trim().toLowerCase()
+    const list = tutors.filter((t) => {
+      const name = `${t.profiles?.first_name ?? ""} ${t.profiles?.last_name ?? ""}`.toLowerCase()
+      if (q && !name.includes(q) && !(t.subjects ?? []).some((s) => s.toLowerCase().includes(q))) return false
+      if (subject !== "all" && !(t.subjects ?? []).includes(subject)) return false
+      if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false
+      if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false
+      if (onlineOnly && t.status !== "online") return false
+      return true
+    })
+    const r = (t: TutorWithProfile) => Number(t.rating) || 0
+    const p = (t: TutorWithProfile) => Number(t.hourly_rate) || 0
+    return list.sort((a, b) =>
+      sortBy === "rating" ? r(b) - r(a) || (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
+        : sortBy === "reviews" ? (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
+        : sortBy === "price_asc" ? p(a) - p(b) : p(b) - p(a))
+  }, [tutors, deferred, subject, maxPrice, minRating, onlineOnly, sortBy])
 
-    if (sortBy === "rating") result = result.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-    else if (sortBy === "price_asc") result = result.sort((a, b) => (Number(a.hourly_rate) || 999) - (Number(b.hourly_rate) || 999));
-    else if (sortBy === "price_desc") result = result.sort((a, b) => (Number(b.hourly_rate) || 0) - (Number(a.hourly_rate) || 0));
-    else if (sortBy === "xp") result = result.sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0));
-
-    return result;
-  }, [tutors, deferredSearch, subject, maxPrice, minRating, sortBy, xpMap, onlineOnly]);
-
-  // Leaderboard: top tutors by XP
-  const leaderboard = useMemo(() => {
-    return [...tutors]
-      .filter((t) => t.status !== "suspended")
-      .sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0))
-      .slice(0, 10);
-  }, [tutors, xpMap]);
+  const activeFilters = (maxPrice < 150 ? 1 : 0) + (minRating > 0 ? 1 : 0) + (onlineOnly ? 1 : 0)
+  const reset = () => { setSearch(""); setSubject("all"); setMaxPrice(150); setMinRating(0); setOnlineOnly(false) }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 animate-fade-in pb-16">
-      <SEO
-        title="Trouver un Professeur"
-        description="Parcourez nos professeurs certifiés en mathématiques, français, physique, anglais et plus. Réservez un cours particulier en ligne en quelques clics."
-        path="/tutors"
-      />
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" />
-          Trouver un Professeur
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {filtered.length > 0 || onlineOnly ? `${filtered.length} résultat${filtered.length !== 1 ? "s" : ""}` : `${tutors.length} professeur${tutors.length !== 1 ? "s" : ""} disponible${tutors.length !== 1 ? "s" : ""}`}
-        </p>
+    <div className="space-y-6">
+      <SEO title="Trouver un prof" description="Cours particuliers en visio : choisis ton prof par matière, niveau, tarif et avis, puis réserve un créneau." path="/tutors" />
+
+      <header className="reveal pt-4 text-center">
+        <span className="eyebrow">Les profs</span>
+        <h1 className="mt-4 text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.02]">Trouve <span className="hl-mark">ton</span> prof.</h1>
+        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Compare les tarifs et les avis, puis réserve en quelques clics.</p>
+      </header>
+
+      {/* Recherche */}
+      <div className="reveal mx-auto max-w-3xl">
+        <div className="glass-strong flex items-center gap-2 rounded-full p-2 pl-5">
+          <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Un prénom, une matière…" aria-label="Rechercher un prof"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[1.02rem] text-ink-2 outline-none placeholder:text-muted-foreground" />
+          {search && <button onClick={() => setSearch("")} aria-label="Effacer" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-ink/5 [&>*]:min-w-0"><X className="h-4 w-4" /></button>}
+          <Button variant={showFilters || activeFilters ? "default" : "outline"} onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters}>
+            <SlidersHorizontal /> <span className="hidden sm:inline">Filtres</span>{activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-hl px-1 text-[11px] text-ink-2 [&>*]:min-w-0">{activeFilters}</span>}
+          </Button>
+        </div>
+
+        {showFilters && (
+          <div className="glass mt-3 grid gap-6 p-5 animate-[fadeup_.35s_ease] sm:grid-cols-3">
+            <div>
+              <div className="flex justify-between text-sm"><span className="font-semibold text-ink-2">Tarif max</span><b className="tabular text-ink-2">{maxPrice >= 150 ? "Tous" : `${maxPrice} €/h`}</b></div>
+              <Slider className="mt-3" min={10} max={150} step={5} value={[maxPrice]} onValueChange={([v]) => setMaxPrice(v)} aria-label="Tarif maximum" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink-2">Note minimum</p>
+              <div className="mt-2 flex gap-1.5">
+                {[0, 4, 4.5].map((r) => (
+                  <button key={r} onClick={() => setMinRating(r)} className={cn("rounded-full px-3 py-1.5 text-sm font-bold transition", minRating === r ? "bg-primary text-white" : "bg-white/70 text-ink hover:bg-white")}>
+                    {r === 0 ? "Toutes" : `${String(r).replace(".", ",")}+`}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold text-ink-2">Trier</p>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>{SORTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-ink-2 sm:col-span-3">
+              <input type="checkbox" checked={onlineOnly} onChange={(e) => setOnlineOnly(e.target.checked)} className="h-4 w-4 accent-[hsl(233_52%_20%)]" />
+              Seulement les profs disponibles maintenant
+            </label>
+          </div>
+        )}
       </div>
 
-      <Tabs defaultValue="search">
-        <TabsList className="mb-4">
-          <TabsTrigger value="search" className="gap-2">
-            <Search className="h-4 w-4" /> Recherche
-          </TabsTrigger>
-          <TabsTrigger value="leaderboard" className="gap-2">
-            <Trophy className="h-4 w-4" /> Classement XP
-          </TabsTrigger>
-        </TabsList>
+      {/* Matières */}
+      <div className="reveal no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center">
+        {["all", ...SUBJECTS].map((s) => (
+          <button key={s} onClick={() => setSubject(s)}
+            className={cn("shrink-0 rounded-full px-4 py-2 text-sm font-bold transition",
+              subject === s ? "bg-primary text-white shadow-ink" : "bg-white/65 text-ink ring-1 ring-ink/5 hover:bg-white")}>
+            {s === "all" ? "Toutes les matières" : s}
+          </button>
+        ))}
+      </div>
 
-        {/* ── Search tab ──────────────────────────────────────────────────── */}
-        <TabsContent value="search" className="space-y-4">
-          {/* Filter bar */}
-          <Card className="glass-card">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                {/* Search */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Search className="h-3 w-3" /> Nom
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Rechercher..."
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
+      <p className="text-sm font-semibold text-muted-foreground">
+        {isLoading ? "Chargement…" : `${filtered.length} prof${filtered.length > 1 ? "s" : ""}`}
+        {subject !== "all" && <> en <span className="text-ink-2">{subject}</span></>}
+      </p>
 
-                {/* Subject filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <BookOpen className="h-3 w-3" /> Matière
-                  </Label>
-                  <Select value={subject} onValueChange={setSubject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les matières</SelectItem>
-                      {ALL_SUBJECTS.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Price filter */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground flex items-center justify-between">
-                    <span className="flex items-center gap-1"><Euro className="h-3 w-3" /> Tarif max</span>
-                    <span className="font-medium text-foreground">{maxPrice}€/h</span>
-                  </Label>
-                  <Slider
-                    value={[maxPrice]}
-                    onValueChange={([v]) => setMaxPrice(v)}
-                    min={5} max={200} step={5}
-                  />
-                </div>
-
-                {/* Rating + sort */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Filter className="h-3 w-3" /> Trier par
-                  </Label>
-                  <Select value={sortBy} onValueChange={(v) => SORT_KEYS.includes(v as SortKey) && setSortBy(v as SortKey)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rating">⭐ Meilleures notes</SelectItem>
-                      <SelectItem value="xp">🏆 Plus d'XP</SelectItem>
-                      <SelectItem value="price_asc">💶 Prix croissant</SelectItem>
-                      <SelectItem value="price_desc">💶 Prix décroissant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Min rating filter */}
-              <div className="mt-4 flex flex-wrap gap-2 items-center">
-                <Label className="text-xs text-muted-foreground">Note minimum :</Label>
-                {[0, 3, 4, 4.5].map((r) => (
-                  <Button
-                    key={r}
-                    variant={minRating === r ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs rounded-full px-3"
-                    onClick={() => setMinRating(r)}
-                  >
-                    {r === 0 ? "Tous" : `${r}+ ★`}
-                  </Button>
-                ))}
-                <div className="ml-auto flex items-center gap-2">
-                  <Button
-                    variant={onlineOnly ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs rounded-full px-3 gap-1.5"
-                    onClick={() => setOnlineOnly(!onlineOnly)}
-                  >
-                    <Wifi className="h-3 w-3" />
-                    Disponible maintenant
-                    {onlineOnly && (
-                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Results */}
-          {isLoading ? (
-            <div className="flex justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <Users className="mx-auto h-12 w-12 mb-3 opacity-20" />
-              <p className="text-lg font-medium">Aucun professeur trouvé</p>
-              <p className="text-sm mb-4">Essayez de modifier vos critères de recherche</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={() => { setSearch(""); setSubject("all"); setMaxPrice(200); setMinRating(0); setOnlineOnly(false); }}
-              >
-                Réinitialiser les filtres
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((tutor) => (
-                <TutorCard key={tutor.id} tutor={tutor} xp={xpMap.get(tutor.user_id) || 0} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ── Leaderboard tab ──────────────────────────────────────────────── */}
-        <TabsContent value="leaderboard">
-          <Card className="glass-card">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="h-5 w-5 text-[hsl(var(--gold))]" />
-                <h2 className="font-semibold">Classement des meilleurs professeurs</h2>
-              </div>
-
-              {leaderboard.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Aucun classement disponible pour le moment.
-                </p>
-              ) : (
-                leaderboard.map((tutor, i) => (
-                  <LeaderboardRow
-                    key={tutor.id}
-                    tutor={tutor}
-                    rank={i + 1}
-                    xp={xpMap.get(tutor.user_id) || 0}
-                  />
-                ))
-              )}
-
-              <p className="text-xs text-muted-foreground text-center pt-4 border-t border-border/30">
-                Le classement est basé sur les points XP accumulés au fil des cours
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+          {Array.from({ length: 6 }, (_, i) => <div key={i} className="glass h-[230px] animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={Users} title="Aucun prof ne correspond"
+          text="Élargis un peu ta recherche : une autre matière, un tarif plus haut ou toutes les notes."
+          action={<Button variant="outline" onClick={reset}>Réinitialiser les filtres</Button>} />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+          {filtered.map((t, i) => <TutorCard key={t.id} tutor={t} tone={AVATAR_TONES[i % AVATAR_TONES.length]} highlight={subject !== "all" ? subject : undefined} />)}
+        </div>
+      )}
     </div>
-  );
+  )
+}
+
+function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: string; highlight?: string }) {
+  const p = tutor.profiles
+  const name = `${p?.first_name ?? "Prof"} ${p?.last_name?.[0] ? `${p.last_name[0]}.` : ""}`.trim()
+  const initials = `${p?.first_name?.[0] ?? "P"}${p?.last_name?.[0] ?? ""}`.toUpperCase()
+  const status = STATUS[tutor.status] ?? STATUS.offline
+  const rate = Number(tutor.hourly_rate) || 0
+  const reviews = tutor.total_reviews ?? 0
+  const subjects = [...(tutor.subjects ?? [])].sort((a, b) => (a === highlight ? -1 : b === highlight ? 1 : 0))
+
+  return (
+    <Link to={`/tutors/${tutor.user_id}`} className="glass reveal lift group flex flex-col p-5">
+      <div className="flex items-start gap-3.5">
+        <div className="relative shrink-0">
+          {p?.avatar_url
+            ? <img src={p.avatar_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+            : <span className={cn("grid h-16 w-16 place-items-center rounded-2xl font-display text-xl font-extrabold text-ink", tone)}>{initials}</span>}
+          <span className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-white", status.dot)} title={status.label} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-lg font-extrabold text-ink-2">{name}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-sm">
+            {reviews > 0
+              ? <><Star className="h-4 w-4 fill-hl text-hl" /><b className="text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">· {reviews} avis</span></>
+              : <span className="rounded-full bg-peri-soft px-2 py-0.5 text-xs font-bold text-ink">Nouveau</span>}
+          </p>
+        </div>
+      </div>
+
+      {p?.bio && <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{p.bio}</p>}
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {subjects.slice(0, 3).map((s) => (
+          <span key={s} className={cn("rounded-full px-2.5 py-1 text-xs font-bold", s === highlight ? "bg-hl text-ink-2" : "bg-white/80 text-ink")}>{s}</span>
+        ))}
+        {subjects.length > 3 && <span className="rounded-full px-2 py-1 text-xs font-bold text-muted-foreground">+{subjects.length - 3}</span>}
+      </div>
+
+      <div className="mt-auto flex items-end justify-between pt-5">
+        <div>
+          <p className="display text-2xl leading-none text-ink-2">{rate ? `${rate} €` : "—"}<span className="text-sm font-semibold text-muted-foreground"> /h</span></p>
+          {rate > 0 && <p className="mt-1 text-xs text-muted-foreground">soit {lessonCreditCost(rate, 60)} crédits l'heure</p>}
+        </div>
+        <span className="flex h-10 items-center gap-1 rounded-full bg-primary px-4 text-sm font-bold text-white transition group-hover:gap-2">
+          Voir <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </Link>
+  )
 }

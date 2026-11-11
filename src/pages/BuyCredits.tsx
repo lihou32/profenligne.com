@@ -16,11 +16,13 @@ import {
   type CreditPurchaseRequest, type PaymentMethod,
 } from "@/hooks/useCreditPurchases"
 import { PurchaseDialog } from "@/components/credits/PurchaseDialog"
+import { PageHeader } from "@/components/brand/PageHeader"
+import { cn } from "@/lib/utils"
 
 const PACK_STYLE = [
-  { icon: Coins, color: "from-info to-primary" },
-  { icon: Zap, color: "from-primary to-accent" },
-  { icon: Crown, color: "from-gold to-warning" },
+  { icon: Coins, color: "bg-peri-soft" },
+  { icon: Zap, color: "bg-hl-soft" },
+  { icon: Crown, color: "bg-mint-soft" },
 ]
 
 const TX_LABELS: Record<string, string> = {
@@ -46,8 +48,8 @@ export default function BuyCredits() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold font-display">Veuillez vous connecter</h1>
-          <Button onClick={() => navigate("/login")} className="rounded-xl gradient-primary text-primary-foreground">Aller à la connexion</Button>
+          <h1 className="text-2xl">Connecte-toi pour acheter des crédits</h1>
+          <Button onClick={() => navigate("/login")}>Se connecter</Button>
         </div>
       </div>
     )
@@ -65,79 +67,41 @@ export default function BuyCredits() {
   const pending = (purchases ?? []).filter((p) => p.status === "pending")
   const dialogOpen = selectedPack !== null || openRequest !== null
 
+  const balance = credits?.balance ?? 0
+
   return (
-    <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Acheter des crédits</h1>
-        <p className="mt-2 text-muted-foreground">
-          Solde actuel : <strong className="text-foreground">{credits?.balance ?? 0} crédit{(credits?.balance ?? 0) > 1 ? "s" : ""}</strong>
-        </p>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-end [&>*]:min-w-0">
+        <PageHeader eyebrow="Crédits" title={<>Recharge, <span className="hl-mark">réserve</span>, progresse.</>}
+          subtitle={<>1 crédit = {CREDIT_VALUE_EUR} € de cours. Débités à la réservation, remboursés si le prof refuse ou si tu annules plus de {FREE_CANCEL_HOURS} h avant. Ils n'expirent jamais.</>} />
+        <div className="glass-ink reveal flex items-center justify-between rounded-3xl p-5">
+          <div>
+            <p className="text-sm text-white/70">Ton solde</p>
+            <p className="display text-4xl tabular">{balance} <span className="text-lg text-white/70">crédit{balance > 1 ? "s" : ""}</span></p>
+          </div>
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-hl text-ink-2 [&>*]:min-w-0"><Coins className="h-6 w-6" /></span>
+        </div>
       </div>
 
-      <div className="mx-auto flex max-w-2xl items-start gap-3 rounded-xl border border-border/50 bg-muted/30 p-4 text-sm">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <p className="text-muted-foreground">
-          <strong className="text-foreground">1 crédit = {CREDIT_VALUE_EUR} € de cours.</strong>{" "}
-          Un cours d'1 h avec un professeur à 35 €/h coûte 7 crédits. Les crédits sont débités à la réservation,
-          remboursés si le professeur refuse ou si vous annulez plus de {FREE_CANCEL_HOURS} h avant, et n'expirent jamais.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 [&>*]:min-w-0">
         {CREDIT_PACKS.map((pack, i) => {
           const style = PACK_STYLE[i % PACK_STYLE.length]
           const price = pack.priceCents / 100
           const perCredit = price / pack.credits
           const saving = Math.round((1 - perCredit / CREDIT_VALUE_EUR) * 100)
           return (
-            <Card
-              key={pack.credits}
-              className={`glass-card relative transition-all hover:shadow-xl ${pack.popular ? "border-gold ring-2 ring-gold/30" : ""}`}
-            >
-              {pack.popular && (
-                <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap bg-gold text-black font-bold text-xs px-3">
-                  LE PLUS POPULAIRE
-                </Badge>
-              )}
-
-              <CardHeader className="text-center pb-2">
-                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-xl mb-3 bg-gradient-to-br ${style.color} shadow-lg`}>
-                  <style.icon className="h-7 w-7 text-primary-foreground" />
-                </div>
-                <CardTitle className="font-display">
-                  <span className="text-4xl font-bold">{pack.credits}</span>
-                  <span className="text-muted-foreground text-base ml-1">crédits</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">{pack.description}</p>
-                <div className="mt-3">
-                  <span className="text-3xl font-bold">{price}</span>
-                  <span className="text-muted-foreground">€</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {perCredit.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })} par crédit
-                  {saving > 0 && <span className="ml-1 font-semibold text-success">(−{saving} %)</span>}
-                </p>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <ul className="space-y-2.5">
-                  {["Crédits sans date d'expiration", "WhatsApp, virement ou Revolut", "Ajoutés dès réception du paiement"].map((b) => (
-                    <li key={b} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 shrink-0 text-success" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  onClick={() => setSelectedPack(pack)}
-                  className={`w-full rounded-xl font-semibold h-11 ${pack.popular ? "gradient-primary text-primary-foreground btn-glow" : ""}`}
-                  variant={pack.popular ? "default" : "outline"}
-                >
-                  Choisir ce pack
-                </Button>
-              </CardContent>
-            </Card>
+            <div key={pack.credits} className={cn("glass reveal lift relative flex flex-col p-6", pack.popular && "ring-2 ring-hl")}>
+              {pack.popular && <span className="absolute -top-3 left-6 rounded-full bg-hl px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-2">Le plus choisi</span>}
+              <span className={cn("grid h-12 w-12 place-items-center rounded-2xl", style.color)}><style.icon className="h-6 w-6 text-ink" /></span>
+              <p className="mt-4"><span className="display text-5xl text-ink-2">{pack.credits}</span> <span className="font-display font-bold text-muted-foreground">crédits</span></p>
+              <p className="text-sm text-muted-foreground">{pack.description} · {pack.credits * CREDIT_VALUE_EUR} € de cours</p>
+              <div className="mt-5 flex items-baseline gap-2">
+                <span className="display text-3xl text-ink-2">{price} €</span>
+                {saving > 0 && <span className="rounded-full bg-mint-soft px-2 py-0.5 text-xs font-bold text-success">−{saving} %</span>}
+              </div>
+              <p className="text-xs text-muted-foreground">{perCredit.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })} le crédit</p>
+              <Button onClick={() => setSelectedPack(pack)} variant={pack.popular ? "default" : "outline"} className="mt-6 w-full">Choisir ce pack</Button>
+            </div>
           )
         })}
       </div>
@@ -147,7 +111,7 @@ export default function BuyCredits() {
       </p>
 
       {(purchases?.length ?? 0) > 0 && (
-        <Card className="glass-card">
+        <Card className="reveal">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-display">Mes demandes d'achat</CardTitle>
           </CardHeader>
@@ -170,11 +134,11 @@ export default function BuyCredits() {
                   </Badge>
                   {p.status === "pending" && (
                     <>
-                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setOpenRequest(p)}>
+                      <Button size="sm" variant="outline" onClick={() => setOpenRequest(p)}>
                         Comment payer
                       </Button>
                       <Button
-                        size="sm" variant="ghost" className="rounded-lg text-muted-foreground"
+                        size="sm" variant="ghost" className="text-muted-foreground"
                         disabled={cancelPurchase.isPending}
                         onClick={() => handleCancel(p.id)}
                         aria-label="Annuler la demande"
@@ -199,7 +163,7 @@ export default function BuyCredits() {
       />
 
       {(transactions?.length ?? 0) > 0 && (
-        <Card className="glass-card">
+        <Card className="reveal">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-display">Historique</CardTitle>
           </CardHeader>

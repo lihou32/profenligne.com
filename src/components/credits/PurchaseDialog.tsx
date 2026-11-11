@@ -154,7 +154,7 @@ function Instructions({ request, settings }: { request: CreditPurchaseRequest; s
         {method === "revolut" && settings.revolut_tag && (
           <>
             <Field label="Revolut" value={`@${settings.revolut_tag}`} onCopy={() => copy(settings.revolut_tag!, "Identifiant Revolut")} />
-            <Button asChild className="w-full rounded-xl gradient-primary text-primary-foreground">
+            <Button asChild className="w-full">
               <a href={revolutLink(settings.revolut_tag)} target="_blank" rel="noopener noreferrer">Payer avec Revolut</a>
             </Button>
             <p className="text-xs text-muted-foreground">Ajoutez la référence en note du paiement.</p>
@@ -162,7 +162,7 @@ function Instructions({ request, settings }: { request: CreditPurchaseRequest; s
         )}
 
         {method === "whatsapp" && settings.whatsapp_number && (
-          <Button asChild className="w-full rounded-xl bg-[#25D366] text-white hover:bg-[#1ebe57]">
+          <Button asChild className="w-full bg-[#25D366] text-white hover:bg-[#1ebe57]">
             <a href={whatsappLink(settings.whatsapp_number, request)} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="mr-2 h-4 w-4" /> Envoyer le message WhatsApp
             </a>

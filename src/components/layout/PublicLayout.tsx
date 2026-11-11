@@ -1,55 +1,65 @@
-import { Outlet, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { GraduationCap, ArrowRight } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { Outlet, Link } from "react-router-dom"
+import { ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
+import { useReveal } from "@/hooks/useReveal"
+import { Backdrop } from "@/components/brand/Backdrop"
+import { Logo } from "@/components/brand/Logo"
 
-/**
- * Lightweight layout for public-facing discovery pages (/tutors, /tutor/:id).
- * Shows a simple navbar with login/signup CTAs for visitors,
- * or redirects into AppLayout-style nav for logged-in users.
- */
+/** Pages publiques (liste et profils des profs) : barre pilule flottante + fond animé. */
 export function PublicLayout() {
-  const { user } = useAuth();
+  const { user } = useAuth()
+  useReveal()
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Compact navbar */}
-      <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-lg">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="font-display text-base font-bold tracking-tight">
-              Prof en Ligne
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            {user ? (
-              <Link to="/dashboard">
-                <Button size="sm" variant="ghost">
-                  Mon tableau de bord
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">
-                    Connexion
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button size="sm" className="gap-1">
-                    S'inscrire <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div className="min-h-screen">
+      <Backdrop />
+      <PublicNav loggedIn={!!user} />
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <Outlet />
       </main>
+      <SiteFooter />
     </div>
-  );
+  )
+}
+
+export function PublicNav({ loggedIn, links }: { loggedIn: boolean; links?: { href: string; label: string }[] }) {
+  return (
+    <div className="sticky top-3 z-50 px-3">
+      <nav className="glass-strong mx-auto flex h-16 max-w-6xl items-center gap-4 rounded-full pl-5 pr-2">
+        <Logo />
+        {links && (
+          <div className="ml-6 hidden items-center gap-6 lg:flex">
+            {links.map((l) => (
+              <a key={l.href} href={l.href} className="text-[15px] font-semibold text-muted-foreground transition hover:text-ink-2">{l.label}</a>
+            ))}
+          </div>
+        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          {loggedIn ? (
+            <Button asChild><Link to="/dashboard">Mon espace <ArrowRight /></Link></Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link to="/login">Connexion</Link></Button>
+              <Button asChild><Link to="/signup">Commencer <ArrowRight /></Link></Button>
+            </>
+          )}
+        </div>
+      </nav>
+    </div>
+  )
+}
+
+export function SiteFooter() {
+  return (
+    <footer className="mx-auto flex max-w-6xl flex-col gap-4 px-6 pb-10 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center">
+      <Logo />
+      <span className="sm:ml-4">Cours particuliers en visio, avec des profs choisis un par un.</span>
+      <nav className="flex gap-4 sm:ml-auto">
+        <Link to="/tutors" className="hover:text-ink-2">Les profs</Link>
+        <Link to="/help" className="hover:text-ink-2">Aide</Link>
+        <Link to="/signup?role=tutor" className="hover:text-ink-2">Devenir prof</Link>
+      </nav>
+    </footer>
+  )
 }
