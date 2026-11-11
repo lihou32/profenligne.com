@@ -15,9 +15,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Search, Star, Euro, BookOpen, Trophy, Filter, ChevronRight,
-  Wifi, Users, Medal,
-} from "lucide-react";
-import { XPBadge, getBadge } from "@/components/gamification/XPBadge";
+  Wifi, Users, } from "lucide-react";
+import { XPBadge } from "@/components/gamification/XPBadge";
+import { useTutors, type TutorWithProfile } from "@/hooks/useData";
 
 const ALL_SUBJECTS = [
   "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
@@ -33,7 +33,7 @@ const statusConfig: Record<string, { dot: string; label: string }> = {
 
 // ─── Tutor card ───────────────────────────────────────────────────────────────
 
-function TutorCard({ tutor, xp }: { tutor: any; xp: number }) {
+function TutorCard({ tutor, xp }: { tutor: TutorWithProfile; xp: number }) {
   const navigate = useNavigate();
   const profile = tutor.profiles;
   const fullName = profile
@@ -43,7 +43,7 @@ function TutorCard({ tutor, xp }: { tutor: any; xp: number }) {
     ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
     : "P";
   const status = statusConfig[tutor.status] ?? statusConfig.offline;
-  const badge = getBadge(xp);
+
 
   const avgRating = Number(tutor.rating) || 0;
 
@@ -129,7 +129,7 @@ function TutorCard({ tutor, xp }: { tutor: any; xp: number }) {
 
 // ─── Leaderboard row ──────────────────────────────────────────────────────────
 
-function LeaderboardRow({ tutor, rank, xp }: { tutor: any; rank: number; xp: number }) {
+function LeaderboardRow({ tutor, rank, xp }: { tutor: TutorWithProfile; rank: number; xp: number }) {
   const navigate = useNavigate();
   const profile = tutor.profiles;
   const fullName = profile
@@ -173,6 +173,9 @@ function LeaderboardRow({ tutor, rank, xp }: { tutor: any; rank: number; xp: num
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+type SortKey = "rating" | "price_asc" | "price_desc" | "xp";
+const SORT_KEYS: SortKey[] = ["rating", "price_asc", "price_desc", "xp"];
+
 export default function Tutors() {
   useDocumentTitle("Trouver un Professeur");
   const [search, setSearch] = useState("");
@@ -180,28 +183,11 @@ export default function Tutors() {
   const [subject, setSubject] = useState("all");
   const [maxPrice, setMaxPrice] = useState(200);
   const [minRating, setMinRating] = useState(0);
-  const [sortBy, setSortBy] = useState<"rating" | "price_asc" | "price_desc" | "xp">("rating");
+  const [sortBy, setSortBy] = useState<SortKey>("rating");
   const [onlineOnly, setOnlineOnly] = useState(false);
 
   // Fetch tutors with profiles
-  const { data: tutors = [], isLoading } = useQuery({
-    queryKey: ["tutors-search"],
-    queryFn: async () => {
-      const { data: t, error } = await supabase.from("tutors").select("*");
-      if (error) throw error;
-
-      const userIds = [...new Set((t || []).map((x: any) => x.user_id))];
-      if (!userIds.length) return [];
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, first_name, last_name, avatar_url, bio")
-        .in("user_id", userIds);
-
-      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-      return (t || []).map((x: any) => ({ ...x, profiles: profileMap.get(x.user_id) ?? null }));
-    },
-  });
+  const { data: tutors = [], isLoading } = useTutors();
 
   // Fetch XP only for tutor user_ids (avoid loading ALL users)
   const tutorUserIds = useMemo(() => tutors.map((t) => t.user_id), [tutors]);
@@ -233,7 +219,6 @@ export default function Tutors() {
       if (subject !== "all" && !(t.subjects || []).includes(subject)) return false;
       if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false;
       if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false;
-      if (t.status === "suspended") return false;
       if (onlineOnly && t.status !== "online") return false;
       return true;
     });
@@ -244,7 +229,7 @@ export default function Tutors() {
     else if (sortBy === "xp") result = result.sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0));
 
     return result;
-  }, [tutors, search, subject, maxPrice, minRating, sortBy, xpMap, onlineOnly]);
+  }, [tutors, deferredSearch, subject, maxPrice, minRating, sortBy, xpMap, onlineOnly]);
 
   // Leaderboard: top tutors by XP
   const leaderboard = useMemo(() => {
@@ -340,7 +325,7 @@ export default function Tutors() {
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
                     <Filter className="h-3 w-3" /> Trier par
                   </Label>
-                  <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
+                  <Select value={sortBy} onValueChange={(v) => SORT_KEYS.includes(v as SortKey) && setSortBy(v as SortKey)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

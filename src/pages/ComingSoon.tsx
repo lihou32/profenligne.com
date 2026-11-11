@@ -59,7 +59,7 @@ const ComingSoon = () => {
         setRegistered(true);
         toast.success("Préinscription réussie ! 🎉");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Erreur lors de la préinscription");
       logger.error("ComingSoon error", err);
     } finally {

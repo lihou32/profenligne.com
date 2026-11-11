@@ -12,17 +12,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate cron secret to prevent unauthorized triggers
+    // Autorisation : uniquement le secret cron (la clé anon est publique, elle ne suffit pas)
     const authHeader = req.headers.get("Authorization");
     const cronSecret = Deno.env.get("CRON_SECRET");
-    if (cronSecret && (!authHeader || authHeader !== `Bearer ${cronSecret}`)) {
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-      if (!authHeader || !anonKey || authHeader !== `Bearer ${anonKey}`) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -158,7 +155,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Weekly report error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

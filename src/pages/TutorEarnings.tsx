@@ -1,3 +1,4 @@
+import { MIN_WITHDRAWAL_EUR, formatEur, friendlyError } from "@/lib/credits";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,20 +17,20 @@ export default function TutorEarnings() {
   const requestWithdrawal = useRequestWithdrawal();
 
   const handleWithdraw = () => {
-    if (!balance || balance.pending <= 0) {
-      toast.error("Aucun solde disponible pour un retrait");
+    if (!balance || balance.available < MIN_WITHDRAWAL_EUR) {
+      toast.error(`Retrait possible à partir de ${formatEur(MIN_WITHDRAWAL_EUR)} disponibles`);
       return;
     }
-    requestWithdrawal.mutate(balance.pending, {
+    requestWithdrawal.mutate(balance.available, {
       onSuccess: () => toast.success("Demande de retrait envoyée !"),
-      onError: () => toast.error("Erreur lors de la demande"),
+      onError: (e) => toast.error(friendlyError(e, "Erreur lors de la demande")),
     });
   };
 
   const statCards = [
-    { label: "Solde disponible", value: `${balance?.pending || 0}€`, icon: Wallet, color: "from-success to-info" },
-    { label: "Total gagné", value: `${balance?.total || 0}€`, icon: TrendingUp, color: "from-primary to-accent" },
-    { label: "Déjà retiré", value: `${balance?.paid || 0}€`, icon: DollarSign, color: "from-gold to-warning" },
+    { label: "Disponible au retrait", value: formatEur(balance?.available), icon: Wallet, color: "from-success to-info" },
+    { label: "Total gagné", value: formatEur(balance?.total), icon: TrendingUp, color: "from-primary to-accent" },
+    { label: "Déjà versé", value: formatEur(balance?.paid), icon: DollarSign, color: "from-gold to-warning" },
   ];
 
   const statusColors: Record<string, string> = {
@@ -51,7 +52,7 @@ export default function TutorEarnings() {
         <Button
           className="rounded-xl gradient-primary text-primary-foreground btn-glow"
           onClick={handleWithdraw}
-          disabled={requestWithdrawal.isPending}
+          disabled={requestWithdrawal.isPending || !balance || balance.available < MIN_WITHDRAWAL_EUR}
         >
           <ArrowDownToLine className="mr-2 h-4 w-4" /> Demander un retrait
         </Button>
@@ -86,10 +87,10 @@ export default function TutorEarnings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {earnings.map((e: any) => (
+            {earnings.map((e) => (
               <div key={e.id} className="flex items-center justify-between rounded-xl border border-border/30 p-3">
                 <div>
-                  <p className="text-sm font-semibold">+{Number(e.amount).toFixed(2)}€</p>
+                  <p className="text-sm font-semibold">+{formatEur(e.amount)}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(e.created_at), "dd MMM yyyy", { locale: fr })}</p>
                 </div>
                 <Badge variant="outline" className={`rounded-full ${statusColors[e.status] || ""}`}>{e.status}</Badge>
@@ -115,10 +116,10 @@ export default function TutorEarnings() {
             </div>
           ) : (
             <div className="space-y-2">
-              {withdrawals.map((w: any) => (
+              {withdrawals.map((w) => (
                 <div key={w.id} className="flex items-center justify-between rounded-xl border border-border/30 p-3">
                   <div>
-                    <p className="text-sm font-semibold">{Number(w.amount).toFixed(2)}€</p>
+                    <p className="text-sm font-semibold">{formatEur(w.amount)}</p>
                     <p className="text-xs text-muted-foreground">{format(new Date(w.created_at), "dd MMM yyyy", { locale: fr })}</p>
                   </div>
                   <Badge variant="outline" className={`rounded-full ${statusColors[w.status] || ""}`}>{w.status}</Badge>

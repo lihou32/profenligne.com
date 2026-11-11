@@ -8,8 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-} from "recharts";
+  } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, BarChart2 } from "lucide-react";

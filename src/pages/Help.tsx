@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 const faqs = [
   { q: "Comment réserver un cours ?", a: "Rendez-vous dans la section 'Mes Cours' et cliquez sur 'Réserver un cours'. Sélectionnez le tuteur, la matière et le créneau qui vous convient." },
   { q: "Comment fonctionne le LiveConnect ?", a: "LiveConnect vous permet de rejoindre des cours en visioconférence. Vous pouvez voir les sessions en cours ou en démarrer une nouvelle." },
-  { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Les annulations sont gratuites jusqu'à 24h avant le cours." },
-  { q: "Comment fonctionne le système de crédits ?", a: "Les crédits permettent de réserver des cours. Vous pouvez en acheter via la section 'Acheter des crédits'. Chaque cours coûte un certain nombre de crédits selon la durée et le tuteur." },
-  { q: "Comment gagner des points XP ?", a: "Vous gagnez de l'XP en complétant des cours et en laissant des avis. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
-  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent et complètent leur premier cours, vous recevez tous les deux des crédits bonus." },
+  { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Tant que le professeur n'a pas confirmé, ou jusqu'à 24 h avant le cours, vos crédits sont intégralement remboursés. Si le professeur refuse ou annule, vous êtes toujours remboursé." },
+  { q: "Comment fonctionne le système de crédits ?", a: "Les crédits permettent de réserver des cours. 1 crédit vaut 5 € de cours : un cours d'1 h avec un professeur à 35 €/h coûte donc 7 crédits. Les crédits sont débités à la réservation, remboursés si le professeur refuse ou si vous annulez plus de 24 h avant, et n'expirent jamais." },
+  { q: "Comment gagner des points XP ?", a: "Chaque cours terminé rapporte 100 XP aux élèves et 50 XP aux professeurs. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
+  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent avec votre lien et terminent leur premier cours, vous recevez chacun 2 crédits offerts." },
   { q: "Quels sont les moyens de paiement acceptés ?", a: "Nous acceptons les cartes bancaires (Visa, Mastercard) via notre partenaire de paiement sécurisé Stripe." },
 ];
 

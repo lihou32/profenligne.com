@@ -8,16 +8,11 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 type AppRole = "admin" | "student" | "tutor";
 
-interface Profile {
-  id: string;
-  user_id: string;
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
-}
+export type Profile = Tables<"profiles">;
 
 interface AuthContextType {
   user: User | null;
@@ -60,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profileResult, rolesResult] = await Promise.allSettled([
       supabase
         .from("profiles")
-        .select("id, user_id, first_name, last_name, avatar_url")
+        .select("*")
         .eq("user_id", userId)
         .single(),
       supabase
@@ -84,15 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const retry = await supabase
           .from("profiles")
-          .select("id, user_id, first_name, last_name, avatar_url")
+          .select("*")
           .eq("user_id", userId)
           .single();
 
         if (!controller.signal.aborted && retry.data) {
-          setProfile(retry.data as Profile);
+          setProfile(retry.data);
         }
       } else if (data) {
-        setProfile(data as Profile);
+        setProfile(data);
       }
     }
 
@@ -100,9 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (rolesResult.status === "fulfilled" && rolesResult.value.data) {
       if (!controller.signal.aborted) {
         setRoles(
-          rolesResult.value.data.map(
-            (r: { role: string }) => r.role as AppRole,
-          ),
+          rolesResult.value.data.map((r) => r.role),
         );
       }
     }
@@ -117,37 +110,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Cela élimine la race condition entre les deux appels concurrents.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
       // Sentry: identifier l'utilisateur pour le suivi d'erreurs
-      if (newSession?.user) {
-        const { setUser: setSentryUser } = await import("@sentry/react");
-        setSentryUser({ id: newSession.user.id, email: newSession.user.email });
-      } else {
-        const { setUser: setSentryUser } = await import("@sentry/react");
-        setSentryUser(null);
-      }
+      import("@sentry/react")
+        .then(({ setUser: setSentryUser }) =>
+          setSentryUser(newSession?.user ? { id: newSession.user.id } : null),
+        )
+        .catch(() => undefined);
 
       // Ignorer TOKEN_REFRESHED — la session est la même, pas besoin de refetch
       if (event === "TOKEN_REFRESHED") {
         return;
       }
 
-      try {
-        if (newSession?.user) {
-          await fetchProfileAndRoles(newSession.user.id);
-        } else {
-          setProfile(null);
-          setRoles([]);
-        }
-      } catch {
-        // Auth state change non-critique : on ne crash pas l'app
-      } finally {
+      if (!newSession?.user) {
+        setProfile(null);
+        setRoles([]);
         clearTimeout(safetyTimer);
         setLoading(false);
+        return;
       }
+
+      // ⚠️ Ne jamais appeler Supabase en `await` dans ce callback (risque de
+      // deadlock documenté par supabase-js) : on diffère au tick suivant.
+      const userId = newSession.user.id;
+      setTimeout(() => {
+        fetchProfileAndRoles(userId)
+          .catch(() => undefined) // non-critique : on ne crash pas l'app
+          .finally(() => {
+            clearTimeout(safetyTimer);
+            setLoading(false);
+          });
+      }, 0);
     });
 
     return () => {
@@ -160,26 +157,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // ── Sanitize metadata pour éviter XSS via signup ──
-  const sanitize = (val: string): string =>
-    val
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#x27;");
-
   const signUp = async (
     email: string,
     password: string,
     metadata?: Record<string, string>,
   ) => {
-    // FIX: Validation + sanitisation des métadonnées utilisateur
+    // Limite de taille par champ. Pas d'encodage HTML : React échappe déjà
+    // tout à l'affichage, et l'encodage corrompait les noms (« O&#x27;Brien »).
     const cleanMeta = metadata
       ? Object.fromEntries(
-          Object.entries(metadata).map(([k, v]) => [
-            sanitize(k),
-            sanitize(String(v).slice(0, 500)), // Limite 500 chars par champ
-          ]),
+          Object.entries(metadata).map(([k, v]) => [k, String(v).trim().slice(0, 200)]),
         )
       : undefined;
 

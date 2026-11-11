@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { useCreateReview } from "@/hooks/useData";
+import { friendlyError } from "@/lib/credits";
 
 interface QuizQuestion {
   question: string;
@@ -54,8 +56,11 @@ export default function LessonReport() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const subject = searchParams.get("subject") || "Mathématiques";
-  const topic = searchParams.get("topic") || "Cours";
+  // Le sujet vient du cours lui-même ; l'URL ne sert que de valeur initiale
+  const [subject, setSubject] = useState(searchParams.get("subject") || "");
+  const [topic, setTopic] = useState(searchParams.get("topic") || "");
+  const [lessonLoaded, setLessonLoaded] = useState(false);
+  const createReview = useCreateReview();
 
   const [quiz, setQuiz] = useState<QuizQuestion[]>([]);
   const [mindmap, setMindmap] = useState<MindmapNode | null>(null);
@@ -71,7 +76,6 @@ export default function LessonReport() {
   const [reviewSaving, setReviewSaving] = useState(false);
   const [reviewSaved, setReviewSaved] = useState(false);
   const [lessonTutorId, setLessonTutorId] = useState<string | null>(null);
-  const [existingReview, setExistingReview] = useState(false);
 
   // Fetch lesson info + check existing review
   useEffect(() => {
@@ -79,9 +83,14 @@ export default function LessonReport() {
     (async () => {
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("tutor_id, student_id, status")
+        .select("tutor_id, student_id, status, subject, topic")
         .eq("id", id)
-        .single();
+        .maybeSingle();
+      if (lesson) {
+        setSubject(lesson.subject);
+        setTopic(lesson.topic || lesson.subject);
+      }
+      setLessonLoaded(true);
       if (lesson && lesson.student_id === user.id && lesson.status === "completed") {
         setLessonTutorId(lesson.tutor_id);
       }
@@ -93,7 +102,6 @@ export default function LessonReport() {
         .eq("student_id", user.id)
         .maybeSingle();
       if (rev) {
-        setExistingReview(true);
         setReviewSaved(true);
       }
     })();
@@ -103,31 +111,30 @@ export default function LessonReport() {
     if (!id || !user || !lessonTutorId || reviewRating === 0) return;
     setReviewSaving(true);
     try {
-      const { error } = await supabase.from("reviews").insert({
-        lesson_id: id,
-        student_id: user.id,
-        tutor_id: lessonTutorId,
-        rating: reviewRating,
-        comment: reviewComment.trim(),
-      });
-      if (error) throw error;
+      await createReview.mutateAsync({ lesson_id: id, rating: reviewRating, comment: reviewComment.trim() || null });
       setReviewSaved(true);
       toast.success("Merci pour votre avis !");
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error("Review submit error", e);
-      toast.error(e?.message?.includes("unique") ? "Vous avez déjà noté ce cours" : "Erreur lors de l'envoi");
+      toast.error(friendlyError(e, "Erreur lors de l'envoi"));
     } finally {
       setReviewSaving(false);
     }
   };
 
   useEffect(() => {
+    // Attendre le vrai sujet du cours (évite deux appels IA payants)
+    if (!lessonLoaded || !subject) {
+      if (lessonLoaded) {
+        setLoadingQuiz(false);
+        setLoadingMindmap(false);
+      }
+      return;
+    }
     const fetchQuiz = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         const res = await supabase.functions.invoke("ai-chat", {
-          body: { mode: "quiz", subject, topic },
-          headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+          body: { mode: "quiz", subject, topic: topic || subject },
         });
         if (res.data?.questions) setQuiz(res.data.questions);
       } catch (e) {
@@ -139,10 +146,8 @@ export default function LessonReport() {
 
     const fetchMindmap = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         const res = await supabase.functions.invoke("ai-chat", {
-          body: { mode: "mindmap", subject, topic },
-          headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+          body: { mode: "mindmap", subject, topic: topic || subject },
         });
         if (res.data?.mindmap) setMindmap(res.data.mindmap);
       } catch (e) {
@@ -154,7 +159,7 @@ export default function LessonReport() {
 
     fetchQuiz();
     fetchMindmap();
-  }, [subject, topic]);
+  }, [lessonLoaded, subject, topic]);
 
   const score = submitted
     ? quiz.reduce((s, q, i) => s + (parseInt(answers[i]) === q.correct ? 1 : 0), 0)

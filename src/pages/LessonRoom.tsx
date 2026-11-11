@@ -13,6 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Whiteboard } from "@/components/lessons/Whiteboard";
 import { logger } from "@/lib/logger";
+import { useCompleteLesson, useStartLesson } from "@/hooks/useData";
+import { friendlyError } from "@/lib/credits";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface LessonInfo {
   subject: string;
@@ -33,16 +39,25 @@ export default function LessonRoom() {
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const [callStarted, setCallStarted] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [endDialogOpen, setEndDialogOpen] = useState(false);
+  const startLesson = useStartLesson();
+  const completeLesson = useCompleteLesson();
+  const isTutor = !!lessonInfo && lessonInfo.tutor_id === user?.id;
 
   // Display name from profile
   const displayName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Participant";
 
+  // Fin de visio (raccrochage Jitsi ou bouton) : le prof choisit de terminer
+  // le cours ; l'élève retourne simplement à ses cours.
   const handleReadyToClose = useCallback(() => {
-    const subject = encodeURIComponent(lessonInfo?.subject || "Cours");
-    const topic = encodeURIComponent(lessonInfo?.topic || "");
-    navigate(`/report/${roomId}?subject=${subject}&topic=${topic}`);
-  }, [lessonInfo, roomId, navigate]);
+    setCallStarted(false);
+    if (lessonInfo?.tutor_id === user?.id) {
+      setEndDialogOpen(true);
+    } else {
+      navigate("/lessons");
+    }
+  }, [lessonInfo, user?.id, navigate]);
 
   const {
     containerRef, isLoading, error, isConnected, meetingLink,
@@ -68,34 +83,21 @@ export default function LessonRoom() {
           toast.error("Vous n'avez pas accès à cette salle");
           navigate("/dashboard");
           setAuthorized(false);
-        } else {
-          setLessonInfo(data as LessonInfo);
-          setAuthorized(true);
+          return;
         }
+        if (data.status === "completed") {
+          navigate(`/report/${id}`, { replace: true });
+          return;
+        }
+        if (data.status === "cancelled") {
+          toast.error("Ce cours a été annulé");
+          navigate("/lessons", { replace: true });
+          return;
+        }
+        setLessonInfo(data);
+        setAuthorized(true);
       });
   }, [user, id, navigate]);
-
-  // Send notification to the other participant when call starts
-  useEffect(() => {
-    if (!callStarted || !lessonInfo || !user) return;
-
-    const otherUserId =
-      lessonInfo.student_id === user.id ? lessonInfo.tutor_id : lessonInfo.student_id;
-
-    // Insert a notification for the other participant
-    supabase
-      .from("notifications")
-      .insert({
-        user_id: otherUserId,
-        title: "Cours en cours",
-        message: `${displayName} vous attend dans la salle de cours (${lessonInfo.subject}). Cliquez pour rejoindre.`,
-        type: "lesson",
-        link: `/room/${roomId}`,
-      })
-      .then(({ error: err }) => {
-        if (err) logger.warn("Failed to send notification", { error: String(err) });
-      });
-  }, [callStarted, lessonInfo, user, roomId, displayName]);
 
   const handleCopyLink = async () => {
     try {
@@ -111,14 +113,33 @@ export default function LessonRoom() {
   };
 
   const handleStartCall = async () => {
+    if (!id) return;
+    try {
+      // Passe le cours en "en cours" et prévient l'autre participant (côté base)
+      const updated = await startLesson.mutateAsync(id);
+      setLessonInfo((prev) => (prev ? { ...prev, status: updated.status } : prev));
+    } catch (e) {
+      toast.error(friendlyError(e, "Impossible de démarrer le cours"));
+      return;
+    }
     setCallStarted(true);
     await startMeeting();
   };
 
   const handleEndCall = () => {
     endMeeting();
-    setCallStarted(false);
     handleReadyToClose();
+  };
+
+  const handleCompleteLesson = async () => {
+    if (!id) return;
+    try {
+      await completeLesson.mutateAsync(id);
+      toast.success("Cours terminé ! Vos gains ont été crédités.");
+      navigate(`/report/${id}`);
+    } catch (e) {
+      toast.error(friendlyError(e, "Impossible de terminer le cours"));
+    }
   };
 
   if (authorized === null) {
@@ -171,13 +192,22 @@ export default function LessonRoom() {
                   <p className="text-sm text-sidebar-foreground/60 mt-1">{lessonInfo.topic}</p>
                 )}
               </div>
-              <p className="text-sm text-sidebar-foreground/50 max-w-sm text-center">
-                Cliquez sur "Démarrer le cours" pour lancer la visio. L'autre participant recevra une notification.
+              <p className="text-sm text-sidebar-foreground/50 max-w-sm text-center px-4">
+                {lessonInfo?.status === "in_progress"
+                  ? "Le cours a commencé : rejoignez la visio."
+                  : "Cliquez sur « Démarrer le cours » pour lancer la visio. L'autre participant recevra une notification."}
               </p>
-              <Button onClick={handleStartCall} className="gradient-primary text-primary-foreground" size="lg">
-                <Phone className="mr-2 h-4 w-4" />
-                Démarrer le cours
-              </Button>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button onClick={handleStartCall} className="gradient-primary text-primary-foreground" size="lg" disabled={startLesson.isPending}>
+                  {startLesson.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                  {lessonInfo?.status === "in_progress" ? "Rejoindre le cours" : "Démarrer le cours"}
+                </Button>
+                {isTutor && lessonInfo?.status === "in_progress" && (
+                  <Button variant="outline" size="lg" onClick={() => setEndDialogOpen(true)}>
+                    Terminer le cours
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             /* Jitsi iframe container */
@@ -247,7 +277,7 @@ export default function LessonRoom() {
           </Button>
 
           {callStarted && (
-            <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full" onClick={handleEndCall}>
+            <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full" onClick={handleEndCall} title="Quitter la visio" aria-label="Quitter la visio">
               <PhoneOff className="h-5 w-5" />
             </Button>
           )}
@@ -256,7 +286,7 @@ export default function LessonRoom() {
 
       {/* Panel whiteboard */}
       {whiteboardOpen && (
-        <Card className="glass-card flex flex-col w-full lg:w-[520px] h-[400px] lg:h-auto shrink-0">
+        <Card className="glass-card flex flex-col w-full lg:w-[min(520px,40vw)] h-[60vh] min-h-[320px] lg:h-auto shrink-0">
           <div className="border-b p-3">
             <h3 className="text-sm font-semibold">Tableau blanc collaboratif</h3>
           </div>
@@ -265,6 +295,24 @@ export default function LessonRoom() {
           </div>
         </Card>
       )}
+
+      <AlertDialog open={endDialogOpen} onOpenChange={setEndDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminer le cours ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le cours sera marqué comme terminé : vos gains sont crédités, l'élève reçoit son certificat
+              et peut laisser un avis. Si vous avez simplement perdu la connexion, choisissez « Pas encore ».
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Pas encore</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCompleteLesson} disabled={completeLesson.isPending}>
+              Terminer le cours
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

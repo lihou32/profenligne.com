@@ -102,21 +102,8 @@ Deno.serve(async (req) => {
       timeZone: "Europe/Paris",
     });
 
-    // ─── 1. In-app notification for the tutor ────────────────────────────────
-    const notifTitle = `Nouvelle demande de cours — ${lesson.subject}`;
-    const notifMessage = `${studentName} a demandé un cours de ${lesson.subject}${lesson.topic ? ` (${lesson.topic})` : ""} le ${dateStr} à ${timeStr} (${lesson.duration_minutes} min). Acceptez ou refusez depuis votre tableau de bord.`;
-
-    const { error: notifError } = await supabaseAdmin.from("notifications").insert({
-      user_id: lesson.tutor_id,
-      title: notifTitle,
-      message: notifMessage,
-      type: "lesson",
-      read: false,
-    });
-
-    if (notifError) {
-      console.error("Failed to create in-app notification:", notifError);
-    }
+    // La notification in-app est créée côté base par la RPC (book_lesson / confirm_lesson / cancel_lesson).
+    // Cette fonction ne s'occupe plus que de l'email.
 
     // ─── 2. Email notification to tutor via Resend ───────────────────────────
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -130,7 +117,7 @@ Deno.serve(async (req) => {
     // Check tutor notification preference (using notify_new_message as proxy for new booking alerts)
     if (tutorProfile?.notify_new_message === false) {
       return new Response(
-        JSON.stringify({ success: true, inAppNotification: !notifError, emailSent: false, reason: "Tutor disabled notifications" }),
+        JSON.stringify({ success: true, emailSent: false, reason: "Tutor disabled notifications" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -140,7 +127,7 @@ Deno.serve(async (req) => {
     if (userError || !tutorUser?.email) {
       console.error("Could not fetch tutor email:", userError);
       return new Response(
-        JSON.stringify({ success: true, inAppNotification: !notifError, emailSent: false, reason: "Tutor email not found" }),
+        JSON.stringify({ success: true, emailSent: false, reason: "Tutor email not found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -192,13 +179,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, inAppNotification: !notifError, emailSent }),
+      JSON.stringify({ success: true, emailSent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error in notify-lesson-booking:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, loading, hasRole } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,7 +20,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   }
 
   if (requiredRole && !hasRole(requiredRole)) {

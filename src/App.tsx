@@ -17,11 +17,11 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import ComingSoon from "./pages/ComingSoon";
-import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 
 // Lazy loaded — only fetched when the user navigates to that page
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const Lessons = lazy(() => import("./pages/Lessons"));
 const LiveConnect = lazy(() => import("./pages/LiveConnect"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -90,7 +90,7 @@ function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="*" element={<ComingSoon />} />
+        <Route path="*" element={<Suspense fallback={<PageLoader />}><ComingSoon /></Suspense>} />
       </Routes>
     );
   }
@@ -112,7 +112,7 @@ function AppRoutes() {
 
       {/* ── Authenticated app routes ── */}
       <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
         <Route path="/lessons" element={<Suspense fallback={<PageLoader />}><Lessons /></Suspense>} />
         <Route path="/live" element={<Suspense fallback={<PageLoader />}><LiveConnect /></Suspense>} />
         <Route path="/notifications" element={<Suspense fallback={<PageLoader />}><Notifications /></Suspense>} />
@@ -132,10 +132,10 @@ function AppRoutes() {
         <Route path="/referral" element={<Suspense fallback={<PageLoader />}><Referral /></Suspense>} />
       </Route>
 
-      <Route path="/become-tutor" element={<Suspense fallback={<PageLoader />}><TutorOnboarding /></Suspense>} />
-      <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense>} />
-        <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><PaymentCancel /></Suspense>} />
-        <Route path="*" element={<NotFound />} />
+      <Route path="/become-tutor" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><TutorOnboarding /></Suspense></ProtectedRoute>} />
+      <Route path="/payment/success" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense></ProtectedRoute>} />
+      <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><PaymentCancel /></Suspense>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

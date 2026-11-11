@@ -1,6 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, BookOpen, Video, Bot, CheckCircle } from "lucide-react";
+import type { ComponentType } from "react";
+import { Bell, BookOpen, Video, Bot, CheckCircle, CreditCard, Star, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications, useMarkNotificationsRead } from "@/hooks/useData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -8,12 +9,15 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   lesson: BookOpen,
   live: Video,
   ai: Bot,
   system: CheckCircle,
   info: Bell,
+  payment: CreditCard,
+  review: Star,
+  referral: Gift,
 };
 
 export default function Notifications() {

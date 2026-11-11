@@ -1,19 +1,30 @@
 project_id = "jlytabfuiwfacfbowiyh"
 
+# ─── Fonctions appelées par un utilisateur connecté ─────────────────────────
+# Le JWT est vérifié par Supabase avant même d'exécuter la fonction.
 [functions.ai-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-account]
+verify_jwt = true
+
+[functions.notify-lesson-status]
+verify_jwt = true
+
+[functions.notify-lesson-booking]
+verify_jwt = true
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+# ─── Fonctions appelées par un tiers ────────────────────────────────────────
+# Stripe n'envoie pas de JWT : l'authenticité est vérifiée par la signature.
+[functions.stripe-webhook]
 verify_jwt = false
 
+# Tâches planifiées : protégées par le header "Authorization: Bearer $CRON_SECRET".
 [functions.send-lesson-reminders]
 verify_jwt = false
 
 [functions.weekly-preregistrations-report]
-verify_jwt = false
-
-[functions.notify-lesson-status]
-verify_jwt = false
-
-[functions.notify-lesson-booking]
 verify_jwt = false

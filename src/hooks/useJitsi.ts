@@ -160,7 +160,7 @@ export function useJitsi({ roomId, displayName, email, onReadyToClose }: UseJits
       api.addListener("videoConferenceJoined", () => {
         setIsConnected(true);
         setIsLoading(false);
-        logger.info("Jitsi: conference joined", { roomName });
+        logger.debug("Jitsi: conference joined", { roomName });
       });
 
       api.addListener("videoConferenceLeft", () => {

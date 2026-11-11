@@ -1,10 +1,11 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 export function AppLayout() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -18,7 +19,7 @@ export function AppLayout() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   }
 
   return (
@@ -28,7 +29,7 @@ export function AppLayout() {
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/30 px-4 bg-background/50 backdrop-blur-lg">
           <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground transition-colors" />
         </header>
-        <main className="flex-1 overflow-auto p-6 mesh-bg">
+        <main className="flex-1 overflow-auto p-4 md:p-6 mesh-bg">
           <Outlet />
         </main>
       </SidebarInset>

@@ -12,15 +12,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate authorization: allow anon key (cron) or CRON_SECRET
+    // Autorisation : uniquement le secret cron (la clé anon est publique, elle ne suffit pas)
     const authHeader = req.headers.get("Authorization");
     const cronSecret = Deno.env.get("CRON_SECRET");
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-
-    const isValidCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
-    const isValidAnon = anonKey && authHeader === `Bearer ${anonKey}`;
-
-    if (!isValidCron && !isValidAnon) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -174,7 +169,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Error in send-lesson-reminders:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

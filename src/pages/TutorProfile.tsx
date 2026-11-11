@@ -6,10 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Star,
@@ -22,10 +18,9 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useCreateLesson } from "@/hooks/useData";
+import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { SEO } from "@/components/SEO";
-import { toast } from "sonner";
 
 // ─── Star rating ─────────────────────────────────────────
 
@@ -61,141 +56,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   offline: { label: "Hors ligne", className: "bg-muted text-muted-foreground border-border" },
   suspended: { label: "Suspendu", className: "bg-destructive/10 text-destructive border-destructive/30" },
 };
-
-// ─── Booking modal ────────────────────────────────────────
-
-const subjects = [
-  "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
-  "Histoire", "Géographie", "SVT", "Informatique", "Philosophie",
-];
-
-function BookingModal({
-  open,
-  onClose,
-  tutorUserId,
-  tutorName,
-}: {
-  open: boolean;
-  onClose: () => void;
-  tutorUserId: string;
-  tutorName: string;
-}) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const createLesson = useCreateLesson();
-
-  const [subject, setSubject] = useState("");
-  const [topic, setTopic] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("60");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast.error("Connectez-vous pour réserver un cours");
-      navigate("/login");
-      return;
-    }
-    if (!subject || !date || !time) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-
-    const scheduledAt = new Date(`${date}T${time}`);
-    if (scheduledAt <= new Date()) {
-      toast.error("La date et l'heure doivent être dans le futur");
-      return;
-    }
-    try {
-      await createLesson.mutateAsync({
-        student_id: user.id,
-        tutor_id: tutorUserId,
-        subject,
-        topic: topic || null,
-        scheduled_at: scheduledAt.toISOString(),
-        duration_minutes: parseInt(duration),
-        status: "pending",
-      });
-      toast.success(`Demande envoyée à ${tutorName} !`);
-      onClose();
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de la réservation");
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Réserver un cours avec {tutorName}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Matière *</Label>
-            <Select value={subject} onValueChange={setSubject}>
-              <SelectTrigger><SelectValue placeholder="Choisir une matière" /></SelectTrigger>
-              <SelectContent>
-                {subjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Sujet / Chapitre</Label>
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Ex : Intégrales, Chapitre 5…"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Date *</Label>
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Heure *</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Durée</Label>
-            <Select value={duration} onValueChange={setDuration}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">1 heure</SelectItem>
-                <SelectItem value="90">1h30</SelectItem>
-                <SelectItem value="120">2 heures</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full gradient-primary text-primary-foreground"
-            disabled={createLesson.isPending}
-          >
-            {createLesson.isPending ? "Envoi…" : "Envoyer la demande"}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Main page ────────────────────────────────────────────
 
 export default function TutorProfile() {
   useDocumentTitle("Profil du professeur");
@@ -326,7 +186,7 @@ export default function TutorProfile() {
 
           {/* CTA */}
           <div className="flex justify-end mb-2">
-            {isStudent && tutor.status === "online" && (
+            {isStudent && !tutor.is_suspended && (
               <Button
                 className="gradient-primary text-primary-foreground shadow-lg"
                 onClick={() => setBookingOpen(true)}
@@ -476,7 +336,7 @@ export default function TutorProfile() {
       </Card>
 
       {/* Bottom CTA */}
-      {isStudent && tutor.status === "online" && (
+      {isStudent && !tutor.is_suspended && (
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
           <h3 className="text-lg font-semibold">Prêt à apprendre avec {fullName} ?</h3>
           <p className="text-sm text-muted-foreground">
@@ -511,11 +371,10 @@ export default function TutorProfile() {
 
       {/* Booking modal */}
       {tutor && (
-        <BookingModal
-          open={bookingOpen}
+        <BookLessonDialog
+          defaultTutorId={tutor.user_id}
+          defaultOpen={bookingOpen}
           onClose={() => setBookingOpen(false)}
-          tutorUserId={tutor.user_id}
-          tutorName={fullName}
         />
       )}
     </div>

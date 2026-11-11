@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 
-// Typed via Database - no cast needed
-
 export function useAdminChartData(months = 6) {
   return useQuery({
     queryKey: ["admin-chart-data", months],
@@ -23,38 +21,33 @@ export function useAdminChartData(months = 6) {
       const rangeStart = ranges[0].start;
       const rangeEnd = ranges[ranges.length - 1].end;
 
-      const [lessonsRes, earningsRes] = await Promise.all([
-        db
+      const [lessonsRes, purchasesRes] = await Promise.all([
+        supabase
           .from("lessons")
           .select("scheduled_at, status")
+          .neq("status", "cancelled")
           .gte("scheduled_at", rangeStart)
           .lte("scheduled_at", rangeEnd),
-        db
-          .from("tutor_earnings")
-          .select("amount, created_at, status")
-          .eq("status", "paid")
+        // Chiffre d'affaires = montants réellement payés via Stripe
+        supabase
+          .from("credit_transactions")
+          .select("amount_paid_eur, created_at")
+          .eq("type", "purchase")
           .gte("created_at", rangeStart)
           .lte("created_at", rangeEnd),
       ]);
+      if (lessonsRes.error) throw lessonsRes.error;
+      if (purchasesRes.error) throw purchasesRes.error;
 
       const lessons = lessonsRes.data ?? [];
-      const earnings = earningsRes.data ?? [];
+      const purchases = purchasesRes.data ?? [];
 
-      return ranges.map((r: any) => {
-        const monthLessons = lessons.filter(
-          (l: any) => l.scheduled_at >= r.start && l.scheduled_at <= r.end
-        );
-        const monthEarnings = earnings.filter(
-          (e: any) => e.created_at >= r.start && e.created_at <= r.end
-        );
-
-        return {
-          mois: r.label,
-          cours: monthLessons.length,
-          revenus: Math.round(
-            monthEarnings.reduce((s: number, e: any) => s + Number(e.amount), 0)
-          ),
-        };
+      return ranges.map((r) => {
+        const monthLessons = lessons.filter((l) => l.scheduled_at >= r.start && l.scheduled_at <= r.end);
+        const monthRevenue = purchases
+          .filter((p) => p.created_at >= r.start && p.created_at <= r.end)
+          .reduce((s, p) => s + Number(p.amount_paid_eur ?? 0), 0);
+        return { mois: r.label, cours: monthLessons.length, revenus: Math.round(monthRevenue) };
       });
     },
   });

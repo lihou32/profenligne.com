@@ -1,6 +1,7 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { CREDIT_PACKS } from "@/lib/credits"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
@@ -12,29 +13,39 @@ export default function PaymentSuccess() {
   useDocumentTitle("Paiement réussi")
   const navigate = useNavigate()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
-  const credits = searchParams.get("credits") || "0"
+  // N'affiche que des packs connus (le paramètre d'URL est manipulable)
+  const creditsParam = Number(searchParams.get("credits"))
+  const credits = CREDIT_PACKS.some((p) => p.credits === creditsParam) ? creditsParam : null
+  const sessionId = searchParams.get("session_id")
+  const startedAt = useRef(Date.now())
 
-  // Fetch real balance from DB
-  const { data: balance, isLoading } = useQuery({
-    queryKey: ["user-credits", user?.id],
+  // Attend que le webhook Stripe ait crédité le compte (transaction liée à la session)
+  const { data, isLoading } = useQuery({
+    queryKey: ["payment-confirmation", user?.id, sessionId],
     enabled: !!user,
-    // Refetch a few times to wait for webhook processing
     refetchInterval: (query) => {
-      // Stop refetching after 5 successful fetches or if balance > 0
-      const data = query.state.data
-      if (data && data > 0) return false
-      return 2000 // retry every 2s
+      if (query.state.data?.confirmed) return false
+      if (Date.now() - startedAt.current > 60_000) return false // on arrête après 1 min
+      return 2000
     },
     queryFn: async () => {
-      const { data } = await supabase
-        .from("user_credits")
-        .select("balance")
-        .eq("user_id", user!.id)
-        .maybeSingle()
-      return data?.balance ?? 0
+      const [balanceRes, txRes] = await Promise.all([
+        supabase.from("user_credits").select("balance").eq("user_id", user!.id).maybeSingle(),
+        sessionId
+          ? supabase.from("credit_transactions").select("id").eq("stripe_payment_id", sessionId).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      return { balance: balanceRes.data?.balance ?? 0, confirmed: !sessionId || !!txRes.data }
     },
   })
+  const balance = data?.balance
+  const confirmed = data?.confirmed ?? false
+
+  useEffect(() => {
+    if (confirmed) queryClient.invalidateQueries({ queryKey: ["user-credits"] })
+  }, [confirmed, queryClient])
 
   return (
     <div className="flex items-center justify-center px-4 py-16 animate-fade-in">
@@ -52,13 +63,15 @@ export default function PaymentSuccess() {
 
         <Card className="glass-card border-success/30">
           <CardContent className="p-6 space-y-3">
-            <div className="text-5xl font-bold text-success">+{credits}</div>
-            <div className="text-muted-foreground">crédits ajoutés à votre compte</div>
+            <div className="text-5xl font-bold text-success">{credits ? `+${credits}` : "✓"}</div>
+            <div className="text-muted-foreground">
+              {confirmed ? "crédits ajoutés à votre compte" : "Validation du paiement en cours…"}
+            </div>
 
             <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/30">
               <Coins className="h-4 w-4 text-gold" />
               <span className="text-sm text-muted-foreground">Solde actuel :</span>
-              {isLoading ? (
+              {isLoading || !confirmed ? (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               ) : (
                 <span className="font-bold text-foreground">{balance ?? 0} crédits</span>
@@ -68,7 +81,9 @@ export default function PaymentSuccess() {
         </Card>
 
         <p className="text-sm text-muted-foreground">
-          Les crédits sont disponibles immédiatement. Vous pouvez maintenant réserver des cours.
+          {confirmed
+            ? "Vos crédits sont disponibles. Vous pouvez maintenant réserver des cours."
+            : "Cela prend généralement quelques secondes. Vous pouvez quitter cette page, vos crédits arriveront automatiquement."}
         </p>
 
         <div className="space-y-3">

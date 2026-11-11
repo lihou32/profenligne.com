@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock import.meta.env
-vi.stubEnv("DEV", "true");
+vi.stubEnv("DEV", true);
 
 describe("logger", () => {
   beforeEach(() => {
