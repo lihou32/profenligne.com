@@ -15,7 +15,7 @@ import { useCancelLesson, useConfirmLesson, type Lesson } from "@/hooks/useData"
 import { FREE_CANCEL_HOURS, ROOM_OPEN_MINUTES_BEFORE, friendlyError, isFreeCancellation, isRoomOpen } from "@/lib/credits";
 
 export const LESSON_STATUS: Record<string, { label: string; className: string }> = {
-  pending: { label: "En attente", className: "border-transparent bg-hl-soft text-gold-foreground" },
+  pending: { label: "En attente", className: "border-transparent bg-hl-soft text-hl" },
   confirmed: { label: "Confirmé", className: "border-transparent bg-peri-soft text-ink" },
   in_progress: { label: "En cours", className: "border-transparent bg-rose-soft text-rose" },
   completed: { label: "Terminé", className: "border-transparent bg-mint-soft text-success" },
@@ -88,7 +88,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           {counterpart !== undefined ? (
             <Avatar className="h-12 w-12 shrink-0 rounded-2xl">
               {counterpart?.avatar_url && <AvatarImage src={counterpart.avatar_url} alt={name} />}
-              <AvatarFallback className="rounded-2xl bg-peri-soft font-display font-extrabold text-ink">
+              <AvatarFallback className="rounded-2xl bg-peri-soft font-display font-bold text-ink">
                 {(counterpart?.first_name?.[0] || fallbackName[0]).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -98,7 +98,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
             </div>
           )}
           <div className="min-w-0">
-            <h3 className="truncate text-base font-extrabold">
+            <h3 className="truncate text-base font-bold">
               {lesson.subject}
               {counterpart !== undefined && (
                 <span className="font-normal text-muted-foreground"> · {name || fallbackName}</span>

@@ -94,7 +94,7 @@ export default function Tutors() {
             className="h-11 min-w-0 flex-1 bg-transparent text-[1.02rem] text-ink-2 outline-none placeholder:text-muted-foreground" />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-ink/5 [&>*]:min-w-0"><X className="h-4 w-4" /></button>}
           <Button variant={showFilters || activeFilters ? "default" : "outline"} onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters}>
-            <SlidersHorizontal /> <span className="hidden sm:inline">Filtres</span>{activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-hl px-1 text-[11px] text-ink-2 [&>*]:min-w-0">{activeFilters}</span>}
+            <SlidersHorizontal /> <span className="hidden sm:inline">Filtres</span>{activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-hl px-1 text-[11px] text-white [&>*]:min-w-0">{activeFilters}</span>}
           </Button>
         </div>
 
@@ -177,14 +177,14 @@ function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: 
         <div className="relative shrink-0">
           {p?.avatar_url
             ? <img src={p.avatar_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
-            : <span className={cn("grid h-16 w-16 place-items-center rounded-2xl font-display text-xl font-extrabold text-ink", tone)}>{initials}</span>}
+            : <span className={cn("grid h-16 w-16 place-items-center rounded-2xl font-display text-xl font-bold text-ink", tone)}>{initials}</span>}
           <span className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-white", status.dot)} title={status.label} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-extrabold text-ink-2">{name}</p>
+          <p className="truncate font-display text-lg font-bold text-ink-2">{name}</p>
           <p className="mt-0.5 flex items-center gap-1 text-sm">
             {reviews > 0
-              ? <><Star className="h-4 w-4 fill-hl text-hl" /><b className="text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">· {reviews} avis</span></>
+              ? <><Star className="h-4 w-4 fill-gold text-gold" /><b className="text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">· {reviews} avis</span></>
               : <span className="rounded-full bg-peri-soft px-2 py-0.5 text-xs font-bold text-ink">Nouveau</span>}
           </p>
         </div>
@@ -194,7 +194,7 @@ function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: 
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {subjects.slice(0, 3).map((s) => (
-          <span key={s} className={cn("rounded-full px-2.5 py-1 text-xs font-bold", s === highlight ? "bg-hl text-ink-2" : "bg-white/80 text-ink")}>{s}</span>
+          <span key={s} className={cn("rounded-full px-2.5 py-1 text-xs font-bold", s === highlight ? "bg-hl text-white" : "bg-white/80 text-ink")}>{s}</span>
         ))}
         {subjects.length > 3 && <span className="rounded-full px-2 py-1 text-xs font-bold text-muted-foreground">+{subjects.length - 3}</span>}
       </div>

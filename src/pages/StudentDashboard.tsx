@@ -66,14 +66,12 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="reveal flex flex-col gap-4 pt-2 sm:flex-row sm:items-end sm:justify-between">
+      <header className="reveal flex min-h-[120px] flex-col gap-4 pb-6 pt-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold capitalize text-muted-foreground">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
-          <h1 className="mt-1 text-[clamp(1.9rem,3.6vw,2.7rem)] leading-[1.05]">
-            {hello}{firstName ? <>, <span className="hl-mark">{firstName}</span></> : ""} 👋
-          </h1>
+          <p className="text-sm font-medium capitalize text-white/75">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
+          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight text-white">{hello}{firstName ? `, ${firstName}` : ""}</h1>
         </div>
-        <BookLessonDialog />
+        <div className="[&_button]:!bg-none [&_button]:!bg-white [&_button]:!text-ink [&_a]:!bg-none [&_a]:!bg-white [&_a]:!text-ink"><BookLessonDialog /></div>
       </header>
 
       {active && <ActiveLessonBanner lesson={active} role="student" />}
@@ -89,7 +87,7 @@ export default function StudentDashboard() {
               <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
                 <span className="rounded-full bg-white/80 px-3 py-1.5 text-ink-2">{when(next.scheduled_at)}</span>
                 <span className="flex items-center gap-1 rounded-full bg-white/80 px-3 py-1.5 text-ink-2"><Clock className="h-3.5 w-3.5" />{next.duration_minutes} min</span>
-                <span className={cn("rounded-full px-3 py-1.5", next.status === "confirmed" ? "bg-mint-soft text-success" : "bg-hl-soft text-gold-foreground")}>
+                <span className={cn("rounded-full px-3 py-1.5", next.status === "confirmed" ? "bg-mint-soft text-success" : "bg-hl-soft text-hl")}>
                   {next.status === "confirmed" ? "Confirmé" : "En attente du prof"}
                 </span>
               </div>
@@ -102,7 +100,7 @@ export default function StudentDashboard() {
             </>
           ) : (
             <>
-              <span className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> On commence ?</span>
+              <span className="eyebrow">On commence ?</span>
               <h2 className="mt-4 text-[1.9rem] leading-tight">Aucun cours de prévu.</h2>
               <p className="mt-2 max-w-md text-muted-foreground">Choisis un prof, un créneau, et c'est parti. Tu vois le prix en crédits avant de confirmer.</p>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -122,7 +120,7 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div>
-            <p className="flex items-center gap-1.5 font-display font-extrabold text-ink-2"><Trophy className="h-4 w-4 text-gold" />{xp.toLocaleString("fr-FR")} XP</p>
+            <p className="flex items-center gap-1.5 font-display font-bold text-ink-2"><Trophy className="h-4 w-4 text-gold" />{xp.toLocaleString("fr-FR")} XP</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {lvl.toNext > 0 ? <>Encore <b className="text-ink-2">{lvl.toNext} XP</b> pour le niveau {lvl.level + 1}. Un cours terminé = 100 XP.</> : "Niveau maximum atteint, bravo !"}
             </p>
@@ -164,7 +162,7 @@ export default function StudentDashboard() {
                     {open ? (
                       <Button asChild size="sm"><Link to={`/room/${l.id}`}><Video /> Rejoindre</Link></Button>
                     ) : (
-                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", l.status === "confirmed" ? "bg-mint-soft text-success" : "bg-hl-soft text-gold-foreground")}>
+                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", l.status === "confirmed" ? "bg-mint-soft text-success" : "bg-hl-soft text-hl")}>
                         {l.status === "confirmed" ? "Confirmé" : "En attente"}
                       </span>
                     )}
@@ -192,14 +190,14 @@ export default function StudentDashboard() {
                     <Link to={`/tutors/${t.user_id}`} className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-white/70">
                       {p.avatar_url
                         ? <img src={p.avatar_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
-                        : <span className="grid h-11 w-11 place-items-center rounded-xl bg-hl-soft font-display font-extrabold text-ink [&>*]:min-w-0">{(p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "")}</span>}
+                        : <span className="grid h-11 w-11 place-items-center rounded-xl bg-hl-soft font-display font-bold text-ink [&>*]:min-w-0">{(p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "")}</span>}
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-bold text-ink-2">{p.first_name} {p.last_name?.[0] ? `${p.last_name[0]}.` : ""}</p>
                         <p className="truncate text-xs text-muted-foreground">{(t.subjects ?? []).slice(0, 2).join(" · ")}</p>
                       </div>
                       <span className="text-right text-sm">
                         <b className="block text-ink-2">{Number(t.hourly_rate)} €/h</b>
-                        {(t.total_reviews ?? 0) > 0 && <span className="flex items-center justify-end gap-0.5 text-xs text-muted-foreground"><Star className="h-3 w-3 fill-hl text-hl" />{Number(t.rating).toFixed(1).replace(".", ",")}</span>}
+                        {(t.total_reviews ?? 0) > 0 && <span className="flex items-center justify-end gap-0.5 text-xs text-muted-foreground"><Star className="h-3 w-3 fill-gold text-gold" />{Number(t.rating).toFixed(1).replace(".", ",")}</span>}
                       </span>
                     </Link>
                   </li>

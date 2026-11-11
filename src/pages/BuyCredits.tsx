@@ -74,12 +74,12 @@ export default function BuyCredits() {
       <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-end [&>*]:min-w-0">
         <PageHeader eyebrow="Crédits" title={<>Recharge, <span className="hl-mark">réserve</span>, progresse.</>}
           subtitle={<>1 crédit = {CREDIT_VALUE_EUR} € de cours. Débités à la réservation, remboursés si le prof refuse ou si tu annules plus de {FREE_CANCEL_HOURS} h avant. Ils n'expirent jamais.</>} />
-        <div className="glass-ink reveal flex items-center justify-between rounded-3xl p-5">
+        <div className="glass reveal flex items-center justify-between rounded-3xl p-5">
           <div>
-            <p className="text-sm text-white/70">Ton solde</p>
-            <p className="display text-4xl tabular">{balance} <span className="text-lg text-white/70">crédit{balance > 1 ? "s" : ""}</span></p>
+            <p className="text-sm text-muted-foreground">Ton solde</p>
+            <p className="display text-4xl text-ink-2 tabular">{balance} <span className="text-lg font-semibold text-muted-foreground">crédit{balance > 1 ? "s" : ""}</span></p>
           </div>
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-hl text-ink-2 [&>*]:min-w-0"><Coins className="h-6 w-6" /></span>
+          <span className="brand-gradient grid h-12 w-12 place-items-center rounded-2xl text-white"><Coins className="h-6 w-6" /></span>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export default function BuyCredits() {
           const saving = Math.round((1 - perCredit / CREDIT_VALUE_EUR) * 100)
           return (
             <div key={pack.credits} className={cn("glass reveal lift relative flex flex-col p-6", pack.popular && "ring-2 ring-hl")}>
-              {pack.popular && <span className="absolute -top-3 left-6 rounded-full bg-hl px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-2">Le plus choisi</span>}
+              {pack.popular && <span className="absolute -top-3 left-6 rounded-full bg-hl px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-2">Le plus choisi</span>}
               <span className={cn("grid h-12 w-12 place-items-center rounded-2xl", style.color)}><style.icon className="h-6 w-6 text-ink" /></span>
               <p className="mt-4"><span className="display text-5xl text-ink-2">{pack.credits}</span> <span className="font-display font-bold text-muted-foreground">crédits</span></p>
               <p className="text-sm text-muted-foreground">{pack.description} · {pack.credits * CREDIT_VALUE_EUR} € de cours</p>

@@ -3,72 +3,73 @@
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════════════════════════
-   Prof en Ligne — design system « encre & surligneur »
-   Fond bleu brume avec des formes floues qui dérivent, cartes en verre dépoli,
-   titres et boutons pilule bleu encre, accents jaune surligneur et pervenche.
-   Une seule apparence, claire. Typo : Bricolage Grotesque (titres) + Instrument Sans.
+   Prof en Ligne — design system tiré des maquettes Figma
+   Dégradé signature corail → bleu-violet (#B95A5B → #6D67A5), cartes blanches,
+   titres bleu nuit et violet, boutons pilule, typo Montserrat. Sobre et pro.
+   Les noms de jetons (ink, hl, peri…) sont conservés pour ne pas réécrire les pages.
    ════════════════════════════════════════════════════════════════════════════ */
-
 
 @layer base {
   :root, .light, .dark {
     color-scheme: light;
-    --background: 225 45% 96%;         /* brume #F1F4FB */
-    --foreground: 233 40% 14%;         /* encre #151937 */
+    --background: 250 33% 97%;         /* #F6F5FB */
+    --foreground: 236 30% 18%;         /* #20223F */
     --card: 0 0% 100%;
-    --card-foreground: 233 40% 14%;
+    --card-foreground: 236 30% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 233 40% 14%;
-    --primary: 233 52% 20%;            /* bleu encre #18205A */
+    --popover-foreground: 236 30% 18%;
+    --primary: 245 30% 50%;            /* violet #5F59A6 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 228 50% 92%;
-    --secondary-foreground: 233 52% 20%;
-    --muted: 228 40% 92%;
-    --muted-foreground: 231 14% 42%;   /* #5C6080 */
-    --accent: 46 100% 62%;             /* surligneur #FFD43F */
-    --accent-foreground: 233 52% 16%;
-    --destructive: 356 70% 52%;
+    --secondary: 247 30% 95%;
+    --secondary-foreground: 245 30% 40%;
+    --muted: 247 25% 95%;
+    --muted-foreground: 240 9% 44%;    /* #66677B */
+    --accent: 359 52% 55%;             /* corail #CB5A5E */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 355 62% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 228 35% 87%;
-    --input: 228 30% 84%;
-    --ring: 233 90% 66%;
-    --radius: 1.25rem;
+    --border: 247 22% 90%;             /* #E3E2EE */
+    --input: 247 20% 86%;
+    --ring: 245 30% 58%;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 233 40% 14%;
-    --sidebar-primary: 233 52% 20%;
+    --sidebar-foreground: 236 30% 18%;
+    --sidebar-primary: 245 30% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 50% 94%;
-    --sidebar-accent-foreground: 233 40% 14%;
-    --sidebar-border: 228 35% 90%;
-    --sidebar-ring: 233 90% 66%;
+    --sidebar-accent: 247 30% 96%;
+    --sidebar-accent-foreground: 236 30% 18%;
+    --sidebar-border: 247 22% 92%;
+    --sidebar-ring: 245 30% 58%;
 
-    --ink: 233 52% 20%;                /* #18205A */
-    --ink-2: 234 55% 12%;              /* #0E1236 titres */
-    --ink-3: 235 45% 32%;              /* #2C3477 survol */
-    --hl: 46 100% 62%;                 /* surligneur #FFD43F */
-    --hl-soft: 48 100% 88%;            /* #FFF2C2 */
-    --peri: 233 90% 66%;               /* pervenche #5B6CF5 */
-    --peri-soft: 232 90% 94%;          /* #E6E9FE */
-    --mint: 158 55% 42%;               /* #30A57D */
-    --mint-soft: 156 55% 90%;          /* #DAF4EA */
-    --rose: 350 80% 60%;               /* #EB4E68 */
-    --rose-soft: 350 90% 94%;
-    --sky: 200 85% 45%;
-    --sky-soft: 200 85% 92%;
-    --gold: 40 90% 42%;
-    --gold-foreground: 38 80% 18%;
-    --gold-soft: 46 100% 88%;
-    --success: 158 55% 34%;
+    /* Couleurs de marque (noms historiques conservés) */
+    --ink: 245 30% 46%;                /* violet profond #5A549B — liens, accents */
+    --ink-2: 234 45% 18%;              /* bleu nuit #19204B — titres */
+    --ink-3: 245 30% 40%;              /* survol */
+    --hl: 359 52% 55%;                 /* corail #CB5A5E — accent principal */
+    --hl-soft: 358 70% 95%;            /* #FBEAEA */
+    --peri: 245 25% 53%;               /* bleu-violet #6D67A5 */
+    --peri-soft: 247 33% 94%;          /* #ECEBF6 */
+    --mint: 160 50% 36%;               /* #2E8A6C */
+    --mint-soft: 152 40% 92%;
+    --rose: 352 61% 60%;               /* #D85A6B */
+    --rose-soft: 352 70% 95%;
+    --sky: 214 55% 48%;
+    --sky-soft: 214 60% 94%;
+    --gold: 40 88% 50%;                /* étoiles #F0A81A */
+    --gold-foreground: 32 70% 26%;
+    --gold-soft: 42 90% 92%;
+    --success: 160 50% 34%;
     --success-foreground: 0 0% 100%;
-    --warning: 36 95% 34%;
+    --warning: 34 80% 38%;
     --warning-foreground: 0 0% 100%;
-    --info: 233 90% 60%;
+    --info: 214 55% 48%;
     --info-foreground: 0 0% 100%;
 
-    --glass: 0 0% 100%;
-    --shadow-soft: 0 10px 34px hsl(233 52% 20% / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.8);
-    --shadow-lift: 0 20px 44px hsl(233 52% 20% / 0.14);
+    --brand-gradient: linear-gradient(135deg, #B95A5B 0%, #975B76 45%, #6D67A5 100%);
+    --brand-gradient-soft: linear-gradient(135deg, #F8E9EA 0%, #EFE9F4 50%, #E9E8F5 100%);
+    --shadow-soft: 0 1px 2px hsl(240 30% 20% / 0.04), 0 8px 24px hsl(240 30% 20% / 0.06);
+    --shadow-lift: 0 2px 4px hsl(240 30% 20% / 0.05), 0 16px 36px hsl(245 30% 30% / 0.12);
     --ease: cubic-bezier(.2, .7, .2, 1);
   }
 }
@@ -81,129 +82,94 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Instrument Sans Variable", "Segoe UI", system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.55;
+    font-family: "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Bricolage Grotesque Variable", "Segoe UI", system-ui, sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.025em;
+    font-family: "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: hsl(var(--ink-2));
     text-wrap: balance;
   }
   p { text-wrap: pretty; }
   :focus-visible { outline: 2px solid hsl(var(--peri)); outline-offset: 2px; border-radius: 6px; }
-  ::selection { background: hsl(var(--hl) / 0.6); color: hsl(var(--foreground)); }
+  ::selection { background: hsl(var(--peri) / 0.22); color: hsl(var(--foreground)); }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(var(--ink) / 0.18); border-radius: 100px; border: 2px solid transparent; background-clip: padding-box; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink) / 0.3); background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--ink-2) / 0.15); border-radius: 100px; border: 2px solid transparent; background-clip: padding-box; }
 }
 
 @layer components {
-  /* Verre dépoli : la brique de base de toute l'interface */
-  .glass {
-    background: hsl(var(--glass) / 0.62);
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    border: 1px solid hsl(0 0% 100% / 0.75);
+  /* Carte : blanc franc, fine bordure, ombre douce */
+  .glass, .glass-card, .stat-card {
+    background: #fff;
+    border: 1px solid hsl(var(--border) / 0.8);
     box-shadow: var(--shadow-soft);
-    border-radius: 1.5rem;
+    border-radius: 1.25rem;
   }
-  .glass-strong {
-    background: hsl(var(--glass) / 0.82);
-    backdrop-filter: blur(22px) saturate(1.5);
-    -webkit-backdrop-filter: blur(22px) saturate(1.5);
-    border: 1px solid hsl(0 0% 100% / 0.85);
-    box-shadow: 0 14px 44px hsl(233 52% 20% / 0.12), inset 0 1px 0 hsl(0 0% 100% / 0.9);
-  }
-  .glass-tint {
-    background: linear-gradient(135deg, hsl(var(--hl-soft) / 0.85), hsl(var(--glass) / 0.7) 55%, hsl(var(--peri-soft) / 0.65));
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    border: 1px solid hsl(0 0% 100% / 0.8);
-    box-shadow: var(--shadow-soft);
-  }
-  .glass-ink {
-    background: linear-gradient(130deg, hsl(var(--ink) / 0.94), hsl(var(--ink-3) / 0.9));
-    color: #fff;
-    border: 1px solid hsl(0 0% 100% / 0.1);
-    box-shadow: 0 24px 60px hsl(234 55% 12% / 0.3);
-  }
-  .glass-ink h1, .glass-ink h2, .glass-ink h3, .glass-ink h4 { color: #fff; }
+  .glass-strong { background: #fff; border: 1px solid hsl(var(--border) / 0.8); box-shadow: var(--shadow-lift); }
+  /* Carte légèrement teintée (dégradé signature très clair) */
+  .glass-tint, .glass-hero { background: var(--brand-gradient-soft); border: 1px solid hsl(var(--border) / 0.6); box-shadow: var(--shadow-soft); }
+  /* Bloc plein au dégradé signature */
+  .glass-ink, .gradient-hero { background: var(--brand-gradient); color: #fff; box-shadow: 0 18px 40px hsl(330 25% 35% / 0.25); }
+  .glass-ink h1, .glass-ink h2, .glass-ink h3, .glass-ink h4, .gradient-hero h1, .gradient-hero h2, .gradient-hero h3 { color: #fff; }
 
-  /* Pastille de section (« eyebrow ») */
+  .brand-gradient { background: var(--brand-gradient); }
+  .brand-text { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* Petite étiquette de section, comme sur la maquette */
   .eyebrow {
     display: inline-flex; align-items: center; gap: .4rem;
-    font-family: "Bricolage Grotesque Variable", system-ui, sans-serif; font-weight: 800; font-size: .72rem;
-    letter-spacing: .12em; text-transform: uppercase;
-    color: hsl(var(--ink)); background: hsl(var(--hl-soft)); padding: 6px 12px; border-radius: 999px;
+    font-weight: 700; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: hsl(var(--hl)); background: hsl(var(--hl-soft)); padding: 5px 12px; border-radius: 999px;
   }
-  /* Mot surligné, comme au stabilo */
-  .hl-mark { background: linear-gradient(transparent 58%, hsl(var(--hl)) 58%, hsl(var(--hl)) 92%, transparent 92%); padding: 0 .08em; border-radius: 2px; }
-  .hl-mark-anim { background: linear-gradient(transparent 58%, hsl(var(--hl)) 58%, hsl(var(--hl)) 92%, transparent 92%) no-repeat; background-size: 0% 100%; transition: background-size 1s var(--ease) .3s; padding: 0 .08em; }
-  .in .hl-mark-anim, .hl-mark-anim.in { background-size: 100% 100%; }
-  .display { font-family: "Bricolage Grotesque Variable", system-ui, sans-serif; font-weight: 800; letter-spacing: -0.03em; }
-  .hl-dot { color: hsl(var(--hl)); }
+  /* Mot mis en valeur : corail, comme « Perfect Tutor » sur la maquette */
+  .hl-mark, .hl-mark-anim { color: hsl(var(--hl)); }
+  .display { font-weight: 700; letter-spacing: -0.025em; }
 
-  /* Carte qui se soulève au survol */
   .lift { transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
-  .lift:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+  .lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
 
-  /* Apparition au défilement (pilotée par useReveal) */
-  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  /* Apparition douce au défilement (useReveal) */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
 
-  /* Fond animé : formes floues qui dérivent */
-  .blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; animation: drift 22s ease-in-out infinite alternate; }
-  .float-a { animation: float 7s ease-in-out infinite; }
-  .float-b { animation: float 8s ease-in-out infinite -2s; }
-  .float-c { animation: float 6s ease-in-out infinite -4s; }
-
-  /* Anneau de progression (conic-gradient) */
   .ring-progress {
-    --p: 0; --c: hsl(var(--peri)); --track: hsl(var(--ink) / 0.1);
+    --p: 0; --c: hsl(var(--hl)); --track: hsl(var(--peri) / 0.15);
     border-radius: 50%; display: grid; place-items: center; position: relative;
     background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--track) 0);
   }
-  .ring-progress::before { content: ""; position: absolute; inset: 12%; border-radius: 50%; background: hsl(var(--card)); }
+  .ring-progress::before { content: ""; position: absolute; inset: 11%; border-radius: 50%; background: #fff; }
   .ring-progress > * { position: relative; }
 
-  /* ─── Compatibilité : anciennes classes réutilisées par certaines pages ─── */
-  .glass-card { @apply relative rounded-3xl; background: hsl(var(--glass) / 0.62); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); border: 1px solid hsl(0 0% 100% / 0.75); box-shadow: var(--shadow-soft); }
-  .glass-hero { @apply relative overflow-hidden rounded-3xl; background: linear-gradient(135deg, hsl(var(--hl-soft) / 0.85), hsl(var(--glass) / 0.7) 55%, hsl(var(--peri-soft) / 0.65)); border: 1px solid hsl(0 0% 100% / 0.8); box-shadow: var(--shadow-soft); }
-  .gradient-primary { background: hsl(var(--ink)); color: #fff; }
-  .gradient-hero { background: linear-gradient(130deg, hsl(var(--ink)), hsl(var(--ink-3))); color: #fff; }
-  .gradient-subtle { background: hsl(var(--hl-soft) / 0.6); }
+  /* Compatibilité avec d'anciennes classes */
+  .gradient-primary { background: var(--brand-gradient); color: #fff; }
+  .gradient-subtle { background: var(--brand-gradient-soft); }
   .gradient-gold { background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
   .gradient-text { color: hsl(var(--ink-2)); }
   .gold-text { color: hsl(var(--gold)); }
-  .btn-glow { box-shadow: 0 8px 22px hsl(233 52% 20% / 0.22); transition: transform .2s var(--ease), box-shadow .2s; }
-  .btn-glow:hover { transform: translateY(-1px); }
-  .glow, .glow-accent, .glow-gold, .progress-glow { box-shadow: 0 8px 22px hsl(233 52% 20% / 0.16); }
+  .btn-glow, .glow, .glow-accent, .glow-gold, .progress-glow { box-shadow: 0 8px 20px hsl(246 30% 45% / 0.22); }
   .mesh-bg { background: transparent; }
-  .stat-card { @apply rounded-3xl p-5; background: hsl(var(--glass) / 0.62); backdrop-filter: blur(18px); border: 1px solid hsl(0 0% 100% / 0.75); box-shadow: var(--shadow-soft); }
-  .shimmer { background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--card)) 50%, hsl(var(--muted)) 100%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
+  .shimmer { background: linear-gradient(90deg, hsl(var(--muted)) 0%, #fff 50%, hsl(var(--muted)) 100%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
   .xp-badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold; background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
+  .blob { display: none; }
 }
 
 @layer utilities {
   .text-ink { color: hsl(var(--ink)); }
   .text-ink-2 { color: hsl(var(--ink-2)); }
   .text-peri { color: hsl(var(--peri)); }
-  .bg-cream { background: hsl(var(--background)); }
   .tabular { font-variant-numeric: tabular-nums; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
 }
 
-@keyframes drift { to { transform: translate(60px, 40px) scale(1.12); } }
-@keyframes float { 50% { transform: translateY(-14px); } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes marquee { to { transform: translateX(-50%); } }
 @keyframes fadeup { from { opacity: 0; transform: translateY(10px); } }
@@ -211,5 +177,4 @@
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; }
-  .blob, .float-a, .float-b, .float-c { animation: none; }
 }

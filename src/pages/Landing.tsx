@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import {
   ArrowRight, CalendarCheck, Check, ChevronDown, GraduationCap, MessageCircle,
-  MonitorPlay, PenLine, Search, ShieldCheck, Sparkles, Star, TrendingUp, Wallet,
+  MonitorPlay, PenLine, Search, ShieldCheck, Star, TrendingUp, Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -69,9 +69,9 @@ function Hero() {
   return (
     <section className="mx-auto grid min-h-[88vh] max-w-6xl items-center gap-12 px-5 pb-16 pt-14 lg:grid-cols-[1.05fr_1fr] lg:pt-6">
       <div className="reveal">
-        <span className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> Du collège au master</span>
-        <h1 className="mt-5 text-[clamp(2.7rem,6.4vw,5rem)] leading-[0.98]">
-          Le bon prof, <br /><span className="hl-mark-anim">en un clic.</span>
+        <span className="eyebrow">Cours particuliers en visio · du collège au master</span>
+        <h1 className="mt-5 text-[clamp(2.4rem,5.2vw,4rem)] font-bold leading-[1.05]">
+          Trouve le <span className="hl-mark">prof idéal</span> en moins d'une minute.
         </h1>
         <p className="mt-6 max-w-xl text-[1.18rem] leading-relaxed text-muted-foreground">
           Choisis ton prof, réserve un créneau et retrouve-le en visio avec un tableau blanc partagé.
@@ -93,14 +93,14 @@ function Hero() {
         <div style={layer(-18)} className="absolute left-0 top-0 z-10 w-[260px]">
           <div className="glass float-a p-5">
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-extrabold text-ink">CL</span>
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-bold text-ink">CL</span>
               <div>
-                <p className="font-display font-extrabold text-ink-2">Camille L.</p>
+                <p className="font-display font-bold text-ink-2">Camille L.</p>
                 <p className="text-xs text-muted-foreground">Maths · Physique-Chimie</p>
               </div>
             </div>
             <div className="mt-4 flex items-center justify-between">
-              <span className="flex items-center gap-1 text-sm font-bold text-ink-2"><Star className="h-4 w-4 fill-hl text-hl" /> 4,9</span>
+              <span className="flex items-center gap-1 text-sm font-bold text-ink-2"><Star className="h-4 w-4 fill-gold text-gold" /> 4,9</span>
               <span className="rounded-full bg-mint-soft px-2.5 py-1 text-xs font-bold text-mint">Disponible</span>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">Exemple de profil</p>
@@ -109,7 +109,7 @@ function Hero() {
         {/* réservation */}
         <div style={layer(26)} className="absolute right-0 top-[150px] z-20 w-[290px]">
           <div className="glass float-b p-5">
-            <p className="font-display font-extrabold text-ink-2">Mercredi 18 h 00</p>
+            <p className="font-display font-bold text-ink-2">Mercredi 18 h 00</p>
             <p className="text-sm text-muted-foreground">Dérivées · 1 h</p>
             <div className="mt-4 grid grid-cols-4 gap-1.5">
               {["16:00", "17:00", "18:00", "19:00"].map((h) => (
@@ -131,10 +131,10 @@ function Hero() {
             </div>
             <div className="mt-3 rounded-2xl bg-white p-4">
               <svg viewBox="0 0 280 90" className="h-[90px] w-full">
-                <path d="M10 70 C 60 70, 70 20, 120 22 S 200 70, 270 18" fill="none" stroke="hsl(233 90% 66%)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M10 70 C 60 70, 70 20, 120 22 S 200 70, 270 18" fill="none" stroke="hsl(245 25% 53%)" strokeWidth="3" strokeLinecap="round" />
                 <path d="M10 80 H 270 M 20 10 V 85" stroke="hsl(233 52% 20% / .25)" strokeWidth="1.5" />
-                <text x="150" y="16" fontSize="13" fontWeight="700" fill="hsl(233 52% 20%)">f'(x) = 0</text>
-                <rect x="140" y="20" width="62" height="5" rx="2.5" fill="hsl(46 100% 62%)" opacity=".8" />
+                <text x="150" y="16" fontSize="13" fontWeight="700" fill="hsl(234 45% 18%)">f'(x) = 0</text>
+                <rect x="140" y="20" width="62" height="5" rx="2.5" fill="hsl(359 52% 55%)" opacity=".8" />
               </svg>
             </div>
             <p className="mt-3 text-sm font-semibold">Tableau blanc partagé</p>
@@ -162,7 +162,7 @@ function SubjectsMarquee() {
       <div className="flex w-max animate-[marquee_40s_linear_infinite] gap-3 hover:[animation-play-state:paused]">
         {row.map((s, i) => (
           <Link key={i} to={`/tutors?subject=${encodeURIComponent(s)}`}
-            className="glass rounded-full px-5 py-2.5 font-display text-[15px] font-bold text-ink-2 transition hover:bg-hl-soft">
+            className="glass rounded-full px-5 py-2.5 text-[15px] font-semibold text-ink-2 transition hover:border-peri/40 hover:text-ink">
             {s}
           </Link>
         ))}
@@ -198,7 +198,7 @@ function HowItWorks() {
       <SectionHead eyebrow="Comment ça marche" title={<>Quatre étapes, <span className="hl-mark-anim">zéro prise de tête</span>.</>} />
       <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="lg:sticky lg:top-[18vh] lg:h-[460px]">
-          <div className="relative h-[380px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-ink-2 to-ink-3 p-5 shadow-[0_30px_70px_hsl(234_55%_12%/0.35)] sm:h-[440px]">
+          <div className="brand-gradient relative h-[380px] overflow-hidden rounded-[2rem] p-5 shadow-[0_30px_70px_hsl(330_25%_30%/0.3)] sm:h-[440px]">
             {STEPS.map((_, i) => (
               <div key={i} className={cn(
                 "absolute inset-5 rounded-3xl bg-white p-6 transition-all duration-500",
@@ -208,7 +208,7 @@ function HowItWorks() {
               </div>
             ))}
             <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-              {STEPS.map((_, i) => <span key={i} className={cn("h-1.5 rounded-full transition-all", active === i ? "w-6 bg-hl" : "w-1.5 bg-white/40")} />)}
+              {STEPS.map((_, i) => <span key={i} className={cn("h-1.5 rounded-full transition-all", active === i ? "w-6 bg-white" : "w-1.5 bg-white/40")} />)}
             </div>
           </div>
         </div>
@@ -216,8 +216,8 @@ function HowItWorks() {
           {STEPS.map((s, i) => (
             <article key={s.title} data-step={i} ref={(el) => (refs.current[i] = el)}
               className={cn("transition-opacity duration-500", active === i ? "opacity-100" : "opacity-30")}>
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-white shadow-ink"><s.icon className="h-5 w-5" /></span>
-              <p className="mt-4 font-display text-sm font-extrabold uppercase tracking-[0.14em] text-peri">Étape {i + 1}</p>
+              <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-peri/30 bg-white text-peri shadow-card"><s.icon className="h-6 w-6" /></span>
+              <p className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-hl">Étape {i + 1}</p>
               <h3 className="mt-1 text-[1.9rem] leading-tight">{s.title}</h3>
               <p className="mt-3 max-w-md text-[1.08rem] text-muted-foreground">{s.text}</p>
             </article>
@@ -233,13 +233,13 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   const item = cn("transition-all duration-500", on ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0")
   if (index === 0) return (
     <div>
-      <p className="font-display text-lg font-extrabold text-ink-2">Profs de maths · Terminale</p>
+      <p className="font-display text-lg font-bold text-ink-2">Profs de maths · Terminale</p>
       <div className="mt-4 flex flex-col gap-2.5">
         {[["Camille L.", "35 €/h", "4,9"], ["Yanis B.", "28 €/h", "4,8"], ["Inès M.", "40 €/h", "5,0"], ["Hugo D.", "22 €/h", "4,7"]].map(([n, p, r], i) => (
           <div key={n} style={anim(i * 80)} className={cn(item, "flex items-center gap-3 rounded-2xl bg-background px-3 py-2.5")}>
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-xs font-extrabold text-ink">{n.slice(0, 2).toUpperCase()}</span>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-xs font-bold text-ink">{n.slice(0, 2).toUpperCase()}</span>
             <span className="flex-1 font-semibold text-ink-2">{n}</span>
-            <span className="flex items-center gap-1 text-sm font-bold"><Star className="h-3.5 w-3.5 fill-hl text-hl" />{r}</span>
+            <span className="flex items-center gap-1 text-sm font-bold"><Star className="h-3.5 w-3.5 fill-gold text-gold" />{r}</span>
             <span className="w-16 text-right text-sm font-bold text-ink">{p}</span>
           </div>
         ))}
@@ -248,7 +248,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   )
   if (index === 1) return (
     <div>
-      <p className="font-display text-lg font-extrabold text-ink-2">Réserver avec Camille</p>
+      <p className="font-display text-lg font-bold text-ink-2">Réserver avec Camille</p>
       <div className="mt-4 grid grid-cols-7 gap-1.5 text-center text-xs">
         {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => <span key={i} className="font-bold text-muted-foreground">{d}</span>)}
         {Array.from({ length: 14 }, (_, i) => (
@@ -265,15 +265,15 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   if (index === 2) return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between">
-        <p className="font-display text-lg font-extrabold text-ink-2">Salle de cours</p>
+        <p className="font-display text-lg font-bold text-ink-2">Salle de cours</p>
         <span className="flex items-center gap-1.5 rounded-full bg-rose-soft px-2.5 py-1 text-xs font-bold text-rose"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose" />En direct</span>
       </div>
       <div className="mt-3 grid flex-1 grid-cols-[1fr_88px] gap-2.5">
         <div className="rounded-2xl border border-border bg-background p-3">
           <svg viewBox="0 0 200 120" className="h-full w-full">
-            <path d="M10 100 Q 60 10, 110 60 T 190 30" fill="none" stroke="hsl(233 90% 66%)" strokeWidth="3" strokeLinecap="round"
+            <path d="M10 100 Q 60 10, 110 60 T 190 30" fill="none" stroke="hsl(245 25% 53%)" strokeWidth="3" strokeLinecap="round"
               strokeDasharray="300" strokeDashoffset={on ? 0 : 300} style={{ transition: "stroke-dashoffset 1.6s ease .2s" }} />
-            <circle cx="110" cy="60" r="5" fill="hsl(46 100% 55%)" opacity={on ? 1 : 0} style={{ transition: "opacity .4s 1.4s" }} />
+            <circle cx="110" cy="60" r="5" fill="hsl(359 52% 55%)" opacity={on ? 1 : 0} style={{ transition: "opacity .4s 1.4s" }} />
           </svg>
         </div>
         <div className="flex flex-col gap-2">
@@ -285,7 +285,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   )
   return (
     <div>
-      <p className="font-display text-lg font-extrabold text-ink-2">Ta progression</p>
+      <p className="font-display text-lg font-bold text-ink-2">Ta progression</p>
       <div className="mt-4 flex h-[200px] items-end gap-3 border-b-2 border-border px-1 pb-0.5">
         {[34, 48, 55, 68, 82].map((h, i) => (
           <div key={i} className={cn("flex-1 rounded-t-xl transition-all duration-700", i === 4 ? "bg-hl" : "bg-peri-soft")}
@@ -374,9 +374,9 @@ function TutorMiniCard({ tutor }: { tutor: NonNullable<ReturnType<typeof useTuto
       <div className="flex items-center gap-3">
         {p?.avatar_url
           ? <img src={p.avatar_url} alt="" className="h-14 w-14 rounded-2xl object-cover" />
-          : <span className="grid h-14 w-14 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-extrabold text-ink">{initials}</span>}
+          : <span className="grid h-14 w-14 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-bold text-ink">{initials}</span>}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-extrabold text-ink-2">{name}</p>
+          <p className="truncate font-display text-lg font-bold text-ink-2">{name}</p>
           <p className="truncate text-sm text-muted-foreground">{(tutor.subjects ?? []).slice(0, 2).join(" · ") || "Toutes matières"}</p>
         </div>
         <ArrowRight className="h-5 w-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-ink" />
@@ -385,7 +385,7 @@ function TutorMiniCard({ tutor }: { tutor: NonNullable<ReturnType<typeof useTuto
       <div className="mt-4 flex items-center justify-between">
         <span className="text-sm font-bold text-ink-2">
           {reviews > 0
-            ? <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-hl text-hl" />{Number(tutor.rating).toFixed(1).replace(".", ",")} <span className="font-medium text-muted-foreground">({reviews})</span></span>
+            ? <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-gold text-gold" />{Number(tutor.rating).toFixed(1).replace(".", ",")} <span className="font-medium text-muted-foreground">({reviews})</span></span>
             : <span className="text-muted-foreground">Nouveau</span>}
         </span>
         {tutor.hourly_rate != null && <span className="rounded-full bg-hl-soft px-3 py-1 text-sm font-bold text-ink-2">{Number(tutor.hourly_rate)} €/h</span>}
@@ -407,9 +407,9 @@ function ForTutors() {
         <span aria-hidden className="blob" style={{ width: 380, height: 380, top: -120, right: -80, background: "hsl(233 90% 66%)", opacity: 0.35 }} />
         <div className="relative grid gap-10 lg:grid-cols-2">
           <div>
-            <span className="eyebrow !bg-white/10 !text-hl">Pour les profs</span>
+            <span className="eyebrow !bg-white/15 !text-white">Pour les profs</span>
             <h2 className="mt-4 text-[clamp(2rem,4.2vw,3rem)] leading-[1.05]">Enseigne à ton rythme.<br />Garde {Math.round((1 - PLATFORM_COMMISSION) * 100)} % de ce que tu factures.</h2>
-            <ul className="mt-6 space-y-3 text-white/80">
+            <ul className="mt-6 space-y-3 text-white/90">
               {[
                 [Wallet, `Tu fixes ton tarif, entre ${MIN_HOURLY_RATE} et ${MAX_HOURLY_RATE} € de l'heure.`],
                 [CalendarCheck, "Tu acceptes ou refuses chaque demande. Si tu annules, l'élève est remboursé."],
@@ -417,7 +417,7 @@ function ForTutors() {
                 [ShieldCheck, "Les élèves paient d'avance en crédits : pas d'impayés."],
               ].map(([Icon, t], i) => {
                 const I = Icon as typeof Wallet
-                return <li key={i} className="flex gap-3"><I className="mt-0.5 h-5 w-5 shrink-0 text-hl" /><span>{t as string}</span></li>
+                return <li key={i} className="flex gap-3"><I className="mt-0.5 h-5 w-5 shrink-0 text-white" /><span>{t as string}</span></li>
               })}
             </ul>
             <Button asChild variant="highlight" size="lg" className="mt-8"><Link to="/signup?role=tutor">Devenir prof <ArrowRight /></Link></Button>
@@ -427,19 +427,19 @@ function ForTutors() {
             <div className="mt-6 space-y-7">
               <div>
                 <div className="flex justify-between text-sm"><span className="text-white/70">Ton tarif</span><b className="tabular">{rate} €/h</b></div>
-                <Slider className="mt-3 [&_[role=slider]]:border-hl [&_[role=slider]]:bg-hl [&>span:first-child>span]:bg-hl [&>span:first-child]:bg-white/15" min={MIN_HOURLY_RATE} max={80} step={1} value={[rate]} onValueChange={([v]) => setRate(v)} aria-label="Ton tarif horaire" />
+                <Slider className="mt-3 [&_[role=slider]]:border-white [&_[role=slider]]:bg-white [&>span:first-child>span]:bg-white [&>span:first-child]:bg-white/25" min={MIN_HOURLY_RATE} max={80} step={1} value={[rate]} onValueChange={([v]) => setRate(v)} aria-label="Ton tarif horaire" />
               </div>
               <div>
                 <div className="flex justify-between text-sm"><span className="text-white/70">Heures de cours par semaine</span><b className="tabular">{hours} h</b></div>
-                <Slider className="mt-3 [&_[role=slider]]:border-hl [&_[role=slider]]:bg-hl [&>span:first-child>span]:bg-hl [&>span:first-child]:bg-white/15" min={1} max={30} step={1} value={[hours]} onValueChange={([v]) => setHours(v)} aria-label="Heures par semaine" />
+                <Slider className="mt-3 [&_[role=slider]]:border-white [&_[role=slider]]:bg-white [&>span:first-child>span]:bg-white [&>span:first-child]:bg-white/25" min={1} max={30} step={1} value={[hours]} onValueChange={([v]) => setHours(v)} aria-label="Heures par semaine" />
               </div>
             </div>
-            <div className="mt-8 rounded-2xl bg-hl p-5 text-ink-2">
+            <div className="mt-8 rounded-2xl bg-white p-5 text-ink-2">
               <p className="text-sm font-semibold opacity-75">Tu gagnerais environ</p>
               <p className="display text-5xl tabular">{monthly.toLocaleString("fr-FR")} €</p>
               <p className="text-sm font-semibold opacity-75">par mois, commission déduite</p>
             </div>
-            <p className="mt-3 text-xs text-white/50">Estimation : tarif × heures × 4,33 semaines × {Math.round((1 - PLATFORM_COMMISSION) * 100)} %. Hors impôts et cotisations.</p>
+            <p className="mt-3 text-xs text-white/70">Estimation : tarif × heures × 4,33 semaines × {Math.round((1 - PLATFORM_COMMISSION) * 100)} %. Hors impôts et cotisations.</p>
           </div>
         </div>
       </div>
@@ -458,13 +458,13 @@ function Packs() {
           const price = p.priceCents / 100
           const saving = Math.round((1 - price / p.credits / CREDIT_VALUE_EUR) * 100)
           return (
-            <div key={p.credits} className={cn("glass reveal lift relative p-7 text-center", p.popular && "ring-2 ring-hl")}>
-              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-hl px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-ink-2">Le plus choisi</span>}
-              <p className="display text-5xl text-ink-2">{p.credits}</p>
-              <p className="font-display font-bold text-muted-foreground">crédits</p>
-              <p className="display mt-5 text-3xl text-ink-2">{price} €</p>
-              <p className="mt-1 h-5 text-sm font-semibold text-mint">{saving > 0 ? `${saving} % d'économie` : " "}</p>
-              <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
+            <div key={p.credits} className={cn("reveal lift relative rounded-[1.25rem] p-7 text-center", p.popular ? "glass-ink md:-my-3 md:py-10" : "glass")}>
+              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-hl shadow-card">Le plus choisi</span>}
+              <p className={cn("display text-5xl", p.popular ? "text-white" : "text-ink-2")}>{p.credits}</p>
+              <p className={cn("font-semibold", p.popular ? "text-white/80" : "text-muted-foreground")}>crédits</p>
+              <p className={cn("display mt-5 text-3xl", p.popular ? "text-white" : "text-ink-2")}>{price} €</p>
+              <p className={cn("mt-1 h-5 text-sm font-semibold", p.popular ? "text-white" : "text-mint")}>{saving > 0 ? `${saving} % d'économie` : " "}</p>
+              <p className={cn("mt-3 text-sm", p.popular ? "text-white/80" : "text-muted-foreground")}>{p.description}</p>
             </div>
           )
         })}
@@ -496,7 +496,7 @@ function Faq() {
       <div className="mt-2 space-y-3">
         {FAQ.map(([q, a]) => (
           <details key={q} className="glass reveal group px-6 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-display text-[1.08rem] font-extrabold text-ink-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-display text-[1.08rem] font-bold text-ink-2">
               {q}<ChevronDown className="h-5 w-5 shrink-0 text-peri transition-transform group-open:rotate-180" />
             </summary>
             <p className="pb-5 text-muted-foreground">{a}</p>
@@ -510,12 +510,12 @@ function Faq() {
 function FinalCta() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
-      <div className="glass-tint reveal rounded-[2rem] px-6 py-14 text-center">
-        <h2 className="text-[clamp(2rem,4.4vw,3.2rem)] leading-[1.05]">Ton prochain cours <span className="hl-mark-anim">commence ici</span>.</h2>
-        <p className="mx-auto mt-4 max-w-lg text-muted-foreground">Crée ton compte en une minute, trouve ton prof et réserve ton premier créneau.</p>
+      <div className="glass-ink reveal rounded-[2rem] px-6 py-14 text-center">
+        <h2 className="text-[clamp(1.9rem,4vw,2.8rem)] leading-[1.1]">Prêt à progresser ?</h2>
+        <p className="mx-auto mt-4 max-w-lg text-white/85">Crée ton compte en une minute, trouve ton prof et réserve ton premier cours.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg"><Link to="/signup">Créer mon compte <ArrowRight /></Link></Button>
-          <Button asChild size="lg" variant="outline"><a href="#faq"><MessageCircle /> J'ai une question</a></Button>
+          <Button asChild size="lg" variant="highlight"><Link to="/signup">Créer mon compte <ArrowRight /></Link></Button>
+          <Button asChild size="lg" variant="outline" className="border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white"><a href="#faq"><MessageCircle /> J'ai une question</a></Button>
         </div>
       </div>
     </section>

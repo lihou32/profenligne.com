@@ -96,8 +96,8 @@ export function AppSidebar() {
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={active} tooltip={item.title}
           className={cn(
-            "h-10 rounded-full px-3 font-semibold transition-all",
-            active ? "!bg-primary !text-primary-foreground shadow-ink" : "text-ink/75 hover:!bg-ink/[0.06] hover:text-ink",
+            "h-11 rounded-xl px-3.5 font-semibold transition-all",
+            active ? "!bg-[image:var(--brand-gradient)] !text-white shadow-ink" : "text-ink-2/70 hover:!bg-peri-soft hover:!text-ink-2",
           )}>
           <Link to={item.path} onClick={close} aria-current={active ? "page" : undefined}>
             <item.icon className="h-[18px] w-[18px]" />
@@ -109,20 +109,20 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar variant="floating" className="p-3" aria-label="Navigation principale">
-      <SidebarHeader className="px-4 pb-2 pt-5">
+    <Sidebar className="border-r-0" aria-label="Navigation principale">
+      <SidebarHeader className="px-5 pb-4 pt-6">
         <Logo to="/dashboard" />
       </SidebarHeader>
 
       <SidebarContent className="px-1">
         {groups.map((g) => (
           <SidebarGroup key={g.label}>
-            <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80">{g.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-3.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">{g.label}</SidebarGroupLabel>
             <SidebarGroupContent><SidebarMenu className="gap-0.5">{g.items.map((i) => <NavItem key={i.path} item={i} />)}</SidebarMenu></SidebarGroupContent>
           </SidebarGroup>
         ))}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80">Général</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-3.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Général</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
               {GENERAL.map((i) => <NavItem key={i.path} item={i} />)}
@@ -133,9 +133,9 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        <div className="flex items-center gap-3 rounded-2xl bg-white/70 p-2.5 ring-1 ring-ink/5">
+        <div className="flex items-center gap-3 rounded-2xl bg-background p-2.5">
           <Link to="/profile" onClick={close} className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-extrabold text-ink">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft text-sm font-bold text-ink">
               {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-xl object-cover" /> : initials}
             </span>
             <span className="min-w-0">

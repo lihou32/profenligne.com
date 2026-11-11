@@ -15,14 +15,14 @@ import { cn } from "@/lib/utils"
 
 const STATUS: Record<string, { label: string; cls: string; dot: string }> = {
   online: { label: "Disponible maintenant", cls: "bg-mint-soft text-success", dot: "bg-mint" },
-  busy: { label: "Occupé", cls: "bg-hl-soft text-gold-foreground", dot: "bg-hl" },
+  busy: { label: "Occupé", cls: "bg-hl-soft text-hl", dot: "bg-hl" },
   offline: { label: "Hors ligne", cls: "bg-ink/5 text-muted-foreground", dot: "bg-ink/30" },
 }
 
 function Stars({ value, size = "h-4 w-4" }: { value: number; size?: string }) {
   return (
     <span className="flex gap-0.5" aria-label={`${value} sur 5`}>
-      {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={cn(size, i <= Math.round(value) ? "fill-hl text-hl" : "text-ink/15")} />)}
+      {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={cn(size, i <= Math.round(value) ? "fill-gold text-gold" : "text-ink/15")} />)}
     </span>
   )
 }
@@ -112,7 +112,7 @@ export default function TutorProfile() {
               <div className="-mt-12 flex flex-wrap items-end gap-4">
                 {p?.avatar_url
                   ? <img src={p.avatar_url} alt="" className="h-24 w-24 rounded-3xl object-cover ring-4 ring-white" />
-                  : <span className="grid h-24 w-24 place-items-center rounded-3xl bg-white font-display text-3xl font-extrabold text-ink ring-4 ring-white [&>*]:min-w-0">{initials}</span>}
+                  : <span className="grid h-24 w-24 place-items-center rounded-3xl bg-white font-display text-3xl font-bold text-ink ring-4 ring-white [&>*]:min-w-0">{initials}</span>}
                 <span className={cn("mb-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold", status.cls)}>
                   <span className={cn("h-2 w-2 rounded-full", status.dot)} />{status.label}
                 </span>
@@ -159,7 +159,7 @@ export default function TutorProfile() {
                   {reviews.map((r) => (
                     <li key={r.id} className="rounded-2xl bg-white/60 p-4">
                       <div className="flex items-center gap-3">
-                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-sm font-extrabold text-ink [&>*]:min-w-0">{r.student_name[0]?.toUpperCase()}</span>
+                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-sm font-bold text-ink [&>*]:min-w-0">{r.student_name[0]?.toUpperCase()}</span>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-ink-2">{r.student_name}</p>
                           <p className="text-xs text-muted-foreground">{format(new Date(r.created_at), "d MMMM yyyy", { locale: fr })}</p>

@@ -31,7 +31,7 @@ export default function TutorEarnings() {
   const statCards = [
     { label: "Disponible au retrait", value: formatEur(balance?.available), icon: Wallet, color: "bg-mint-soft text-mint" },
     { label: "Total gagné", value: formatEur(balance?.total), icon: TrendingUp, color: "bg-peri-soft text-peri" },
-    { label: "Déjà versé", value: formatEur(balance?.paid), icon: DollarSign, color: "bg-hl-soft text-gold-foreground" },
+    { label: "Déjà versé", value: formatEur(balance?.paid), icon: DollarSign, color: "bg-hl-soft text-hl" },
   ];
 
   const statusColors: Record<string, string> = {

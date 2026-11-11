@@ -71,15 +71,13 @@ export default function TutorDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="reveal flex flex-col gap-4 pt-2 sm:flex-row sm:items-end sm:justify-between">
+      <header className="reveal flex min-h-[120px] flex-col gap-4 pb-6 pt-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold capitalize text-muted-foreground">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
-          <h1 className="mt-1 text-[clamp(1.9rem,3.6vw,2.7rem)] leading-[1.05]">
-            Bonjour{profile?.first_name ? <>, <span className="hl-mark">{profile.first_name}</span></> : ""}
-          </h1>
+          <p className="text-sm font-medium capitalize text-white/75">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
+          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight text-white">Bonjour{profile?.first_name ? `, ${profile.first_name}` : ""}</h1>
         </div>
         <label className="glass-strong flex cursor-pointer items-center gap-3 rounded-full py-2 pl-4 pr-2">
-          <span className={cn("h-2.5 w-2.5 rounded-full", isOnline ? "animate-pulse bg-mint" : "bg-ink/25")} />
+          <span className={cn("h-2.5 w-2.5 rounded-full", isOnline ? "bg-mint" : "bg-ink-2/25")} />
           <span className="text-sm font-bold text-ink-2">{isOnline ? "Disponible maintenant" : "Indisponible"}</span>
           <Switch checked={isOnline} onCheckedChange={toggleStatus} aria-label="Disponibilité" />
         </label>
@@ -114,7 +112,7 @@ export default function TutorDashboard() {
         {/* Demandes */}
         <section className="glass reveal p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg">Demandes {pending.length > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-hl px-1.5 text-xs text-ink-2 [&>*]:min-w-0">{pending.length}</span>}</h2>
+            <h2 className="flex items-center gap-2 text-lg">Demandes {pending.length > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-hl px-1.5 text-xs text-white [&>*]:min-w-0">{pending.length}</span>}</h2>
           </div>
           {pending.length === 0 ? (
             <div className="rounded-2xl bg-white/50 px-4 py-10 text-center">
@@ -126,7 +124,7 @@ export default function TutorDashboard() {
               {pending.slice(0, 5).map((l) => (
                 <li key={l.id} className="rounded-2xl bg-white/70 p-3.5 ring-1 ring-ink/5">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-extrabold text-ink [&>*]:min-w-0">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-bold text-ink [&>*]:min-w-0">
                       {(l.student_profile?.first_name?.[0] ?? "É").toUpperCase()}
                     </span>
                     <div className="min-w-0 flex-1">
