@@ -2,16 +2,20 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Loader2, Check, Coins, Zap, Crown, ShieldCheck, Info } from "lucide-react"
+import { Check, Coins, Zap, Crown, Info, Clock, X } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
-import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useCreditTransactions, useUserCredits } from "@/hooks/useCredits"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CREDIT_PACKS, CREDIT_VALUE_EUR, FREE_CANCEL_HOURS, type CreditPack, friendlyError } from "@/lib/credits"
+import { CREDIT_PACKS, CREDIT_VALUE_EUR, FREE_CANCEL_HOURS, type CreditPack, friendlyError, formatEur } from "@/lib/credits"
+import {
+  useCancelCreditPurchase, useMyCreditPurchases, PAYMENT_METHOD_LABELS, PURCHASE_STATUS_LABELS,
+  type CreditPurchaseRequest, type PaymentMethod,
+} from "@/hooks/useCreditPurchases"
+import { PurchaseDialog } from "@/components/credits/PurchaseDialog"
 
 const PACK_STYLE = [
   { icon: Coins, color: "from-info to-primary" },
@@ -33,7 +37,10 @@ export default function BuyCredits() {
   const { toast } = useToast()
   const { data: credits } = useUserCredits()
   const { data: transactions } = useCreditTransactions()
-  const [loadingPack, setLoadingPack] = useState<number | null>(null)
+  const { data: purchases } = useMyCreditPurchases()
+  const cancelPurchase = useCancelCreditPurchase()
+  const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null)
+  const [openRequest, setOpenRequest] = useState<CreditPurchaseRequest | null>(null)
 
   if (!user) {
     return (
@@ -46,24 +53,17 @@ export default function BuyCredits() {
     )
   }
 
-  const handleBuy = async (pack: CreditPack) => {
-    setLoadingPack(pack.credits)
+  const handleCancel = async (id: string) => {
     try {
-      // L'acheteur est identifié côté serveur par son token, pas par le corps de la requête
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { credits: pack.credits },
-      })
-      if (error || !data?.url) {
-        toast({ variant: "destructive", title: "Paiement indisponible", description: friendlyError(error, "Réessayez dans un instant.") })
-        return
-      }
-      window.location.href = data.url
+      await cancelPurchase.mutateAsync(id)
+      toast({ title: "Demande annulée" })
     } catch (e) {
-      toast({ variant: "destructive", title: "Erreur", description: friendlyError(e, "Une erreur inattendue s'est produite.") })
-    } finally {
-      setLoadingPack(null)
+      toast({ variant: "destructive", title: "Annulation impossible", description: friendlyError(e) })
     }
   }
+
+  const pending = (purchases ?? []).filter((p) => p.status === "pending")
+  const dialogOpen = selectedPack !== null || openRequest !== null
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
@@ -121,7 +121,7 @@ export default function BuyCredits() {
 
               <CardContent className="space-y-4">
                 <ul className="space-y-2.5">
-                  {["Crédits sans date d'expiration", "Paiement sécurisé Stripe", "Disponibles dès le paiement validé"].map((b) => (
+                  {["Crédits sans date d'expiration", "WhatsApp, virement ou Revolut", "Ajoutés dès réception du paiement"].map((b) => (
                     <li key={b} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 shrink-0 text-success" />
                       <span>{b}</span>
@@ -130,14 +130,11 @@ export default function BuyCredits() {
                 </ul>
 
                 <Button
-                  onClick={() => handleBuy(pack)}
-                  disabled={loadingPack !== null}
+                  onClick={() => setSelectedPack(pack)}
                   className={`w-full rounded-xl font-semibold h-11 ${pack.popular ? "gradient-primary text-primary-foreground btn-glow" : ""}`}
                   variant={pack.popular ? "default" : "outline"}
                 >
-                  {loadingPack === pack.credits ? (
-                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Redirection…</span>
-                  ) : "Acheter maintenant"}
+                  Choisir ce pack
                 </Button>
               </CardContent>
             </Card>
@@ -145,10 +142,61 @@ export default function BuyCredits() {
         })}
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <ShieldCheck className="h-4 w-4" />
-        <p>Paiement sécurisé par <span className="font-semibold text-foreground">Stripe</span></p>
-      </div>
+      <p className="text-center text-sm text-muted-foreground">
+        Paiement par WhatsApp, virement ou Revolut. Vos crédits sont ajoutés dès que nous recevons le paiement, en général sous 24 h.
+      </p>
+
+      {(purchases?.length ?? 0) > 0 && (
+        <Card className="glass-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-display">Mes demandes d'achat</CardTitle>
+          </CardHeader>
+          <CardContent className="divide-y divide-border/40">
+            {purchases!.slice(0, 10).map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {p.credits} crédits · {formatEur(p.amount_eur)} · {PAYMENT_METHOD_LABELS[p.method as PaymentMethod] ?? p.method}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Réf. <span className="font-mono">{p.reference}</span> · {format(new Date(p.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                    {p.status === "rejected" && p.admin_note ? ` · ${p.admin_note}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={p.status === "confirmed" ? "default" : "secondary"} className="gap-1">
+                    {p.status === "pending" && <Clock className="h-3 w-3" />}
+                    {PURCHASE_STATUS_LABELS[p.status] ?? p.status}
+                  </Badge>
+                  {p.status === "pending" && (
+                    <>
+                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setOpenRequest(p)}>
+                        Comment payer
+                      </Button>
+                      <Button
+                        size="sm" variant="ghost" className="rounded-lg text-muted-foreground"
+                        disabled={cancelPurchase.isPending}
+                        onClick={() => handleCancel(p.id)}
+                        aria-label="Annuler la demande"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <PurchaseDialog
+        open={dialogOpen}
+        pack={selectedPack}
+        existingRequest={openRequest}
+        pendingCount={pending.length}
+        onClose={() => { setSelectedPack(null); setOpenRequest(null) }}
+      />
 
       {(transactions?.length ?? 0) > 0 && (
         <Card className="glass-card">

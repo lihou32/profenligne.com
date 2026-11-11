@@ -81,6 +81,66 @@ export type Database = {
           },
         ]
       }
+      credit_purchase_requests: {
+        Row: {
+          admin_note: string | null
+          amount_eur: number
+          amount_received_eur: number | null
+          created_at: string
+          credits: number
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_eur: number
+          amount_received_eur?: number | null
+          created_at?: string
+          credits: number
+          id?: string
+          method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_eur?: number
+          amount_received_eur?: number | null
+          created_at?: string
+          credits?: number
+          id?: string
+          method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_purchase_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_purchase_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -240,6 +300,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          account_holder: string | null
+          bic: string | null
+          iban: string | null
+          id: number
+          instructions: string | null
+          revolut_tag: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          account_holder?: string | null
+          bic?: string | null
+          iban?: string | null
+          id?: number
+          instructions?: string | null
+          revolut_tag?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          account_holder?: string | null
+          bic?: string | null
+          iban?: string | null
+          id?: number
+          instructions?: string | null
+          revolut_tag?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
       }
       preregistrations: {
         Row: {
@@ -409,20 +502,6 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: true
             referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -742,6 +821,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_confirm_credit_purchase: {
+        Args: {
+          p_request_id: string
+          p_amount_received_eur?: number
+        }
+        Returns: number
+      }
+      admin_list_credit_purchases: {
+        Args: {
+          p_status?: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          credits: number
+          amount_eur: number
+          method: string
+          reference: string
+          status: string
+          amount_received_eur: number
+          admin_note: string
+          created_at: string
+          processed_at: string
+        }[]
+      }
       admin_list_lessons: {
         Args: {
           p_status?: string
@@ -777,6 +884,13 @@ export type Database = {
           created_at: string
         }[]
       }
+      admin_reject_credit_purchase: {
+        Args: {
+          p_request_id: string
+          p_note?: string
+        }
+        Returns: undefined
+      }
       admin_set_tutor_suspended: {
         Args: {
           p_user_id: string
@@ -796,6 +910,32 @@ export type Database = {
           avg_rating: number
           preregistrations: number
         }[]
+      }
+      admin_update_payment_settings: {
+        Args: {
+          p_whatsapp_number: string
+          p_account_holder: string
+          p_iban: string
+          p_bic: string
+          p_revolut_tag: string
+          p_instructions: string
+        }
+        Returns: {
+          account_holder: string | null
+          bic: string | null
+          iban: string | null
+          id: number
+          instructions: string | null
+          revolut_tag: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       app_setting: {
         Args: {
@@ -843,6 +983,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      cancel_credit_purchase: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: undefined
       }
       cancel_lesson: {
         Args: {
@@ -934,6 +1080,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      credit_pack_price_eur: {
+        Args: {
+          _credits: number
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -960,6 +1112,32 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      request_credit_purchase: {
+        Args: {
+          p_credits: number
+          p_method: string
+        }
+        Returns: {
+          admin_note: string | null
+          amount_eur: number
+          amount_received_eur: number | null
+          created_at: string
+          credits: number
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reference: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_purchase_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       request_withdrawal: {
         Args: {

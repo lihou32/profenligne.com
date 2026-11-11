@@ -38,5 +38,5 @@ export function useCreditTransactions() {
   });
 }
 
-// Credits are managed server-side only (via Stripe webhooks or admin RPC).
+// Les crédits ne sont ajoutés que côté serveur (validation admin d'un paiement, parrainage, remboursement).
 // No client-side credit manipulation is allowed.

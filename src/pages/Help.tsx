@@ -12,7 +12,7 @@ const faqs = [
   { q: "Comment fonctionne le système de crédits ?", a: "Les crédits permettent de réserver des cours. 1 crédit vaut 5 € de cours : un cours d'1 h avec un professeur à 35 €/h coûte donc 7 crédits. Les crédits sont débités à la réservation, remboursés si le professeur refuse ou si vous annulez plus de 24 h avant, et n'expirent jamais." },
   { q: "Comment gagner des points XP ?", a: "Chaque cours terminé rapporte 100 XP aux élèves et 50 XP aux professeurs. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
   { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent avec votre lien et terminent leur premier cours, vous recevez chacun 2 crédits offerts." },
-  { q: "Quels sont les moyens de paiement acceptés ?", a: "Nous acceptons les cartes bancaires (Visa, Mastercard) via notre partenaire de paiement sécurisé Stripe." },
+  { q: "Quels sont les moyens de paiement acceptés ?", a: "Vous pouvez payer par WhatsApp, par virement bancaire ou par Revolut. Choisissez un pack, suivez les instructions avec votre référence : les crédits sont ajoutés dès réception du paiement, en général sous 24 h." },
 ];
 
 export default function Help() {

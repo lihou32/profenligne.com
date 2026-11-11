@@ -54,3 +54,21 @@ Règles métier (modifiables dans `public.app_setting` **et** `src/lib/credits.t
 - Base : `supabase/tests/10_security_scenario.sql` (47 vérifications : escalade de rôle, crédits,
   cycle de cours, avis, parrainage, RLS, admin) — à exécuter sur une base locale après
   `supabase/tests/00_supabase_stub.sql` + migrations.
+
+## Mise à jour — paiement manuel et IA gratuite (11/11/2026)
+
+Stripe est mis de côté. Les crédits s'achètent par **WhatsApp, virement ou Revolut** :
+
+1. L'élève choisit un pack et un moyen de paiement → une demande `PEL-XXXXXX` est créée (`request_credit_purchase`), les admins sont notifiés.
+2. L'élève paie en indiquant la référence.
+3. L'admin ouvre **Panel Admin → Paiements**, vérifie la réception et clique **Payé** (`admin_confirm_credit_purchase`) : les crédits sont ajoutés une seule fois, l'élève est notifié, le CA apparaît dans les statistiques.
+
+Les coordonnées (WhatsApp, IBAN, BIC, titulaire, identifiant Revolut) se saisissent dans le même onglet. Un moyen de paiement n'apparaît aux élèves que si son champ est rempli.
+
+Migration : `supabase/migrations/20261111000200_manual_payments.sql` (rejouable). Tests : `supabase/tests/20_manual_payments.sql`.
+
+**IA (quiz, cartes mentales)** : la fonction `ai-chat` accepte une clé gratuite. Ajouter dans Supabase → Edge Functions → Secrets **une** de ces clés :
+- `GEMINI_API_KEY` — Google AI Studio (aistudio.google.com/apikey), gratuit ; modèle `gemini-2.5-flash` ;
+- ou `GROQ_API_KEY` — console.groq.com, gratuit ; modèle `llama-3.3-70b-versatile`.
+
+`AI_MODEL` permet de forcer un autre modèle. `LOVABLE_API_KEY` reste accepté en dernier recours.
