@@ -4,20 +4,17 @@ import { ArrowRight, Search, SlidersHorizontal, Star, Users, X } from "lucide-re
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { SEO } from "@/components/SEO"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTutors, type TutorWithProfile } from "@/hooks/useData"
 import { SUBJECTS } from "@/lib/constants"
-import { lessonCreditCost } from "@/lib/credits"
+import { MIN_LESSON_PRICE_EUR } from "@/lib/credits"
 import { EmptyState } from "@/components/brand/PageHeader"
 import { cn } from "@/lib/utils"
 
-type SortKey = "rating" | "price_asc" | "price_desc" | "reviews"
+type SortKey = "rating" | "reviews"
 const SORTS: { value: SortKey; label: string }[] = [
   { value: "rating", label: "Mieux notés" },
   { value: "reviews", label: "Plus d'avis" },
-  { value: "price_asc", label: "Prix croissant" },
-  { value: "price_desc", label: "Prix décroissant" },
 ]
 
 const STATUS: Record<string, { dot: string; label: string }> = {
@@ -34,7 +31,6 @@ export default function Tutors() {
   const [search, setSearch] = useState("")
   const deferred = useDeferredValue(search)
   const subject = params.get("subject") ?? "all"
-  const [maxPrice, setMaxPrice] = useState(150)
   const [minRating, setMinRating] = useState(0)
   const [sortBy, setSortBy] = useState<SortKey>("rating")
   const [onlineOnly, setOnlineOnly] = useState(false)
@@ -53,18 +49,15 @@ export default function Tutors() {
       const name = `${t.profiles?.first_name ?? ""} ${t.profiles?.last_name ?? ""}`.toLowerCase()
       if (q && !name.includes(q) && !(t.subjects ?? []).some((s) => s.toLowerCase().includes(q))) return false
       if (subject !== "all" && !(t.subjects ?? []).includes(subject)) return false
-      if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false
       if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false
       if (onlineOnly && t.status !== "online") return false
       return true
     })
     const r = (t: TutorWithProfile) => Number(t.rating) || 0
-    const p = (t: TutorWithProfile) => Number(t.hourly_rate) || 0
     return list.sort((a, b) =>
       sortBy === "rating" ? r(b) - r(a) || (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
-        : sortBy === "reviews" ? (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
-        : sortBy === "price_asc" ? p(a) - p(b) : p(b) - p(a))
-  }, [tutors, deferred, subject, maxPrice, minRating, onlineOnly, sortBy])
+        : (b.total_reviews ?? 0) - (a.total_reviews ?? 0))
+  }, [tutors, deferred, subject, minRating, onlineOnly, sortBy])
 
   // Matières proposées = celles réellement enseignées par les profs (sinon la liste de référence)
   const subjectChips = useMemo(() => {
@@ -73,8 +66,8 @@ export default function Tutors() {
     return found.length ? found.sort((x, y) => order(x) - order(y) || x.localeCompare(y, "fr")) : SUBJECTS
   }, [tutors])
 
-  const activeFilters = (maxPrice < 150 ? 1 : 0) + (minRating > 0 ? 1 : 0) + (onlineOnly ? 1 : 0)
-  const reset = () => { setSearch(""); setSubject("all"); setMaxPrice(150); setMinRating(0); setOnlineOnly(false) }
+  const activeFilters = (minRating > 0 ? 1 : 0) + (onlineOnly ? 1 : 0)
+  const reset = () => { setSearch(""); setSubject("all"); setMinRating(0); setOnlineOnly(false) }
 
   return (
     <div className="space-y-6">
@@ -83,7 +76,7 @@ export default function Tutors() {
       <header className="reveal pt-4 text-center">
         <span className="eyebrow">Les profs</span>
         <h1 className="mt-4 text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.02]">Trouve <span className="hl-mark">ton</span> prof.</h1>
-        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Compare les tarifs et les avis, puis réserve en quelques clics.</p>
+        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Même prix chez tous les profs, dès {MIN_LESSON_PRICE_EUR} € le cours. Compare les avis et réserve en quelques clics.</p>
       </header>
 
       {/* Recherche */}
@@ -99,11 +92,7 @@ export default function Tutors() {
         </div>
 
         {showFilters && (
-          <div className="glass mt-3 grid gap-6 p-5 animate-[fadeup_.35s_ease] sm:grid-cols-3">
-            <div>
-              <div className="flex justify-between text-sm"><span className="font-semibold text-ink-2">Tarif max</span><b className="tabular text-ink-2">{maxPrice >= 150 ? "Tous" : `${maxPrice} €/h`}</b></div>
-              <Slider className="mt-3" min={10} max={150} step={5} value={[maxPrice]} onValueChange={([v]) => setMaxPrice(v)} aria-label="Tarif maximum" />
-            </div>
+          <div className="glass mt-3 grid gap-6 p-5 animate-[fadeup_.35s_ease] sm:grid-cols-2">
             <div>
               <p className="text-sm font-semibold text-ink-2">Note minimum</p>
               <div className="mt-2 flex gap-1.5">
@@ -121,7 +110,7 @@ export default function Tutors() {
                 <SelectContent>{SORTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-ink-2 sm:col-span-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-ink-2 sm:col-span-2">
               <input type="checkbox" checked={onlineOnly} onChange={(e) => setOnlineOnly(e.target.checked)} className="h-4 w-4 accent-[hsl(233_52%_20%)]" />
               Seulement les profs disponibles maintenant
             </label>
@@ -167,7 +156,6 @@ function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: 
   const name = `${p?.first_name ?? "Prof"} ${p?.last_name?.[0] ? `${p.last_name[0]}.` : ""}`.trim()
   const initials = `${p?.first_name?.[0] ?? "P"}${p?.last_name?.[0] ?? ""}`.toUpperCase()
   const status = STATUS[tutor.status] ?? STATUS.offline
-  const rate = Number(tutor.hourly_rate) || 0
   const reviews = tutor.total_reviews ?? 0
   const subjects = [...(tutor.subjects ?? [])].sort((a, b) => (a === highlight ? -1 : b === highlight ? 1 : 0))
 
@@ -201,8 +189,8 @@ function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: 
 
       <div className="mt-auto flex items-end justify-between pt-5">
         <div>
-          <p className="display text-2xl leading-none text-ink-2">{rate ? `${rate} €` : "—"}<span className="text-sm font-semibold text-muted-foreground"> /h</span></p>
-          {rate > 0 && <p className="mt-1 text-xs text-muted-foreground">soit {lessonCreditCost(rate, 60)} crédits l'heure</p>}
+          <p className="text-xs text-muted-foreground">Dès</p>
+          <p className="font-display text-2xl leading-none text-ink-2">{MIN_LESSON_PRICE_EUR} €<span className="font-sans text-sm text-muted-foreground"> le cours</span></p>
         </div>
         <span className="flex h-10 items-center gap-1 rounded-full bg-primary px-4 text-sm font-bold text-white transition group-hover:gap-2">
           Voir <ArrowRight className="h-4 w-4" />

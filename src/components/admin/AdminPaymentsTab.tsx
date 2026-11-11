@@ -28,10 +28,10 @@ export function AdminPaymentsTab() {
   const { confirm, reject } = useAdminPurchaseActions()
 
   const onConfirm = async (id: string, label: string) => {
-    if (!window.confirm(`Confirmer la réception du paiement ${label} ? Les crédits seront ajoutés immédiatement.`)) return
+    if (!window.confirm(`Confirmer la réception du paiement ${label} ? Le solde de l'élève (avec le bonus éventuel) sera crédité immédiatement.`)) return
     try {
       await confirm.mutateAsync({ id })
-      toast({ title: "Paiement validé", description: "Les crédits ont été ajoutés." })
+      toast({ title: "Paiement validé", description: "Le solde de l'élève a été crédité." })
     } catch (e) {
       toast({ variant: "destructive", title: "Validation impossible", description: friendlyError(e) })
     }
@@ -53,7 +53,7 @@ export function AdminPaymentsTab() {
       <Card className="glass-card">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="text-lg">Demandes d'achat de crédits</CardTitle>
+            <CardTitle className="text-lg">Recharges de solde à vérifier</CardTitle>
             <div className="flex gap-1">
               {FILTERS.map((f) => (
                 <Button
@@ -96,7 +96,7 @@ export function AdminPaymentsTab() {
                           <p className="font-medium">{name || "—"}</p>
                           <p className="text-xs text-muted-foreground">{r.email}</p>
                         </td>
-                        <td className="p-3 whitespace-nowrap">{r.credits} cr. · {formatEur(r.amount_eur)}</td>
+                        <td className="p-3 whitespace-nowrap">{formatEur(r.amount_eur)}{Number(r.bonus_eur) > 0 && <span className="block text-xs text-success">+{formatEur(r.bonus_eur)} offerts</span>}</td>
                         <td className="p-3">{PAYMENT_METHOD_LABELS[r.method as PaymentMethod] ?? r.method}</td>
                         <td className="p-3 whitespace-nowrap text-muted-foreground">
                           {format(new Date(r.created_at), "dd MMM HH:mm", { locale: fr })}

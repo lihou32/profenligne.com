@@ -1,25 +1,37 @@
-import { describe, it, expect } from "vitest";
 import {
-  CREDIT_PACKS, friendlyError, isFreeCancellation, isRoomOpen, lessonCreditCost, lessonPriceEur, referralCodeFor,
+  LESSON_DURATIONS, TOPUP_PACKS, friendlyError, isFreeCancellation, isRoomOpen, lessonPaidEur, lessonPriceEur,
+  referralCodeFor, topupBonusEur, tutorShareEur, withdrawalBreakdown,
 } from "@/lib/credits";
 
-describe("credits", () => {
-  it("coût d'un cours = prix / 5 €, arrondi au crédit supérieur (aligné sur lesson_credit_cost)", () => {
-    expect(lessonCreditCost(40, 60)).toBe(8);   // 40 € → 8 crédits
-    expect(lessonCreditCost(35, 60)).toBe(7);   // 35 € → 7 crédits
-    expect(lessonCreditCost(35, 30)).toBe(4);   // 17,50 € → 4 crédits
-    expect(lessonCreditCost(42, 90)).toBe(13);  // 63 € → 13 crédits
-    expect(lessonCreditCost(0, 60)).toBe(1);    // jamais gratuit
-    expect(lessonCreditCost(null, 60)).toBe(1);
+describe("prix et solde", () => {
+  it("grille unique alignée sur public.lesson_price_cents", () => {
+    expect(LESSON_DURATIONS.map((d) => [d.value, d.priceEur])).toEqual([
+      [20, 15], [30, 25], [45, 30], [60, 35], [90, 50], [120, 65],
+    ]);
+    expect(lessonPriceEur(60)).toBe(35);
+    expect(lessonPriceEur(50)).toBe(0); // durée hors grille
   });
 
-  it("prix en euros", () => {
-    expect(lessonPriceEur(52.5, 60)).toBe(52.5);
-    expect(lessonPriceEur(35, 20)).toBeCloseTo(11.67, 2);
+  it("le prof touche 80 % du prix", () => {
+    expect(tutorShareEur(60)).toBe(28);
+    expect(tutorShareEur(120)).toBe(52);
   });
 
-  it("packs alignés sur les edge functions Stripe", () => {
-    expect(CREDIT_PACKS.map((p) => [p.credits, p.priceCents])).toEqual([[5, 2500], [10, 4500], [20, 8000]]);
+  it("bonus de recharge alignés sur public.topup_bonus_eur", () => {
+    expect(TOPUP_PACKS.map((p) => [p.amountEur, p.bonusEur])).toEqual([[50, 5], [70, 7.5], [100, 15], [150, 25]]);
+    expect(topupBonusEur(100)).toBe(15);
+    expect(topupBonusEur(35)).toBe(0);
+  });
+
+  it("frais de retrait de 2 %", () => {
+    expect(withdrawalBreakdown(50)).toEqual({ feeEur: 1, netEur: 49 });
+    expect(withdrawalBreakdown(33.33)).toEqual({ feeEur: 0.67, netEur: 32.66 });
+  });
+
+  it("prix payé d'un cours : centimes, sinon anciens crédits à 5 €", () => {
+    expect(lessonPaidEur({ price_cents: 5000 })).toBe(50);
+    expect(lessonPaidEur({ price_cents: 0, credits_cost: 8 })).toBe(40);
+    expect(lessonPaidEur({ duration_minutes: 30 })).toBe(25);
   });
 
   it("code parrainage = 8 premiers caractères de l'id, en majuscules (aligné sur referral_code_for)", () => {

@@ -26,7 +26,7 @@ const Lessons = lazy(() => import("./pages/Lessons"));
 const LiveConnect = lazy(() => import("./pages/LiveConnect"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Help = lazy(() => import("./pages/Help"));
-// Pricing (abonnements) removed — modèle basé sur crédits uniquement
+// Paiement : solde en euros rechargé manuellement (voir /credits)
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const LessonRoom = lazy(() => import("./pages/LessonRoom"));
 const LessonReport = lazy(() => import("./pages/LessonReport"));

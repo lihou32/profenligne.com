@@ -15,7 +15,7 @@ describe("paiement manuel", () => {
   })
 
   it("pré-remplit le message WhatsApp avec la référence", () => {
-    const url = whatsappLink("33612345678", { credits: 10, amount_eur: 45, reference: "PEL-ABC123" })
+    const url = whatsappLink("33612345678", { amount_eur: 45, reference: "PEL-ABC123" })
     expect(url.startsWith("https://wa.me/33612345678?text=")).toBe(true)
     expect(decodeURIComponent(url.split("text=")[1])).toContain("PEL-ABC123")
     expect(decodeURIComponent(url.split("text=")[1])).toContain("45 €")

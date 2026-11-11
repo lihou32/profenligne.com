@@ -11,7 +11,7 @@ export type StudentLesson = Lesson & { tutor_profile: PersonSummary | null };
 /**
  * Toutes les transitions de statut passent par des RPC côté base
  * (book_lesson, confirm_lesson, cancel_lesson, start_lesson, complete_lesson) :
- * débit/remboursement des crédits, XP, gains prof et notifications sont
+ * débit/remboursement du solde, XP, gains prof et notifications sont
  * gérés de façon atomique côté serveur.
  */
 

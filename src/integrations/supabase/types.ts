@@ -86,8 +86,9 @@ export type Database = {
           admin_note: string | null
           amount_eur: number
           amount_received_eur: number | null
+          bonus_eur: number
           created_at: string
-          credits: number
+          credits: number | null
           id: string
           method: string
           processed_at: string | null
@@ -100,8 +101,9 @@ export type Database = {
           admin_note?: string | null
           amount_eur: number
           amount_received_eur?: number | null
+          bonus_eur?: number
           created_at?: string
-          credits: number
+          credits?: number | null
           id?: string
           method: string
           processed_at?: string | null
@@ -114,8 +116,9 @@ export type Database = {
           admin_note?: string | null
           amount_eur?: number
           amount_received_eur?: number | null
+          bonus_eur?: number
           created_at?: string
-          credits?: number
+          credits?: number | null
           id?: string
           method?: string
           processed_at?: string | null
@@ -194,6 +197,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -213,6 +217,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           notes?: string | null
+          price_cents?: number
           rating?: number | null
           room_id?: string | null
           scheduled_at: string
@@ -232,6 +237,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           notes?: string | null
+          price_cents?: number
           rating?: number | null
           room_id?: string | null
           scheduled_at?: string
@@ -755,7 +761,9 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          fee_eur: number
           id: string
+          net_amount_eur: number | null
           status: string
           stripe_transfer_id: string | null
           tutor_id: string
@@ -764,7 +772,9 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          fee_eur?: number
           id?: string
+          net_amount_eur?: number | null
           status?: string
           stripe_transfer_id?: string | null
           tutor_id: string
@@ -773,7 +783,9 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          fee_eur?: number
           id?: string
+          net_amount_eur?: number | null
           status?: string
           stripe_transfer_id?: string | null
           tutor_id?: string
@@ -838,8 +850,8 @@ export type Database = {
           email: string
           first_name: string
           last_name: string
-          credits: number
           amount_eur: number
+          bonus_eur: number
           method: string
           reference: string
           status: string
@@ -946,7 +958,7 @@ export type Database = {
       become_tutor: {
         Args: {
           p_subjects: string[]
-          p_hourly_rate: number
+          p_hourly_rate?: number
         }
         Returns: string
       }
@@ -966,6 +978,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1002,6 +1015,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1032,6 +1046,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1062,6 +1077,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1080,12 +1096,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      credit_pack_price_eur: {
-        Args: {
-          _credits: number
-        }
-        Returns: number
-      }
       has_role: {
         Args: {
           _user_id: string
@@ -1093,9 +1103,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      lesson_credit_cost: {
+      lesson_price_cents: {
         Args: {
-          _tutor_id: string
           _duration: number
         }
         Returns: number
@@ -1113,17 +1122,18 @@ export type Database = {
         }
         Returns: string
       }
-      request_credit_purchase: {
+      request_topup: {
         Args: {
-          p_credits: number
+          p_amount_eur: number
           p_method: string
         }
         Returns: {
           admin_note: string | null
           amount_eur: number
           amount_received_eur: number | null
+          bonus_eur: number
           created_at: string
-          credits: number
+          credits: number | null
           id: string
           method: string
           processed_at: string | null
@@ -1146,7 +1156,9 @@ export type Database = {
         Returns: {
           amount: number
           created_at: string
+          fee_eur: number
           id: string
+          net_amount_eur: number | null
           status: string
           stripe_transfer_id: string | null
           tutor_id: string
@@ -1171,6 +1183,7 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1211,6 +1224,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      topup_bonus_eur: {
+        Args: {
+          _amount: number
+        }
+        Returns: number
       }
       tutor_available_balance: {
         Args: {

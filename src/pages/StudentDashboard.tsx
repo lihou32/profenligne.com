@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useUserCredits } from "@/hooks/useCredits"
 import { useDashboardStats, useTutors } from "@/hooks/useData"
 import { supabase } from "@/integrations/supabase/client"
-import { isRoomOpen } from "@/lib/credits"
+import { formatEur, isRoomOpen } from "@/lib/credits"
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog"
 import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner"
 import { StatTile } from "@/components/brand/PageHeader"
@@ -102,10 +102,10 @@ export default function StudentDashboard() {
             <>
               <span className="eyebrow">On commence ?</span>
               <h2 className="mt-4 text-[1.9rem] leading-tight">Aucun cours de prévu.</h2>
-              <p className="mt-2 max-w-md text-muted-foreground">Choisis un prof, un créneau, et c'est parti. Tu vois le prix en crédits avant de confirmer.</p>
+              <p className="mt-2 max-w-md text-muted-foreground">Choisis un prof, un créneau, et c'est parti. Tu vois le prix exact avant de confirmer.</p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <Button asChild><Link to="/tutors"><Search /> Trouver un prof</Link></Button>
-                {(credits?.balance ?? 0) === 0 && <Button asChild variant="outline"><Link to="/credits"><Coins /> Acheter des crédits</Link></Button>}
+                {(credits?.balance ?? 0) === 0 && <Button asChild variant="outline"><Link to="/credits"><Coins /> Recharger mon solde</Link></Button>}
               </div>
             </>
           )}
@@ -130,7 +130,7 @@ export default function StudentDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 [&>*]:min-w-0">
-        <StatTile label="Crédits" value={credits?.balance ?? 0} icon={Coins} tone="hl" hint={<Link to="/credits" className="font-semibold text-peri hover:underline">Recharger</Link>} />
+        <StatTile label="Mon solde" value={formatEur(credits?.balanceEur ?? 0)} icon={Coins} tone="hl" hint={<Link to="/credits" className="font-semibold text-peri hover:underline">Recharger</Link>} />
         <StatTile label="Cours terminés" value={isLoading ? "…" : stats?.completedLessons ?? 0} icon={GraduationCap} tone="mint" />
         <StatTile label="Heures de cours" value={isLoading ? "…" : `${String(stats?.totalHours ?? "0").replace(".", ",")} h`} icon={Clock} tone="peri" />
         <StatTile label="À venir" value={upcoming.length} icon={CalendarDays} tone="rose" />
@@ -196,7 +196,6 @@ export default function StudentDashboard() {
                         <p className="truncate text-xs text-muted-foreground">{(t.subjects ?? []).slice(0, 2).join(" · ")}</p>
                       </div>
                       <span className="text-right text-sm">
-                        <b className="block text-ink-2">{Number(t.hourly_rate)} €/h</b>
                         {(t.total_reviews ?? 0) > 0 && <span className="flex items-center justify-end gap-0.5 text-xs text-muted-foreground"><Star className="h-3 w-3 fill-gold text-gold" />{Number(t.rating).toFixed(1).replace(".", ",")}</span>}
                       </span>
                     </Link>

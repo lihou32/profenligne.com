@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import {
   GraduationCap, BookOpen, Euro, Sparkles, Loader2,
   ChevronRight, ChevronLeft, CheckCircle,
@@ -17,13 +16,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
-import { CREDIT_VALUE_EUR, MAX_HOURLY_RATE, MIN_HOURLY_RATE, PLATFORM_COMMISSION, formatEur, friendlyError, lessonCreditCost } from "@/lib/credits";
+import { LESSON_DURATIONS, MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION, WITHDRAWAL_FEE_RATE, formatEur, friendlyError, tutorShareEur } from "@/lib/credits";
 
 const MAX_SUBJECTS = 6;
 
 const STEPS = [
   { title: "Matières", icon: BookOpen },
-  { title: "Tarifs", icon: Euro },
+  { title: "Revenus", icon: Euro },
   { title: "Profil", icon: GraduationCap },
 ];
 
@@ -40,13 +39,12 @@ export default function TutorOnboarding() {
       .filter((x) => (SUBJECTS as readonly string[]).includes(x))
       .slice(0, MAX_SUBJECTS),
   );
-  const [hourlyRate, setHourlyRate] = useState(25);
   const [bio, setBio] = useState(profile?.bio || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canNext = () => {
     if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS;
-    if (step === 1) return hourlyRate >= MIN_HOURLY_RATE && hourlyRate <= MAX_HOURLY_RATE;
+    if (step === 1) return true;
     if (step === 2) return bio.trim().length >= 20;
     return false;
   };
@@ -67,7 +65,6 @@ export default function TutorOnboarding() {
       // Call the become_tutor RPC
       const { error } = await supabase.rpc("become_tutor", {
         p_subjects: selectedSubjects,
-        p_hourly_rate: hourlyRate,
       });
 
       if (error) throw error;
@@ -168,58 +165,32 @@ export default function TutorOnboarding() {
 
             {/* Step 1: Hourly Rate */}
             {step === 1 && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
-                  <CardTitle className="text-xl">Quel est votre tarif horaire ?</CardTitle>
+                  <CardTitle className="text-xl">Un prix unique, la même grille pour tous</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Vous pourrez le modifier à tout moment
+                    Pas de tarif à fixer : l'élève paie selon la durée, et vous touchez {Math.round((1 - PLATFORM_COMMISSION) * 100)} %.
                   </p>
                 </div>
-
-                <div className="flex flex-col items-center gap-6 py-4">
-                  <div className="text-center">
-                    <span className="display text-5xl text-ink-2 tabular-nums">{hourlyRate}</span>
-                    <span className="text-2xl text-muted-foreground ml-1">€/h</span>
-                  </div>
-
-                  <div className="w-full max-w-xs space-y-2">
-                    <Slider
-                      value={[hourlyRate]}
-                      onValueChange={([v]) => setHourlyRate(v)}
-                      min={MIN_HOURLY_RATE}
-                      max={80}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{MIN_HOURLY_RATE}€</span>
-                      <span>80€ (jusqu'à {MAX_HOURLY_RATE}€ en saisie)</span>
-                    </div>
-                  </div>
-
-                  <div className="text-center space-y-1">
-                    <Label className="text-xs text-muted-foreground">Ou saisissez manuellement</Label>
-                    <Input
-                      type="number"
-                      min={MIN_HOURLY_RATE}
-                      max={MAX_HOURLY_RATE}
-                      value={hourlyRate}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        if (v >= 0 && v <= MAX_HOURLY_RATE) setHourlyRate(v);
-                      }}
-                      className="w-24 h-10 text-center rounded-xl bg-secondary/50 border-border/50 mx-auto"
-                    />
-                  </div>
+                <div className="overflow-hidden rounded-xl border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary text-left text-xs text-muted-foreground">
+                      <tr><th className="px-3 py-2 font-medium">Durée</th><th className="px-3 py-2 font-medium">L'élève paie</th><th className="px-3 py-2 font-medium">Vous touchez</th></tr>
+                    </thead>
+                    <tbody>
+                      {LESSON_DURATIONS.map((d) => (
+                        <tr key={d.value} className="border-t">
+                          <td className="px-3 py-2">{d.label}</td>
+                          <td className="px-3 py-2">{formatEur(d.priceEur)}</td>
+                          <td className="px-3 py-2 font-semibold text-ink-2">{formatEur(tutorShareEur(d.value))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-
-                <div className="glass-card p-3 rounded-xl">
-                  <p className="text-xs text-muted-foreground text-center">
-                    Pour 1 h de cours, l'élève paie <strong className="text-foreground">{lessonCreditCost(hourlyRate, 60)} crédits</strong>{" "}
-                    et vous touchez <strong className="text-foreground">{formatEur(lessonCreditCost(hourlyRate, 60) * CREDIT_VALUE_EUR * (1 - PLATFORM_COMMISSION))}</strong>{" "}
-                    (commission plateforme {Math.round(PLATFORM_COMMISSION * 100)} %).
-                  </p>
-                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Retrait dès {MIN_WITHDRAWAL_EUR} € depuis votre espace, avec {Math.round(WITHDRAWAL_FEE_RATE * 100)} % de frais de retrait.
+                </p>
               </div>
             )}
 
@@ -258,7 +229,7 @@ export default function TutorOnboarding() {
                     ))}
                   </div>
                   <p className="text-sm text-foreground">
-                    Tarif : <strong>{hourlyRate}€/h</strong>
+                    Prix : <strong>grille unique, dès {formatEur(LESSON_DURATIONS[0].priceEur)} le cours</strong>
                   </p>
                 </div>
               </div>

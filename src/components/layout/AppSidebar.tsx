@@ -25,7 +25,7 @@ const STUDENT: { label: string; items: Item[] }[] = [
     { title: "Salle de cours", icon: Video, path: "/live" },
   ] },
   { label: "Mon compte", items: [
-    { title: "Crédits", icon: Coins, path: "/credits" },
+    { title: "Mon solde", icon: Coins, path: "/credits" },
     { title: "Certificats", icon: Award, path: "/certificates" },
     { title: "Avis", icon: Star, path: "/reviews" },
     { title: "Parrainage", icon: Gift, path: "/referral" },

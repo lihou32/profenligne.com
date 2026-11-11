@@ -12,7 +12,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCancelLesson, useConfirmLesson, type Lesson } from "@/hooks/useData";
-import { FREE_CANCEL_HOURS, ROOM_OPEN_MINUTES_BEFORE, friendlyError, isFreeCancellation, isRoomOpen } from "@/lib/credits";
+import { FREE_CANCEL_HOURS, ROOM_OPEN_MINUTES_BEFORE, formatEur, friendlyError, isFreeCancellation, isRoomOpen, lessonPaidEur } from "@/lib/credits";
 
 export const LESSON_STATUS: Record<string, { label: string; className: string }> = {
   pending: { label: "En attente", className: "border-transparent bg-hl-soft text-hl" },
@@ -74,7 +74,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
         toast.success(
           viewer === "tutor"
             ? lesson.status === "pending" ? "Demande refusée — l'élève est remboursé" : "Cours annulé — l'élève est remboursé"
-            : freeCancel ? `Cours annulé — ${lesson.credits_cost} crédit(s) remboursé(s)` : "Cours annulé",
+            : freeCancel ? `Cours annulé — ${formatEur(lessonPaidEur(lesson))} remis sur ton solde` : "Cours annulé",
         ),
       onError: (e) => toast.error(friendlyError(e)),
     });
@@ -114,10 +114,10 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
                 <Clock className="h-3 w-3" />
                 {format(scheduled, "HH:mm")} ({formatDuration(lesson.duration_minutes)})
               </span>
-              {lesson.credits_cost > 0 && (
+              {lessonPaidEur(lesson) > 0 && (
                 <span className="flex items-center gap-1">
                   <Coins className="h-3 w-3 text-gold" />
-                  {lesson.credits_cost} crédit{lesson.credits_cost > 1 ? "s" : ""}
+                  {formatEur(lessonPaidEur(lesson))}
                 </span>
               )}
             </div>
@@ -145,10 +145,10 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
                   <AlertDialogTitle>{cancelLabel} ce cours ?</AlertDialogTitle>
                   <AlertDialogDescription>
                     {viewer === "tutor"
-                      ? `L'élève sera prévenu et remboursé de ${lesson.credits_cost} crédit(s).`
+                      ? `L'élève sera prévenu et remboursé de ${formatEur(lessonPaidEur(lesson))}.`
                       : freeCancel
-                        ? `Vous serez remboursé de ${lesson.credits_cost} crédit(s).`
-                        : `Le cours commence dans moins de ${FREE_CANCEL_HOURS} h : les crédits ne seront pas remboursés.`}
+                        ? `Vous serez remboursé de ${formatEur(lessonPaidEur(lesson))} sur votre solde.`
+                        : `Le cours commence dans moins de ${FREE_CANCEL_HOURS} h : le cours ne sera pas remboursé.`}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

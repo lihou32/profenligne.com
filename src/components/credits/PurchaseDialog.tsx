@@ -3,10 +3,10 @@ import { Copy, Landmark, Loader2, MessageCircle, Smartphone, CheckCircle2 } from
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
-import { friendlyError, formatEur, type CreditPack } from "@/lib/credits"
+import { friendlyError, formatEur } from "@/lib/credits"
 import {
   availableMethods, formatIban, PAYMENT_METHOD_LABELS, revolutLink, usePaymentSettings,
-  useRequestCreditPurchase, whatsappLink,
+  useRequestTopup, whatsappLink,
   type CreditPurchaseRequest, type PaymentMethod, type PaymentSettings,
 } from "@/hooks/useCreditPurchases"
 
@@ -24,18 +24,18 @@ const METHOD_HINTS: Record<PaymentMethod, string> = {
 
 interface Props {
   open: boolean
-  /** Pack choisi : étape « choisir le moyen de paiement ». */
-  pack: CreditPack | null
+  /** Recharge choisie (montant payé + bonus) : étape « choisir le moyen de paiement ». */
+  topup: { amountEur: number; bonusEur: number } | null
   /** Demande existante : on affiche directement ses instructions. */
   existingRequest: CreditPurchaseRequest | null
   pendingCount: number
   onClose: () => void
 }
 
-export function PurchaseDialog({ open, pack, existingRequest, pendingCount, onClose }: Props) {
+export function PurchaseDialog({ open, topup, existingRequest, pendingCount, onClose }: Props) {
   const { toast } = useToast()
   const { data: settings, isLoading } = usePaymentSettings()
-  const requestPurchase = useRequestCreditPurchase()
+  const requestPurchase = useRequestTopup()
   const [created, setCreated] = useState<CreditPurchaseRequest | null>(null)
 
   useEffect(() => {
@@ -46,9 +46,9 @@ export function PurchaseDialog({ open, pack, existingRequest, pendingCount, onCl
   const methods = availableMethods(settings)
 
   const choose = async (method: PaymentMethod) => {
-    if (!pack) return
+    if (!topup) return
     try {
-      const r = await requestPurchase.mutateAsync({ credits: pack.credits, method })
+      const r = await requestPurchase.mutateAsync({ amountEur: topup.amountEur, method })
       setCreated(r)
     } catch (e) {
       toast({ variant: "destructive", title: "Demande impossible", description: friendlyError(e) })
@@ -64,9 +64,11 @@ export function PurchaseDialog({ open, pack, existingRequest, pendingCount, onCl
           <>
             <DialogHeader>
               <DialogTitle className="font-display">
-                {pack ? `${pack.credits} crédits · ${formatEur(pack.priceCents / 100)}` : "Acheter des crédits"}
+                {topup ? `Recharge de ${formatEur(topup.amountEur)}` : "Recharger mon solde"}
               </DialogTitle>
-              <DialogDescription>Choisissez comment vous voulez payer.</DialogDescription>
+              <DialogDescription>
+                {topup && topup.bonusEur > 0 ? `${formatEur(topup.bonusEur)} offerts : ${formatEur(topup.amountEur + topup.bonusEur)} sur ton solde. ` : ""}Choisis comment tu veux payer.
+              </DialogDescription>
             </DialogHeader>
 
             {isLoading ? (
@@ -134,7 +136,7 @@ function Instructions({ request, settings }: { request: CreditPurchaseRequest; s
           <CheckCircle2 className="h-5 w-5 text-success" /> Demande enregistrée
         </DialogTitle>
         <DialogDescription>
-          {request.credits} crédits · {amount} · {PAYMENT_METHOD_LABELS[method]}
+          Recharge de {amount}{Number(request.bonus_eur) > 0 ? ` (+${formatEur(request.bonus_eur)} offerts)` : ""} · {PAYMENT_METHOD_LABELS[method]}
         </DialogDescription>
       </DialogHeader>
 
@@ -174,7 +176,7 @@ function Instructions({ request, settings }: { request: CreditPurchaseRequest; s
         )}
 
         <p className="text-xs text-muted-foreground">
-          Vos crédits sont ajoutés dès que nous recevons le paiement, en général sous 24 h. Vous recevrez une notification.
+          Ton solde est crédité dès que nous recevons le paiement, en général sous 24 h. Tu recevras une notification.
         </p>
       </div>
     </>

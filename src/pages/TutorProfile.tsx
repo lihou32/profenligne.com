@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { SEO } from "@/components/SEO"
-import { CREDIT_VALUE_EUR, FREE_CANCEL_HOURS, LESSON_DURATIONS, lessonCreditCost } from "@/lib/credits"
+import { FREE_CANCEL_HOURS, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR, formatEur, lessonPriceEur } from "@/lib/credits"
 import { cn } from "@/lib/utils"
 
 const STATUS: Record<string, { label: string; cls: string; dot: string }> = {
@@ -90,8 +90,7 @@ export default function TutorProfile() {
   const initials = `${p?.first_name?.[0] ?? "P"}${p?.last_name?.[0] ?? ""}`.toUpperCase()
   const status = STATUS[tutor.status] ?? STATUS.offline
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
-  const rate = Number(tutor.hourly_rate) || 0
-  const cost = lessonCreditCost(rate, duration)
+  const price = lessonPriceEur(duration)
   const isStudent = !!user && hasRole("student")
   const isSelf = user?.id === tutor.user_id
   const canBook = isStudent && !tutor.is_suspended && !isSelf
@@ -107,7 +106,7 @@ export default function TutorProfile() {
   return (
     <div className="space-y-6 pb-12">
       <SEO title={`${fullName} — prof de ${seoSubjects}`} path={`/tutors/${id}`} type="profile"
-        description={`Réserve un cours avec ${fullName}.${seoSubjects ? ` Matières : ${seoSubjects}.` : ""} ${rate ? `${rate} € de l'heure.` : ""}`} />
+        description={`Réserve un cours avec ${fullName}.${seoSubjects ? ` Matières : ${seoSubjects}.` : ""} Dès ${MIN_LESSON_PRICE_EUR} € le cours.`} />
 
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-ink-2">
         <ChevronLeft className="h-4 w-4" /> Retour
@@ -187,8 +186,9 @@ export default function TutorProfile() {
 
         {/* Réservation */}
         <aside className="glass-strong reveal rounded-[1.75rem] p-6 lg:sticky lg:top-24">
-          <p className="display text-4xl text-ink-2">{rate ? `${rate} €` : "—"}<span className="text-base font-semibold text-muted-foreground"> / heure</span></p>
-          {rate > 0 && (
+          <p className="text-sm text-muted-foreground">Prix unique, dès</p>
+          <p className="font-display text-4xl font-medium text-ink-2">{MIN_LESSON_PRICE_EUR} €<span className="font-sans text-base font-medium text-muted-foreground"> le cours</span></p>
+          {(
             <>
               <p className="mt-5 text-sm font-semibold text-ink-2">Durée</p>
               <div className="mt-2 grid grid-cols-3 gap-1.5">
@@ -196,12 +196,13 @@ export default function TutorProfile() {
                   <button key={d.value} onClick={() => setDuration(d.value)}
                     className={cn("rounded-xl py-2 text-sm font-bold transition", duration === d.value ? "bg-primary text-white" : "bg-white/70 text-ink hover:bg-white")}>
                     {d.label}
+                    <span className={cn("block text-xs font-medium", duration === d.value ? "text-white/75" : "text-muted-foreground")}>{d.priceEur} €</span>
                   </button>
                 ))}
               </div>
               <div className="mt-4 flex items-center justify-between rounded-2xl bg-hl-soft px-4 py-3">
                 <span className="text-sm text-muted-foreground">Coût du cours</span>
-                <span className="text-right"><b className="font-display text-lg text-ink-2">{cost} crédit{cost > 1 ? "s" : ""}</b><span className="block text-xs text-muted-foreground">{cost * CREDIT_VALUE_EUR} €</span></span>
+                <b className="font-display text-xl font-medium text-ink-2">{formatEur(price)}</b>
               </div>
             </>
           )}

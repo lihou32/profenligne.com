@@ -8,6 +8,7 @@ import { useUserCredits } from "@/hooks/useCredits"
 import { useReveal } from "@/hooks/useReveal"
 import { supabase } from "@/integrations/supabase/client"
 import { LogoMark } from "@/components/brand/Logo"
+import { formatEur } from "@/lib/credits"
 
 /**
  * Espace connecté : barre latérale crème, contenu aéré sur fond crème.
@@ -65,9 +66,9 @@ function TopBar({ isTutor, userId, initials, avatar, name }: { isTutor: boolean;
         </Link>
         <div className="ml-auto flex items-center gap-2">
           {!isTutor && (
-            <Link to="/credits" aria-label={`${credits?.balance ?? 0} crédits — acheter des crédits`}
+            <Link to="/credits" aria-label={`Solde : ${formatEur(credits?.balanceEur ?? 0)} — recharger`}
               className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3.5 text-sm font-semibold text-ink-2 transition hover:border-ink-2/25">
-              <Coins className="h-4 w-4" /><span className="tabular">{credits?.balance ?? 0}</span><span className="hidden sm:inline">crédits</span>
+              <Coins className="h-4 w-4" /><span className="tabular">{formatEur(credits?.balanceEur ?? 0)}</span>
             </Link>
           )}
           <Link to="/notifications" aria-label={unread ? `${unread} notifications non lues` : "Notifications"}

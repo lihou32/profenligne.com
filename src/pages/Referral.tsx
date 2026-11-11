@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { REFERRAL_BONUS_CREDITS, referralCodeFor } from "@/lib/credits"
+import { REFERRAL_BONUS_EUR, centsToEur, formatEur, referralCodeFor } from "@/lib/credits"
 import {
   Gift, Users, Copy, Check, Share2, ArrowRight, Trophy, Zap,
 } from "lucide-react"
@@ -33,7 +33,7 @@ const HOW_IT_WORKS = [
   {
     icon: Gift,
     title: "Vous gagnez tous les deux",
-    desc: `Dès que votre filleul termine son premier cours, vous recevez chacun ${REFERRAL_BONUS_CREDITS} crédits offerts !`,
+    desc: `Dès que votre filleul termine son premier cours, vous recevez chacun ${REFERRAL_BONUS_EUR} € sur votre solde !`,
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
@@ -98,8 +98,8 @@ export default function Referral() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-16">
-      <PageHeader eyebrow="Parrainage" title={<>Invite tes amis, <span className="hl-mark">gagnez des crédits</span>.</>}
-        subtitle={<>{REFERRAL_BONUS_CREDITS} crédits chacun dès que ton ami termine son premier cours.</>} />
+      <PageHeader eyebrow="Parrainage" title={<>Invite tes amis, <span className="hl-mark">gagnez {REFERRAL_BONUS_EUR} €</span>.</>}
+        subtitle={<>{REFERRAL_BONUS_EUR} € chacun sur votre solde dès que ton ami termine son premier cours.</>} />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -122,8 +122,8 @@ export default function Referral() {
         <Card className="glass-card text-center">
           <CardContent className="pt-5 pb-4">
             <Zap className="mx-auto h-6 w-6 text-green-500 mb-2" />
-            <p className="text-3xl font-bold">{creditsEarned}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Crédits gagnés</p>
+            <p className="text-3xl font-bold">{formatEur(centsToEur(creditsEarned))}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Gagnés</p>
           </CardContent>
         </Card>
       </div>
@@ -217,7 +217,7 @@ export default function Referral() {
                     : ""}
                 >
                   {r.status === "completed"
-                    ? `+${r.credits_awarded} crédits`
+                    ? `+${formatEur(centsToEur(r.credits_awarded))}`
                     : "En attente"}
                 </Badge>
               </div>
@@ -228,7 +228,7 @@ export default function Referral() {
 
       {/* Terms */}
       <p className="text-xs text-center text-muted-foreground">
-        Les crédits de parrainage sont crédités automatiquement après le premier cours de votre filleul.
+        Le bonus de parrainage est ajouté automatiquement à votre solde après le premier cours de votre filleul.
         Offre valable pour les nouveaux inscrits uniquement. Pas de limite de parrainages.
       </p>
     </div>

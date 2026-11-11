@@ -111,7 +111,7 @@ export function AdminLessonsTab() {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-medium">
-                            {l.price ? `${formatEur(l.price)} (${l.credits_cost} cr.)` : '—'}
+                            {l.price ? formatEur(l.price) : '—'}
                           </TableCell>
                         </TableRow>
                       ))}

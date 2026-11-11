@@ -4,9 +4,9 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./useAuth";
 
 /**
- * Paiement manuel des crédits (WhatsApp, virement, Revolut).
+ * Recharge du solde par paiement manuel (WhatsApp, virement, Revolut).
  * L'élève crée une demande ; l'admin la valide une fois l'argent reçu.
- * Les crédits ne sont ajoutés que côté serveur (admin_confirm_credit_purchase).
+ * Le solde n'est crédité que côté serveur (admin_confirm_credit_purchase).
  */
 
 export type PaymentMethod = "whatsapp" | "virement" | "revolut";
@@ -37,8 +37,8 @@ export function availableMethods(s: PaymentSettings | null | undefined): Payment
 }
 
 /** Lien WhatsApp avec un message pré-rempli contenant la référence. */
-export function whatsappLink(number: string, req: Pick<CreditPurchaseRequest, "credits" | "amount_eur" | "reference">): string {
-  const text = `Bonjour, je souhaite acheter ${req.credits} crédits Prof en Ligne (${Number(req.amount_eur)} €). Référence : ${req.reference}`;
+export function whatsappLink(number: string, req: Pick<CreditPurchaseRequest, "amount_eur" | "reference">): string {
+  const text = `Bonjour, je souhaite recharger mon solde Prof en Ligne de ${Number(req.amount_eur)} €. Référence : ${req.reference}`;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
@@ -82,11 +82,11 @@ export function useMyCreditPurchases() {
   });
 }
 
-export function useRequestCreditPurchase() {
+export function useRequestTopup() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ credits, method }: { credits: number; method: PaymentMethod }) => {
-      const { data, error } = await supabase.rpc("request_credit_purchase", { p_credits: credits, p_method: method });
+    mutationFn: async ({ amountEur, method }: { amountEur: number; method: PaymentMethod }) => {
+      const { data, error } = await supabase.rpc("request_topup", { p_amount_eur: amountEur, p_method: method });
       if (error) throw error;
       return data as CreditPurchaseRequest;
     },

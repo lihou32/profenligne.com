@@ -112,7 +112,7 @@ export default function Signup() {
 
       {referralCode && (
         <p className="mt-4 rounded-2xl bg-mint-soft px-4 py-3 text-sm font-semibold text-success">
-          Invitation de parrainage appliquée : 2 crédits offerts après ton premier cours.
+          Invitation de parrainage appliquée : 10 € offerts sur ton solde après ton premier cours.
         </p>
       )}
 

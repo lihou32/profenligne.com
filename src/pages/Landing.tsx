@@ -12,8 +12,8 @@ import { useReveal } from "@/hooks/useReveal"
 import { useTutors } from "@/hooks/useTutors"
 import { SUBJECTS } from "@/lib/constants"
 import {
-  CREDIT_PACKS, CREDIT_VALUE_EUR, FREE_CANCEL_HOURS, LESSON_DURATIONS, MAX_HOURLY_RATE, MIN_HOURLY_RATE,
-  PLATFORM_COMMISSION, formatEur, lessonCreditCost, lessonPriceEur,
+  FREE_CANCEL_HOURS, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR, MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION,
+  TOPUP_PACKS, WITHDRAWAL_FEE_RATE, formatEur, lessonPriceEur, tutorShareEur,
 } from "@/lib/credits"
 import { cn } from "@/lib/utils"
 
@@ -64,14 +64,14 @@ function Hero() {
         </h1>
         <p className="mt-7 max-w-[30em] text-[1.15rem] leading-[1.7] text-muted-foreground sm:text-[1.2rem]">
           Des cours particuliers en visio, du collège au master. Compare les profs, réserve un créneau,
-          et paie au cours avec des crédits qui n'expirent jamais.
+          avec un prix unique, le même pour tous les profs.
         </p>
         <div className="mt-9 flex flex-wrap gap-3">
           <Button asChild size="lg"><Link to="/tutors">Trouver mon prof <ArrowRight /></Link></Button>
           <Button asChild size="lg" variant="outline"><Link to="/signup?role=tutor">Je suis prof</Link></Button>
         </div>
         <dl className="mt-12 grid max-w-md grid-cols-3 gap-4 text-sm sm:gap-6 [&>*]:min-w-0 text-muted-foreground">
-          <div><dt className="sr-only">Prix</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">Dès 10 €</b>de l'heure</dd></div>
+          <div><dt className="sr-only">Prix</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">Dès {MIN_LESSON_PRICE_EUR} €</b>le cours</dd></div>
           <div><dt className="sr-only">Annulation</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">{FREE_CANCEL_HOURS} h</b>pour annuler sans frais</dd></div>
           <div><dt className="sr-only">Abonnement</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">0</b>abonnement</dd></div>
         </dl>
@@ -105,7 +105,6 @@ function HeroTutor({ tutor }: { tutor: NonNullable<ReturnType<typeof useTutors>[
           <p className="truncate font-semibold text-ink-2">{name}</p>
           <p className="truncate text-sm text-muted-foreground">{(tutor.subjects ?? []).slice(0, 2).join(" · ") || "Toutes matières"}</p>
         </div>
-        {tutor.hourly_rate != null && <span className="font-display text-xl text-ink-2">{Number(tutor.hourly_rate)} €</span>}
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
         {reviews > 0
@@ -132,10 +131,10 @@ function HeroExample() {
       </div>
       <div className="flex items-center justify-between rounded-2xl border bg-white p-5">
         <div>
-          <p className="font-semibold text-ink-2">Prof à 35 € de l'heure</p>
-          <p className="text-sm text-muted-foreground">Payé en crédits, annulable {FREE_CANCEL_HOURS} h avant</p>
+          <p className="font-semibold text-ink-2">Cours de 1 h</p>
+          <p className="text-sm text-muted-foreground">Payé avec ton solde, annulable {FREE_CANCEL_HOURS} h avant</p>
         </div>
-        <span className="font-display text-xl text-ink-2">{lessonCreditCost(35, 60)} crédits</span>
+        <span className="font-display text-xl text-ink-2">{formatEur(lessonPriceEur(60))}</span>
       </div>
     </div>
   )
@@ -163,7 +162,7 @@ function SubjectsMarquee() {
 
 const STEPS = [
   { icon: Search, title: "Choisis ton prof", text: "Filtre par matière, niveau et tarif. Chaque prof affiche son prix à l'heure, ses avis vérifiés et ses disponibilités." },
-  { icon: CalendarCheck, title: "Réserve un créneau", text: "Tu vois le coût exact en crédits avant de confirmer. Le prof accepte, et tu peux annuler gratuitement jusqu'à 24 h avant." },
+  { icon: CalendarCheck, title: "Réserve un créneau", text: "Tu vois le prix exact avant de confirmer. Le prof accepte, et tu peux annuler gratuitement jusqu'à 24 h avant." },
   { icon: MonitorPlay, title: "Retrouve-le en visio", text: "La salle ouvre 15 minutes avant. Caméra, partage d'écran et tableau blanc : tout se passe dans le navigateur, rien à installer." },
   { icon: TrendingUp, title: "Progresse, cours après cours", text: "Rapport de séance, points d'expérience, certificats : tu vois ce que tu as travaillé et ce qui reste à faire." },
 ]
@@ -223,11 +222,11 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
     <div>
       <p className="font-display text-lg font-medium text-ink-2">Profs de maths · Terminale</p>
       <div className="mt-4 flex flex-col gap-2.5">
-        {[["Camille L.", "35 €/h", "4,9"], ["Yanis B.", "28 €/h", "4,8"], ["Inès M.", "40 €/h", "5,0"], ["Hugo D.", "22 €/h", "4,7"]].map(([n, p, r], i) => (
+        {[["Camille L.", "Lycée", "Dispo"], ["Yanis B.", "Prépa", "Dispo"], ["Inès M.", "Collège", "Ce soir"], ["Hugo D.", "Lycée", "Demain"]].map(([n, p, r], i) => (
           <div key={n} style={anim(i * 80)} className={cn(item, "flex items-center gap-3 rounded-2xl bg-background px-3 py-2.5")}>
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-xs font-bold text-ink">{n.slice(0, 2).toUpperCase()}</span>
             <span className="flex-1 font-semibold text-ink-2">{n}</span>
-            <span className="flex items-center gap-1 text-sm font-bold"><Star className="h-3.5 w-3.5 fill-gold text-gold" />{r}</span>
+            <span className="text-xs font-semibold text-success">{r}</span>
             <span className="w-16 text-right text-sm font-bold text-ink">{p}</span>
           </div>
         ))}
@@ -245,8 +244,8 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
         ))}
       </div>
       <div style={anim(400)} className={cn(item, "mt-5 rounded-2xl bg-hl-soft p-4")}>
-        <div className="flex justify-between text-sm"><span className="text-muted-foreground">Cours d'1 h · 35 €/h</span><b className="text-ink-2">7 crédits</b></div>
-        <div className="mt-1 flex justify-between text-sm"><span className="text-muted-foreground">Ton solde</span><b className="text-ink-2">10 crédits</b></div>
+        <div className="flex justify-between text-sm"><span className="text-muted-foreground">Cours d'1 h</span><b className="text-ink-2">{formatEur(lessonPriceEur(60))}</b></div>
+        <div className="mt-1 flex justify-between text-sm"><span className="text-muted-foreground">Ton solde</span><b className="text-ink-2">{formatEur(55)}</b></div>
       </div>
     </div>
   )
@@ -285,44 +284,33 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   )
 }
 
-/* ─── 4. Simulateur de prix (élèves) ──────────────────────────────────── */
+/* ─── 4. Grille de prix (élèves) ─────────────────────────────────────── */
 
 function PriceSimulator() {
-  const [rate, setRate] = useState(30)
   const [duration, setDuration] = useState(60)
-  const credits = lessonCreditCost(rate, duration)
-  const price = lessonPriceEur(rate, duration)
+  const price = lessonPriceEur(duration)
+  const hourly = Math.round(price / duration * 60 * 100) / 100
 
   return (
     <section id="tarifs" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-20">
-      <SectionHead eyebrow="Combien ça coûte ?" title="Tu sais toujours ce que tu paies." sub={`1 crédit = ${CREDIT_VALUE_EUR} € de cours. Chaque prof fixe son tarif ; le coût en crédits s'affiche avant de réserver.`} />
-      <div className="glass reveal mx-auto mt-4 grid max-w-4xl gap-8 p-6 sm:p-10 md:grid-cols-[1.3fr_1fr]">
-        <div className="space-y-8">
-          <div>
-            <div className="flex items-baseline justify-between">
-              <label className="font-display font-medium text-ink-2" htmlFor="rate">Tarif du prof</label>
-              <span className="display text-2xl text-ink-2 tabular">{rate} €<span className="text-base text-muted-foreground"> / h</span></span>
-            </div>
-            <Slider id="rate" className="mt-4" min={MIN_HOURLY_RATE} max={80} step={1} value={[rate]} onValueChange={([v]) => setRate(v)} aria-label="Tarif horaire du prof" />
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>{MIN_HOURLY_RATE} €</span><span>80 € et plus</span></div>
-          </div>
-          <div>
-            <p className="font-display font-medium text-ink-2">Durée du cours</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {LESSON_DURATIONS.map((d) => (
-                <button key={d.value} type="button" onClick={() => setDuration(d.value)}
-                  className={cn("rounded-full px-4 py-2 text-sm font-bold transition", duration === d.value ? "bg-primary text-white shadow-ink" : "bg-white/70 text-ink hover:bg-white")}>
-                  {d.label}
-                </button>
-              ))}
-            </div>
+      <SectionHead eyebrow="Combien ça coûte ?" title="Un prix clair, le même pour tous." sub="Pas de surprise : le prix dépend seulement de la durée du cours, quel que soit le prof." />
+      <div className="glass reveal mx-auto mt-4 grid max-w-4xl gap-8 p-6 sm:p-10 md:grid-cols-[1.3fr_1fr] [&>*]:min-w-0">
+        <div>
+          <p className="font-display font-medium text-ink-2">Durée du cours</p>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {LESSON_DURATIONS.map((d) => (
+              <button key={d.value} type="button" onClick={() => setDuration(d.value)} aria-pressed={duration === d.value}
+                className={cn("rounded-xl border px-4 py-3 text-left transition", duration === d.value ? "border-ink-2 bg-ink-2 text-white" : "bg-white text-ink-2 hover:border-ink-2/30")}>
+                <span className="block text-sm">{d.label}</span>
+                <span className="font-display text-xl">{d.priceEur} €</span>
+              </button>
+            ))}
           </div>
         </div>
-        <div className="flex flex-col justify-center rounded-3xl bg-hl-soft p-6 text-center">
+        <div className="flex flex-col justify-center rounded-2xl bg-hl-soft p-6 text-center">
           <p className="text-sm font-semibold text-muted-foreground">Ce cours te coûte</p>
-          <p className="display mt-1 text-[3.6rem] leading-none text-ink-2 tabular">{credits}</p>
-          <p className="font-display font-medium text-ink-2">crédit{credits > 1 ? "s" : ""}</p>
-          <p className="mt-3 text-sm text-muted-foreground">soit {formatEur(credits * CREDIT_VALUE_EUR)} (prix exact : {formatEur(price)}, arrondi au crédit supérieur)</p>
+          <p className="mt-1 font-display text-[3.4rem] font-medium leading-none text-ink-2 tabular">{formatEur(price)}</p>
+          <p className="mt-3 text-sm text-muted-foreground">soit {formatEur(hourly)} de l'heure. Plus le cours est long, moins l'heure coûte cher.</p>
         </div>
       </div>
     </section>
@@ -376,7 +364,6 @@ function TutorMiniCard({ tutor }: { tutor: NonNullable<ReturnType<typeof useTuto
             ? <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-gold text-gold" />{Number(tutor.rating).toFixed(1).replace(".", ",")} <span className="font-medium text-muted-foreground">({reviews})</span></span>
             : <span className="text-muted-foreground">Nouveau</span>}
         </span>
-        {tutor.hourly_rate != null && <span className="rounded-full bg-hl-soft px-3 py-1 text-sm font-bold text-ink-2">{Number(tutor.hourly_rate)} €/h</span>}
       </div>
     </Link>
   )
@@ -385,9 +372,9 @@ function TutorMiniCard({ tutor }: { tutor: NonNullable<ReturnType<typeof useTuto
 /* ─── 6. Pour les profs : simulateur de revenus ───────────────────────── */
 
 function ForTutors() {
-  const [rate, setRate] = useState(30)
   const [hours, setHours] = useState(6)
-  const monthly = Math.round(rate * hours * 4.33 * (1 - PLATFORM_COMMISSION))
+  const perHour = tutorShareEur(60)
+  const monthly = Math.round(perHour * hours * 4.33)
 
   return (
     <section id="devenir-prof" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-24">
@@ -396,13 +383,13 @@ function ForTutors() {
         <div className="relative grid gap-10 lg:grid-cols-2">
           <div>
             <span className="eyebrow !text-[#E9A39F]">Pour les profs</span>
-            <h2 className="mt-4 text-[clamp(2rem,4.2vw,3rem)] leading-[1.05]">Enseigne à ton rythme.<br />Garde {Math.round((1 - PLATFORM_COMMISSION) * 100)} % de ce que tu factures.</h2>
+            <h2 className="mt-4 text-[clamp(2rem,4.2vw,3rem)] leading-[1.05]">Enseigne à ton rythme.<br />Garde {Math.round((1 - PLATFORM_COMMISSION) * 100)} % du prix de chaque cours.</h2>
             <ul className="mt-6 space-y-3 text-white/90">
               {[
-                [Wallet, `Tu fixes ton tarif, entre ${MIN_HOURLY_RATE} et ${MAX_HOURLY_RATE} € de l'heure.`],
+                [Wallet, `Prix unique pour tous : tu touches ${formatEur(perHour)} par heure de cours.`],
                 [CalendarCheck, "Tu acceptes ou refuses chaque demande. Si tu annules, l'élève est remboursé."],
                 [PenLine, "Visio, tableau blanc et rapport de séance sont fournis."],
-                [ShieldCheck, "Les élèves paient d'avance en crédits : pas d'impayés."],
+                [ShieldCheck, "Les élèves paient d'avance avec leur solde : pas d'impayés."],
               ].map(([Icon, t], i) => {
                 const I = Icon as typeof Wallet
                 return <li key={i} className="flex gap-3"><I className="mt-0.5 h-5 w-5 shrink-0 text-white" /><span>{t as string}</span></li>
@@ -413,10 +400,7 @@ function ForTutors() {
           <div className="rounded-3xl bg-white/[0.07] p-6 ring-1 ring-white/10 sm:p-8">
             <p className="font-display font-medium">Simule tes revenus</p>
             <div className="mt-6 space-y-7">
-              <div>
-                <div className="flex justify-between text-sm"><span className="text-white/70">Ton tarif</span><b className="tabular">{rate} €/h</b></div>
-                <Slider className="mt-3 [&_[role=slider]]:border-white [&_[role=slider]]:bg-white [&>span:first-child>span]:bg-white [&>span:first-child]:bg-white/25" min={MIN_HOURLY_RATE} max={80} step={1} value={[rate]} onValueChange={([v]) => setRate(v)} aria-label="Ton tarif horaire" />
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-white/70">Tu touches par heure</span><b className="tabular">{formatEur(perHour)}</b></div>
               <div>
                 <div className="flex justify-between text-sm"><span className="text-white/70">Heures de cours par semaine</span><b className="tabular">{hours} h</b></div>
                 <Slider className="mt-3 [&_[role=slider]]:border-white [&_[role=slider]]:bg-white [&>span:first-child>span]:bg-white [&>span:first-child]:bg-white/25" min={1} max={30} step={1} value={[hours]} onValueChange={([v]) => setHours(v)} aria-label="Heures par semaine" />
@@ -427,7 +411,7 @@ function ForTutors() {
               <p className="display text-5xl tabular">{monthly.toLocaleString("fr-FR")} €</p>
               <p className="text-sm font-semibold opacity-75">par mois, commission déduite</p>
             </div>
-            <p className="mt-3 text-xs text-white/70">Estimation : tarif × heures × 4,33 semaines × {Math.round((1 - PLATFORM_COMMISSION) * 100)} %. Hors impôts et cotisations.</p>
+            <p className="mt-3 text-xs text-white/70">Estimation : {formatEur(perHour)} × heures × 4,33 semaines. Avant les {Math.round(WITHDRAWAL_FEE_RATE * 100)} % de frais de retrait, hors impôts et cotisations.</p>
           </div>
         </div>
       </div>
@@ -435,32 +419,27 @@ function ForTutors() {
   )
 }
 
-/* ─── 7. Packs de crédits ─────────────────────────────────────────────── */
+/* ─── 7. Recharges du solde ──────────────────────────────────────────── */
 
 function Packs() {
   return (
     <section className="mx-auto max-w-6xl px-5 pt-24">
-      <SectionHead eyebrow="Crédits" title="Des packs, pas d'abonnement." sub="Les crédits n'expirent jamais. Plus le pack est gros, moins le crédit coûte cher." />
-      <div className="mx-auto mt-4 grid max-w-4xl gap-4 md:grid-cols-3">
-        {CREDIT_PACKS.map((p) => {
-          const price = p.priceCents / 100
-          const saving = Math.round((1 - price / p.credits / CREDIT_VALUE_EUR) * 100)
-          return (
-            <div key={p.credits} className={cn("reveal lift relative rounded-[1.25rem] p-7 text-center", p.popular ? "glass-ink md:-my-3 md:py-10" : "glass")}>
-              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-hl shadow-card">Recommandé</span>}
-              <p className={cn("display text-5xl", p.popular ? "text-white" : "text-ink-2")}>{p.credits}</p>
-              <p className={cn("font-semibold", p.popular ? "text-white/80" : "text-muted-foreground")}>crédits</p>
-              <p className={cn("display mt-5 text-3xl", p.popular ? "text-white" : "text-ink-2")}>{price} €</p>
-              <p className={cn("mt-1 h-5 text-sm font-semibold", p.popular ? "text-white" : "text-mint")}>{saving > 0 ? `${saving} % d'économie` : " "}</p>
-              <p className={cn("mt-3 text-sm", p.popular ? "text-white/80" : "text-muted-foreground")}>{p.description}</p>
-            </div>
-          )
-        })}
+      <SectionHead eyebrow="Ton solde" title="Recharge, et on t'en offre plus." sub="Tu paies tes cours avec ton solde, qui n'expire jamais. Plus la recharge est grosse, plus le bonus est grand. Pas d'abonnement obligatoire." />
+      <div className="mx-auto mt-4 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+        {TOPUP_PACKS.map((p) => (
+          <div key={p.amountEur} className={cn("reveal lift relative rounded-[1.25rem] p-7 text-center", p.recommended ? "glass-ink" : "glass")}>
+            {p.recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-hl px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">Recommandé</span>}
+            <p className={cn("text-sm", p.recommended ? "text-white/75" : "text-muted-foreground")}>Tu paies</p>
+            <p className={cn("font-display text-5xl font-medium", p.recommended ? "text-white" : "text-ink-2")}>{p.amountEur} €</p>
+            <p className={cn("mt-4 text-sm font-semibold", p.recommended ? "text-[#9FD9BE]" : "text-success")}>+{formatEur(p.bonusEur)} offerts</p>
+            <p className={cn("mt-1 text-sm", p.recommended ? "text-white/80" : "text-muted-foreground")}>{formatEur(p.amountEur + p.bonusEur)} sur ton solde</p>
+          </div>
+        ))}
       </div>
       <div className="reveal mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
         <span className="font-semibold">Paiement par</span>
-        {["WhatsApp", "virement", "Revolut"].map((m) => <span key={m} className="rounded-full bg-white/70 px-3 py-1 font-bold text-ink">{m}</span>)}
-        <span>· crédits ajoutés dès réception, en général sous 24 h</span>
+        {["WhatsApp", "virement", "Revolut"].map((m) => <span key={m} className="rounded-full border bg-white px-3 py-1 font-semibold text-ink-2">{m}</span>)}
+        <span>· solde crédité dès réception, en général sous 24 h</span>
       </div>
     </section>
   )
@@ -470,10 +449,11 @@ function Packs() {
 
 const FAQ = [
   ["Comment se passe un cours ?", "En visio, directement dans le navigateur : caméra, micro, partage d'écran et tableau blanc. La salle ouvre 15 minutes avant l'heure prévue. Rien à installer."],
-  ["Comment je paie ?", `Tu achètes un pack de crédits (1 crédit = ${CREDIT_VALUE_EUR} €) par WhatsApp, virement ou Revolut. Les crédits sont débités à la réservation et n'expirent jamais.`],
+  ["Combien coûte un cours ?", `Le même prix chez tous les profs : ${LESSON_DURATIONS.map((d) => `${d.label} ${d.priceEur} €`).join(", ")}.`],
+  ["Comment je paie ?", "Tu recharges ton solde par WhatsApp, virement ou Revolut (à partir de 50 €, un bonus est offert). Le prix du cours est débité à la réservation, et ton solde n'expire jamais."],
   ["Et si je dois annuler ?", `Tant que le prof n'a pas confirmé, ou jusqu'à ${FREE_CANCEL_HOURS} h avant le cours, tu es remboursé intégralement. Si c'est le prof qui annule, tu es toujours remboursé.`],
   ["Quels niveaux ?", "Du collège au master : chaque prof indique ses matières et ses niveaux sur son profil."],
-  ["Je suis prof, comment je suis payé ?", `Tu touches ${Math.round((1 - PLATFORM_COMMISSION) * 100)} % du prix de chaque cours terminé. Tu demandes un retrait depuis ton espace dès 20 €.`],
+  ["Je suis prof, comment je suis payé ?", `Tu touches ${Math.round((1 - PLATFORM_COMMISSION) * 100)} % du prix de chaque cours terminé. Tu demandes un retrait depuis ton espace dès ${MIN_WITHDRAWAL_EUR} € (frais de retrait : ${Math.round(WITHDRAWAL_FEE_RATE * 100)} %).`],
   ["Les avis sont-ils vrais ?", "Seul un élève qui a terminé un cours avec le prof peut laisser un avis, une fois par cours."],
 ]
 
