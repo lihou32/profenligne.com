@@ -84,6 +84,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_credit_transactions_stripe
   ON public.credit_transactions(stripe_payment_id)
   WHERE stripe_payment_id IS NOT NULL;
 ALTER TABLE public.credit_transactions ADD COLUMN IF NOT EXISTS lesson_id UUID REFERENCES public.lessons(id) ON DELETE SET NULL;
+-- Montant réellement encaissé (achats Stripe) : les packs sont remisés, donc ≠ crédits × 5 €
+ALTER TABLE public.credit_transactions ADD COLUMN IF NOT EXISTS amount_paid_eur NUMERIC(10,2);
 
 -- Tutor earnings : un seul gain par cours
 CREATE UNIQUE INDEX IF NOT EXISTS uq_tutor_earnings_lesson
@@ -402,6 +404,10 @@ BEGIN
     RAISE EXCEPTION 'Durée invalide' USING ERRCODE = '22023';
   END IF;
 
+  -- Sérialise les réservations d'un même prof : sans ce verrou, deux élèves
+  -- pourraient réserver le même créneau en même temps.
+  PERFORM pg_advisory_xact_lock(hashtext('book_lesson:' || p_tutor_id::text));
+
   -- Pas de double réservation du prof sur un créneau qui se chevauche
   IF EXISTS (
     SELECT 1 FROM public.lessons l
@@ -627,15 +633,21 @@ $$;
 -- ─── Demande de retrait (prof) ──────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.tutor_available_balance(_tutor_id UUID)
 RETURNS NUMERIC
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT
+BEGIN
+  -- Un prof ne peut consulter que son propre solde
+  IF _tutor_id IS DISTINCT FROM auth.uid() AND NOT public.has_role(auth.uid(), 'admin') THEN
+    RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501';
+  END IF;
+  RETURN
     COALESCE((SELECT sum(amount) FROM public.tutor_earnings WHERE tutor_id = _tutor_id), 0)
     - COALESCE((SELECT sum(amount) FROM public.withdrawal_requests
-                WHERE tutor_id = _tutor_id AND status <> 'rejected'), 0)
+                WHERE tutor_id = _tutor_id AND status <> 'rejected'), 0);
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.request_withdrawal(p_amount NUMERIC)
@@ -673,7 +685,8 @@ $$;
 -- ─── Ajout de crédits (Stripe webhook uniquement — service_role) ────────────
 DROP FUNCTION IF EXISTS public.add_credits(UUID, INTEGER, TEXT, TEXT);
 CREATE OR REPLACE FUNCTION public.add_credits(
-  p_user_id UUID, p_credits INTEGER, p_description TEXT, p_stripe_session_id TEXT
+  p_user_id UUID, p_credits INTEGER, p_description TEXT, p_stripe_session_id TEXT,
+  p_amount_paid_eur NUMERIC DEFAULT NULL
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -696,6 +709,8 @@ BEGIN
   END IF;
 
   bal := public._credit(p_user_id, p_credits, 'purchase', p_description, p_stripe_session_id, NULL);
+  UPDATE public.credit_transactions SET amount_paid_eur = p_amount_paid_eur
+   WHERE stripe_payment_id = p_stripe_session_id AND p_stripe_session_id IS NOT NULL;
   PERFORM public._notify(p_user_id, 'Paiement reçu 💳',
     p_credits || ' crédits ont été ajoutés à votre compte.', 'payment', '/credits');
   RETURN bal;
@@ -724,6 +739,8 @@ BEGIN
   IF NEW.student_id   IS DISTINCT FROM OLD.student_id
   OR NEW.tutor_id     IS DISTINCT FROM OLD.tutor_id
   OR NEW.status       IS DISTINCT FROM OLD.status
+  OR NEW.subject      IS DISTINCT FROM OLD.subject
+  OR NEW.topic        IS DISTINCT FROM OLD.topic
   OR NEW.credits_cost IS DISTINCT FROM OLD.credits_cost
   OR NEW.scheduled_at IS DISTINCT FROM OLD.scheduled_at
   OR NEW.duration_minutes IS DISTINCT FROM OLD.duration_minutes
@@ -890,6 +907,10 @@ DROP POLICY IF EXISTS "Public can view tutor profiles" ON public.profiles;
 CREATE POLICY "Public can view tutor profiles" ON public.profiles
   FOR SELECT TO anon
   USING (EXISTS (SELECT 1 FROM public.tutors WHERE tutors.user_id = profiles.user_id));
+-- La policy filtre les lignes ; les droits de colonnes limitent ce qu'un visiteur
+-- voit à la partie publique (pas d'année de naissance, de préférences, etc.)
+REVOKE SELECT ON public.profiles FROM anon;
+GRANT SELECT (user_id, first_name, last_name, avatar_url, bio) ON public.profiles TO anon;
 
 -- User roles : un utilisateur ne peut jamais s'attribuer un rôle
 -- ("Admins can manage roles" reste la seule policy d'écriture)
@@ -989,8 +1010,8 @@ DROP POLICY IF EXISTS "Anyone can insert referrals" ON public.referrals;
 -- Fonctions internes : jamais appelables depuis le client
 REVOKE ALL ON FUNCTION public._notify(UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public._credit(UUID, INTEGER, TEXT, TEXT, TEXT, UUID) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.add_credits(UUID, INTEGER, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.add_credits(UUID, INTEGER, TEXT, TEXT) TO service_role;
+REVOKE ALL ON FUNCTION public.add_credits(UUID, INTEGER, TEXT, TEXT, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.add_credits(UUID, INTEGER, TEXT, TEXT, NUMERIC) TO service_role;
 REVOKE ALL ON FUNCTION public.tutor_available_balance(UUID) FROM PUBLIC, anon;
 
 -- RPC utilisateur : connectés uniquement

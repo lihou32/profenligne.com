@@ -59,6 +59,7 @@ Deno.serve(async (req: Request) => {
     p_credits: credits,
     p_description: `Achat de ${credits} crédits`,
     p_stripe_session_id: session.id,
+    p_amount_paid_eur: (session.amount_total ?? 0) / 100,
   });
   if (error) {
     console.error("add_credits failed:", error);

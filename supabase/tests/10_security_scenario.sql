@@ -30,7 +30,7 @@ RESET ROLE;
 
 -- Webhook Stripe (service_role) x2 pour idempotence
 SET ROLE service_role;
-SELECT 'T13 achat 10 credits:', add_credits('22222222-2222-2222-2222-222222222222', 10, 'Achat', 'cs_test_1');
+SELECT 'T13 achat 10 credits:', add_credits('22222222-2222-2222-2222-222222222222', 10, 'Achat', 'cs_test_1', 45);
 SELECT 'T14 rejeu webhook (attendu 10):', add_credits('22222222-2222-2222-2222-222222222222', 10, 'Achat', 'cs_test_1');
 RESET ROLE;
 
@@ -102,4 +102,20 @@ SELECT 'T46 prof suspendu se reactive (attendu erreur)'; UPDATE tutors SET is_su
 RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222222',false);
 SELECT 'T47 resa prof suspendu (attendu erreur)'; SELECT book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','x', now()+interval '4 days', 30);
+RESET ROLE;
+
+-- ─── Retours de revue (Codex) ───────────────────────────────────────────────
+SET ROLE anon; SELECT set_config('request.jwt.claim.sub','',false);
+SELECT 'T48 visiteur lit annee de naissance (attendu erreur)'; SELECT birth_year FROM profiles;
+SELECT 'T49 visiteur lit colonnes publiques (attendu 1):', count(*) FROM (SELECT user_id, first_name, bio FROM profiles) x;
+RESET ROLE;
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222222',false);
+SELECT 'T50 eleve lit solde d''un prof (attendu erreur)'; SELECT tutor_available_balance('11111111-1111-1111-1111-111111111111');
+SELECT 'T51 eleve renomme la matiere (attendu erreur)'; UPDATE lessons SET subject='Hack' WHERE student_id=auth.uid();
+RESET ROLE;
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
+SELECT 'T52 prof lit son propre solde (attendu 32 = 2 cours):', tutor_available_balance(auth.uid());
+RESET ROLE;
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','55555555-5555-5555-5555-555555555555',false);
+SELECT 'T53 CA reel (45 paye, pas 50):', revenue_this_month FROM admin_stats();
 RESET ROLE;

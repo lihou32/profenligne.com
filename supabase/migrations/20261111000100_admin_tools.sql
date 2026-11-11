@@ -158,11 +158,9 @@ BEGIN
     (SELECT count(*) FROM public.tutors WHERE NOT is_suspended),
     (SELECT count(*) FROM public.lessons WHERE scheduled_at >= m0 AND status <> 'cancelled'),
     (SELECT count(*) FROM public.lessons WHERE scheduled_at >= m1 AND scheduled_at < m0 AND status <> 'cancelled'),
-    -- Chiffre d'affaires encaissé = achats de crédits (en €), hors bonus parrainage
-    COALESCE((SELECT sum(amount) FROM public.credit_transactions WHERE type = 'purchase' AND created_at >= m0), 0)
-      * public.app_setting('credit_value_eur'),
-    COALESCE((SELECT sum(amount) FROM public.credit_transactions WHERE type = 'purchase' AND created_at >= m1 AND created_at < m0), 0)
-      * public.app_setting('credit_value_eur'),
+    -- Chiffre d'affaires réellement encaissé via Stripe (packs remisés inclus), hors bonus parrainage
+    COALESCE((SELECT sum(amount_paid_eur) FROM public.credit_transactions WHERE type = 'purchase' AND created_at >= m0), 0),
+    COALESCE((SELECT sum(amount_paid_eur) FROM public.credit_transactions WHERE type = 'purchase' AND created_at >= m1 AND created_at < m0), 0),
     COALESCE((SELECT round(avg(rating)::numeric, 2) FROM public.reviews), 0),
     (SELECT count(*) FROM public.preregistrations);
 END;

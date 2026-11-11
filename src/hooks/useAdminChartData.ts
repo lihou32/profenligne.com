@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CREDIT_VALUE_EUR } from "@/lib/credits";
 
 export function useAdminChartData(months = 6) {
   return useQuery({
@@ -29,10 +28,10 @@ export function useAdminChartData(months = 6) {
           .neq("status", "cancelled")
           .gte("scheduled_at", rangeStart)
           .lte("scheduled_at", rangeEnd),
-        // Chiffre d'affaires = achats de crédits (1 crédit = CREDIT_VALUE_EUR)
+        // Chiffre d'affaires = montants réellement payés via Stripe
         supabase
           .from("credit_transactions")
-          .select("amount, created_at")
+          .select("amount_paid_eur, created_at")
           .eq("type", "purchase")
           .gte("created_at", rangeStart)
           .lte("created_at", rangeEnd),
@@ -45,10 +44,10 @@ export function useAdminChartData(months = 6) {
 
       return ranges.map((r) => {
         const monthLessons = lessons.filter((l) => l.scheduled_at >= r.start && l.scheduled_at <= r.end);
-        const monthCredits = purchases
+        const monthRevenue = purchases
           .filter((p) => p.created_at >= r.start && p.created_at <= r.end)
-          .reduce((s, p) => s + p.amount, 0);
-        return { mois: r.label, cours: monthLessons.length, revenus: monthCredits * CREDIT_VALUE_EUR };
+          .reduce((s, p) => s + Number(p.amount_paid_eur ?? 0), 0);
+        return { mois: r.label, cours: monthLessons.length, revenus: Math.round(monthRevenue) };
       });
     },
   });

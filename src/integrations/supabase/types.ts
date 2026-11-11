@@ -84,6 +84,7 @@ export type Database = {
       credit_transactions: {
         Row: {
           amount: number
+          amount_paid_eur: number | null
           created_at: string
           description: string | null
           id: string
@@ -94,6 +95,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_paid_eur?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -104,6 +106,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_paid_eur?: number | null
           created_at?: string
           description?: string | null
           id?: string
