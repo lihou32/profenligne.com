@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Camera, Save, Loader2, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/credits";
 import { SUBJECTS, GRADE_LEVELS, SCHOOL_TYPES } from "@/lib/constants";
 
 export default function Profile() {
@@ -89,8 +91,8 @@ export default function Profile() {
         .eq("user_id", user.id);
 
       toast.success("Photo de profil mise à jour !");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'upload");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de l'upload"));
     } finally {
       setIsUploading(false);
     }
@@ -100,7 +102,7 @@ export default function Profile() {
     if (!user) return;
     setIsSaving(true);
     try {
-      const updates: Record<string, any> = {
+      const updates: TablesUpdate<"profiles"> = {
         first_name: firstName,
         last_name: lastName,
         bio,
@@ -133,8 +135,8 @@ export default function Profile() {
       }
 
       toast.success("Profil mis à jour avec succès !");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la sauvegarde");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de la sauvegarde"));
     } finally {
       setIsSaving(false);
     }

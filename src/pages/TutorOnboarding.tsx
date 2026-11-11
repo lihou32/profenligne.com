@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,6 +15,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
+import { CREDIT_VALUE_EUR, MAX_HOURLY_RATE, MIN_HOURLY_RATE, PLATFORM_COMMISSION, formatEur, friendlyError, lessonCreditCost } from "@/lib/credits";
+
+const MAX_SUBJECTS = 6;
 
 const STEPS = [
   { title: "Matières", icon: BookOpen },
@@ -25,18 +27,24 @@ const STEPS = [
 
 export default function TutorOnboarding() {
   useDocumentTitle("Devenir Professeur");
-  const navigate = useNavigate();
   const { user, profile } = useAuth();
 
   const [step, setStep] = useState(0);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  // Pré-remplit avec les matières choisies à l'inscription
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() =>
+    String(user?.user_metadata?.subjects ?? "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter((x) => (SUBJECTS as readonly string[]).includes(x))
+      .slice(0, MAX_SUBJECTS),
+  );
   const [hourlyRate, setHourlyRate] = useState(25);
   const [bio, setBio] = useState(profile?.bio || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canNext = () => {
-    if (step === 0) return selectedSubjects.length > 0;
-    if (step === 1) return hourlyRate >= 10 && hourlyRate <= 150;
+    if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS;
+    if (step === 1) return hourlyRate >= MIN_HOURLY_RATE && hourlyRate <= MAX_HOURLY_RATE;
     if (step === 2) return bio.trim().length >= 20;
     return false;
   };
@@ -66,8 +74,8 @@ export default function TutorOnboarding() {
 
       // Force a page reload to refresh auth context (roles)
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de la création du profil tuteur");
+    } catch (err: unknown) {
+      toast.error(friendlyError(err, "Erreur lors de la création du profil professeur"));
     } finally {
       setIsSubmitting(false);
     }
@@ -142,9 +150,10 @@ export default function TutorOnboarding() {
                       >
                         <Checkbox
                           checked={checked}
+                          disabled={!checked && selectedSubjects.length >= MAX_SUBJECTS}
                           onCheckedChange={(c) =>
                             setSelectedSubjects((prev) =>
-                              c ? [...prev, subject] : prev.filter((s) => s !== subject)
+                              c ? (prev.length >= MAX_SUBJECTS ? prev : [...prev, subject]) : prev.filter((s) => s !== subject)
                             )
                           }
                         />
@@ -181,14 +190,14 @@ export default function TutorOnboarding() {
                     <Slider
                       value={[hourlyRate]}
                       onValueChange={([v]) => setHourlyRate(v)}
-                      min={10}
+                      min={MIN_HOURLY_RATE}
                       max={80}
                       step={1}
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>10€</span>
-                      <span>80€</span>
+                      <span>{MIN_HOURLY_RATE}€</span>
+                      <span>80€ (jusqu'à {MAX_HOURLY_RATE}€ en saisie)</span>
                     </div>
                   </div>
 
@@ -196,12 +205,12 @@ export default function TutorOnboarding() {
                     <Label className="text-xs text-muted-foreground">Ou saisissez manuellement</Label>
                     <Input
                       type="number"
-                      min={10}
-                      max={150}
+                      min={MIN_HOURLY_RATE}
+                      max={MAX_HOURLY_RATE}
                       value={hourlyRate}
                       onChange={(e) => {
                         const v = Number(e.target.value);
-                        if (v >= 0 && v <= 150) setHourlyRate(v);
+                        if (v >= 0 && v <= MAX_HOURLY_RATE) setHourlyRate(v);
                       }}
                       className="w-24 h-10 text-center rounded-xl bg-secondary/50 border-border/50 mx-auto"
                     />
@@ -210,8 +219,9 @@ export default function TutorOnboarding() {
 
                 <div className="glass-card p-3 rounded-xl">
                   <p className="text-xs text-muted-foreground text-center">
-                    Tarif moyen sur la plateforme : <strong className="text-foreground">25€/h</strong>.
-                    Les professeurs entre 20€ et 35€ reçoivent le plus de demandes.
+                    Pour 1 h de cours, l'élève paie <strong className="text-foreground">{lessonCreditCost(hourlyRate, 60)} crédits</strong>{" "}
+                    et vous touchez <strong className="text-foreground">{formatEur(lessonCreditCost(hourlyRate, 60) * CREDIT_VALUE_EUR * (1 - PLATFORM_COMMISSION))}</strong>{" "}
+                    (commission plateforme {Math.round(PLATFORM_COMMISSION * 100)} %).
                   </p>
                 </div>
               </div>

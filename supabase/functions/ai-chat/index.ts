@@ -167,83 +167,15 @@ serve(async (req) => {
       }
     }
 
-    // ─── Default chat mode ──────────────────────────────
-    const { messages } = body;
-
-    // Validate messages array
-    if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
-      return new Response(JSON.stringify({ error: "Invalid messages array" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    for (const msg of messages) {
-      if (!msg.role || !["user", "assistant", "system"].includes(msg.role)) {
-        return new Response(JSON.stringify({ error: "Invalid message role" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (typeof msg.content === "string" && msg.content.length > MAX_MESSAGE_LENGTH) {
-        return new Response(JSON.stringify({ error: "Message too long" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `Tu es un tuteur IA bienveillant et pédagogue pour des élèves francophones (collège, lycée, université). 
-Tu aides avec les devoirs, expliques des concepts, résous des exercices étape par étape.
-Tu utilises le markdown pour structurer tes réponses (titres, listes, formules, code).
-Si l'élève envoie une image de devoir, analyse-la attentivement et aide-le.
-Sois encourageant et patient. Réponds toujours en français.`,
-          },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Trop de requêtes, réessayez dans un moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Crédits IA épuisés." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(
-        JSON.stringify({ error: "Erreur du service IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    // Le mode chat libre (« Tuteur IA ») a été retiré du produit.
+    return new Response(JSON.stringify({ error: "Mode non supporté" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ai-chat error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

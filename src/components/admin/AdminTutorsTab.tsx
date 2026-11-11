@@ -18,7 +18,8 @@ export function AdminTutorsTab() {
   const handleToggle = async (id: string, isSuspended: boolean) => {
     setLoadingIds((prev) => new Set(prev).add(id));
     try {
-      isSuspended ? await approveTutor(id) : await suspendTutor(id);
+      if (isSuspended) await approveTutor(id);
+      else await suspendTutor(id);
     } catch (err) {
       logger.error('AdminTutorsTab erreur', err);
     } finally {

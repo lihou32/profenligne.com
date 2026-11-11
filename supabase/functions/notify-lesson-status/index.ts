@@ -107,28 +107,9 @@ Deno.serve(async (req) => {
       timeZone: "Europe/Paris",
     });
 
-    // ─── 1. In-app notification ───────────────────────────────────────────────
+    // La notification in-app est créée côté base par la RPC (book_lesson / confirm_lesson / cancel_lesson).
+    // Cette fonction ne s'occupe plus que de l'email.
     const isConfirmed = newStatus === "confirmed";
-
-    const notifTitle = isConfirmed
-      ? `Cours confirmé — ${lesson.subject}`
-      : `Cours annulé — ${lesson.subject}`;
-
-    const notifMessage = isConfirmed
-      ? `${tutorName} a accepté votre demande de cours de ${lesson.subject}${lesson.topic ? ` (${lesson.topic})` : ""}. Rendez-vous le ${dateStr} à ${timeStr}.`
-      : `${tutorName} a refusé votre demande de cours de ${lesson.subject}${lesson.topic ? ` (${lesson.topic})` : ""} prévu le ${dateStr} à ${timeStr}.`;
-
-    const { error: notifError } = await supabaseAdmin.from("notifications").insert({
-      user_id: lesson.student_id,
-      title: notifTitle,
-      message: notifMessage,
-      type: "lesson",
-      read: false,
-    });
-
-    if (notifError) {
-      console.error("Failed to create in-app notification:", notifError);
-    }
 
     // ─── 2. Email notification via Resend ─────────────────────────────────────
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -224,13 +205,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, inAppNotification: !notifError, emailSent }),
+      JSON.stringify({ success: true, emailSent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error in notify-lesson-status:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

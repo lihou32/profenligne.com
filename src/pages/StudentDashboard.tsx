@@ -1,9 +1,11 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type Profile } from "@/hooks/useAuth";
+import { useUserCredits } from "@/hooks/useCredits";
+import { isRoomOpen } from "@/lib/credits";
 import { useDashboardStats, useTutors } from "@/hooks/useData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Clock, TrendingUp, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap, CheckCircle2, CircleDashed, UserCircle, GraduationCap } from "lucide-react";
+import { BookOpen, Clock, Video, Star, CalendarDays, Sparkles, ArrowRight, Users, Trophy, Zap, CheckCircle2, CircleDashed, UserCircle, GraduationCap, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -15,14 +17,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { XPBadge } from "@/components/gamification/XPBadge";
 
-const PROFILE_FIELDS = [
+const PROFILE_FIELDS: { key: keyof Profile; label: string }[] = [
   { key: "first_name", label: "Prénom" },
   { key: "last_name", label: "Nom" },
   { key: "bio", label: "Biographie" },
   { key: "grade_level", label: "Niveau scolaire" },
 ];
 
-function ProfileCompletion({ profile }: { profile: any }) {
+function ProfileCompletion({ profile }: { profile: Profile | null }) {
   const completed = PROFILE_FIELDS.filter((f) => !!profile?.[f.key]);
   const pct = Math.round((completed.length / PROFILE_FIELDS.length) * 100);
   if (pct === 100) return null;
@@ -30,7 +32,7 @@ function ProfileCompletion({ profile }: { profile: any }) {
   return (
     <Card className="glass-card border-primary/20 animate-fade-in">
       <CardContent className="p-5">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 shrink-0">
             <div className="gradient-primary flex h-10 w-10 items-center justify-center rounded-xl">
               <UserCircle className="h-5 w-5 text-primary-foreground" />
@@ -40,10 +42,10 @@ function ProfileCompletion({ profile }: { profile: any }) {
               <p className="text-xs text-muted-foreground">{pct}% — {PROFILE_FIELDS.length - completed.length} champ{PROFILE_FIELDS.length - completed.length > 1 ? "s" : ""} manquant{PROFILE_FIELDS.length - completed.length > 1 ? "s" : ""}</p>
             </div>
           </div>
-          <div className="flex-1 max-w-xs">
+          <div className="flex-1 min-w-[120px] max-w-xs">
             <Progress value={pct} className="h-2" />
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
             {PROFILE_FIELDS.map((f) =>
               profile?.[f.key] ? (
                 <CheckCircle2 key={f.key} className="h-4 w-4 text-success" />
@@ -81,23 +83,21 @@ export default function StudentDashboard() {
   });
 
   // Cours actif : in_progress, ou confirmed démarré depuis moins de duration_minutes
-  const activeLesson = (stats?.upcomingLessons || []).find((l) => {
-    const start = new Date(l.scheduled_at).getTime();
-    const now = Date.now();
-    const durationMs = (l.duration_minutes || 120) * 60 * 1000;
-    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + durationMs);
-  });
+  const activeLesson = (stats?.upcomingLessons || []).find(
+    (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes)),
+  );
+  const { data: credits } = useUserCredits();
 
   const statCards = [
     { label: "Heures de cours", value: stats?.totalHours || "0", icon: Clock, color: "from-primary to-info" },
     { label: "Cours terminés", value: String(stats?.completedLessons || 0), icon: BookOpen, color: "from-success to-info" },
-    { label: "Moyenne", value: stats?.averageRating || "—", icon: TrendingUp, color: "from-gold to-warning" },
+    { label: "Crédits", value: String(credits?.balance ?? 0), icon: Coins, color: "from-gold to-warning" },
     { label: "Cours à venir", value: String(stats?.upcomingLessons?.length || 0), icon: CalendarDays, color: "from-accent to-primary" },
   ];
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">
             Bonjour, <span className="gradient-text">{displayName}</span> 👋
@@ -259,7 +259,7 @@ export default function StudentDashboard() {
                 <p className="text-sm text-muted-foreground">Aucun tuteur inscrit</p>
               </div>
             )}
-            {(tutors || []).filter((t: any) => t.status === "online").slice(0, 4).map((tutor: any, i: number) => {
+            {(tutors || []).filter((t) => t.status === "online").slice(0, 4).map((tutor, i) => {
               const initial = (tutor.profiles?.first_name?.[0] || "T").toUpperCase();
               const name = tutor.profiles?.first_name ? `${tutor.profiles.first_name} ${tutor.profiles.last_name || ""}` : "Tuteur";
               return (

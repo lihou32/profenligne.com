@@ -14,7 +14,8 @@ import {
 import { format, startOfMonth, endOfMonth, eachWeekOfInterval, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useUpdateLesson } from "@/hooks/useData";
+import { useConfirmLesson, useCancelLesson } from "@/hooks/useData";
+import { friendlyError, isRoomOpen } from "@/lib/credits";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,34 +27,46 @@ export default function TutorDashboard() {
   const { data: lessons } = useTutorLessons();
   const { data: tutorProfile } = useTutorProfile();
   const updateStatus = useUpdateTutorStatus();
-  const updateLesson = useUpdateLesson();
+  const confirmLesson = useConfirmLesson();
+  const cancelLesson = useCancelLesson();
   const displayName = profile?.first_name || "Professeur";
   const isOnline = tutorProfile?.status === "online";
 
-  const pendingLessons = (lessons || []).filter((l: any) => l.status === "pending");
-  const upcomingLessons = (lessons || []).filter((l: any) => ["confirmed", "in_progress"].includes(l.status));
+  const now = Date.now();
+  const pendingLessons = (lessons || []).filter(
+    (l) => l.status === "pending" && new Date(l.scheduled_at).getTime() > now,
+  );
+  const upcomingLessons = (lessons || []).filter(
+    (l) => ["confirmed", "in_progress"].includes(l.status)
+      && (l.status === "in_progress" || new Date(l.scheduled_at).getTime() + l.duration_minutes * 60_000 > now),
+  );
 
   // Cours actif : in_progress, ou confirmed démarré depuis moins de duration_minutes
-  const activeLesson = upcomingLessons.find((l: any) => {
-    const start = new Date(l.scheduled_at).getTime();
-    const now = Date.now();
-    const durationMs = (l.duration_minutes || 120) * 60 * 1000;
-    return l.status === "in_progress" || (l.status === "confirmed" && now >= start - 5 * 60 * 1000 && now < start + durationMs);
-  });
+  const activeLesson = upcomingLessons.find(
+    (l) => l.status === "in_progress" || isRoomOpen(l.scheduled_at, l.duration_minutes),
+  );
 
   const handleToggleStatus = () => {
-    updateStatus.mutate(isOnline ? "offline" : "online");
-  };
-
-  const handleAccept = (id: string) => {
-    updateLesson.mutate({ id, status: "confirmed" }, {
-      onSuccess: () => toast.success("Cours confirmé !"),
+    if (!tutorProfile) {
+      toast.error("Complétez d'abord votre profil professeur");
+      return;
+    }
+    updateStatus.mutate(isOnline ? "offline" : "online", {
+      onError: (e) => toast.error(friendlyError(e)),
     });
   };
 
-  const handleReject = (id: string) => {
-    updateLesson.mutate({ id, status: "cancelled" }, {
-      onSuccess: () => toast.success("Cours refusé"),
+  const handleAccept = (id: string) => {
+    confirmLesson.mutate(id, {
+      onSuccess: () => toast.success("Cours confirmé ! L'élève est prévenu."),
+      onError: (e) => toast.error(friendlyError(e)),
+    });
+  };
+
+  const handleReject = (lesson: { id: string; tutor_id: string }) => {
+    cancelLesson.mutate(lesson, {
+      onSuccess: () => toast.success("Demande refusée — l'élève est remboursé"),
+      onError: (e) => toast.error(friendlyError(e)),
     });
   };
 
@@ -78,8 +91,7 @@ export default function TutorDashboard() {
         .select("amount, created_at")
         .eq("tutor_id", profile!.user_id)
         .gte("created_at", monthStart.toISOString())
-        .lte("created_at", monthEnd.toISOString())
-        .eq("status", "paid");
+        .lte("created_at", monthEnd.toISOString());
       if (error) throw error;
       return data ?? [];
     },
@@ -106,7 +118,7 @@ export default function TutorDashboard() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header with toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">
             Bonjour, <span className="gradient-text">{displayName}</span> 👨‍🏫
@@ -121,6 +133,29 @@ export default function TutorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Profil prof incomplet : invisible dans la marketplace tant que non complété */}
+      {tutorProfile === null && (
+        <Card className="border-warning/40 bg-warning/5">
+          <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold">Complétez votre profil professeur</p>
+              <p className="text-sm text-muted-foreground">Ajoutez vos matières et votre tarif pour apparaître dans la marketplace et recevoir des demandes.</p>
+            </div>
+            <Button asChild className="gradient-primary text-primary-foreground shrink-0">
+              <Link to="/become-tutor">Compléter mon profil <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {tutorProfile?.is_suspended && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-5 text-sm">
+            <p className="font-semibold text-destructive">Profil suspendu</p>
+            <p className="text-muted-foreground">Votre profil n'apparaît plus dans la marketplace. Contactez le support pour plus d'informations.</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cours actif — banner prioritaire */}
       {activeLesson && <ActiveLessonBanner lesson={activeLesson} role="tutor" />}
@@ -186,18 +221,18 @@ export default function TutorDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(270 18% 24%)" />
-                <XAxis dataKey="week" stroke="hsl(270 12% 60%)" fontSize={12} />
-                <YAxis stroke="hsl(270 12% 60%)" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} unit="€" />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(270 25% 18%)",
-                    border: "1px solid hsl(270 18% 24%)",
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
                     borderRadius: "12px",
-                    color: "hsl(270 10% 95%)",
+                    color: "hsl(var(--popover-foreground))",
                   }}
                 />
-                <Line type="monotone" dataKey="revenus" stroke="hsl(265 80% 65%)" strokeWidth={3} dot={{ fill: "hsl(265 80% 65%)", r: 5 }} />
+                <Line type="linear" dataKey="revenus" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ fill: "hsl(var(--primary))", r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -217,7 +252,7 @@ export default function TutorDashboard() {
                 <p className="text-sm text-muted-foreground">Aucune demande</p>
               </div>
             )}
-            {pendingLessons.slice(0, 4).map((lesson: any) => (
+            {pendingLessons.slice(0, 4).map((lesson) => (
               <div key={lesson.id} className="rounded-xl border border-border/30 p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
@@ -237,10 +272,10 @@ export default function TutorDashboard() {
                   {format(new Date(lesson.scheduled_at), "dd MMM à HH:mm", { locale: fr })}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 rounded-lg gradient-primary text-primary-foreground text-xs h-8" onClick={() => handleAccept(lesson.id)}>
+                  <Button size="sm" className="flex-1 rounded-lg gradient-primary text-primary-foreground text-xs h-8" onClick={() => handleAccept(lesson.id)} disabled={confirmLesson.isPending}>
                     <CheckCircle2 className="mr-1 h-3 w-3" /> Accepter
                   </Button>
-                  <Button size="sm" variant="ghost" className="flex-1 rounded-lg text-destructive hover:bg-destructive/10 text-xs h-8" onClick={() => handleReject(lesson.id)}>
+                  <Button size="sm" variant="ghost" className="flex-1 rounded-lg text-destructive hover:bg-destructive/10 text-xs h-8" onClick={() => handleReject(lesson)} disabled={cancelLesson.isPending}>
                     <XCircle className="mr-1 h-3 w-3" /> Refuser
                   </Button>
                 </div>
@@ -267,7 +302,7 @@ export default function TutorDashboard() {
               <p className="text-sm text-muted-foreground">Aucun cours à venir</p>
             </div>
           )}
-          {upcomingLessons.slice(0, 5).map((lesson: any, i: number) => (
+          {upcomingLessons.slice(0, 5).map((lesson, i) => (
             <div key={lesson.id} className="flex items-center justify-between rounded-xl border border-border/30 p-4 hover:bg-secondary/50 hover:border-primary/20 transition-all group animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
@@ -283,10 +318,14 @@ export default function TutorDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge className="rounded-full px-3 bg-success/15 text-success border-success/30" variant="outline">Confirmé</Badge>
-                <Button size="sm" className="rounded-xl gradient-primary text-primary-foreground btn-glow text-xs" asChild>
-                  <Link to={`/room/${lesson.id}`}><Video className="mr-1 h-3 w-3" /> Démarrer</Link>
-                </Button>
+                <Badge className="rounded-full px-3 bg-success/15 text-success border-success/30" variant="outline">
+                  {lesson.status === "in_progress" ? "En cours" : "Confirmé"}
+                </Badge>
+                {(lesson.status === "in_progress" || isRoomOpen(lesson.scheduled_at, lesson.duration_minutes)) && (
+                  <Button size="sm" className="rounded-xl gradient-primary text-primary-foreground btn-glow text-xs" asChild>
+                    <Link to={`/room/${lesson.id}`}><Video className="mr-1 h-3 w-3" /> {lesson.status === "in_progress" ? "Rejoindre" : "Démarrer"}</Link>
+                  </Button>
+                )}
               </div>
             </div>
           ))}

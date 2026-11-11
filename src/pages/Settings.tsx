@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Settings, Lock, Trash2, Loader2, AlertTriangle, Bell, Sun, Moon, Palett
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/credits";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import {
@@ -19,7 +20,7 @@ import {
 
 export default function SettingsPage() {
   useDocumentTitle("Paramètres");
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
@@ -35,25 +36,18 @@ export default function SettingsPage() {
   const [notifyLessonCancelled, setNotifyLessonCancelled] = useState(true);
   const [isSavingNotifs, setIsSavingNotifs] = useState(false);
 
+  // Préférences déjà chargées avec le profil : pas de second fetch, et on ne
+  // les applique qu'une fois (sinon un changement de thème rapide était écrasé).
+  const prefsApplied = useRef(false);
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("notify_lesson_reminder, notify_new_message, notify_lesson_cancelled, theme")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setNotifyLessonReminder(data?.notify_lesson_reminder ?? true);
-          setNotifyNewMessage(data?.notify_new_message ?? true);
-          setNotifyLessonCancelled(data?.notify_lesson_cancelled ?? true);
-          // Apply saved theme on mount only — setTheme is stable so no dep needed
-          const savedTheme = data?.theme;
-          if (savedTheme) setTheme(savedTheme);
-        }
-      });
+    if (!profile || prefsApplied.current) return;
+    prefsApplied.current = true;
+    setNotifyLessonReminder(profile.notify_lesson_reminder ?? true);
+    setNotifyNewMessage(profile.notify_new_message ?? true);
+    setNotifyLessonCancelled(profile.notify_lesson_cancelled ?? true);
+    if (profile.theme && profile.theme !== theme) setTheme(profile.theme);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [profile]);
 
   const handleSaveNotifs = async () => {
     if (!user) return;
@@ -69,26 +63,29 @@ export default function SettingsPage() {
         .eq("user_id", user.id);
       if (error) throw error;
       toast.success("Préférences de notifications sauvegardées !");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la sauvegarde");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de la sauvegarde"));
     } finally {
       setIsSavingNotifs(false);
     }
   };
 
   const handleThemeChange = async (newTheme: string) => {
+    prefsApplied.current = true;
     setTheme(newTheme);
     if (!user) return;
-    await supabase
-      .from("profiles")
-      .update({ theme: newTheme })
-      .eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").update({ theme: newTheme }).eq("user_id", user.id);
+    if (error) toast.error("Thème appliqué, mais non sauvegardé sur votre compte");
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 8) {
       toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+    if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      toast.error("Le mot de passe doit contenir au moins une lettre et un chiffre");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -102,8 +99,8 @@ export default function SettingsPage() {
       toast.success("Mot de passe modifié avec succès !");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors du changement de mot de passe");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors du changement de mot de passe"));
     } finally {
       setIsChangingPassword(false);
     }
@@ -113,23 +110,21 @@ export default function SettingsPage() {
     if (deleteConfirmText !== "SUPPRIMER") return;
     setIsDeletingAccount(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("delete-account", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      const res = await supabase.functions.invoke("delete-account");
       if (res.error) throw res.error;
-      await signOut();
+      // Le compte n'existe plus : la déconnexion serveur peut échouer, on nettoie quand même
+      await signOut().catch(() => supabase.auth.signOut({ scope: "local" }));
       toast.success("Votre compte a été supprimé");
       navigate("/");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la suppression du compte");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de la suppression du compte"));
     } finally {
       setIsDeletingAccount(false);
     }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold font-display gradient-text flex items-center gap-2">
           <Settings className="h-6 w-6" />

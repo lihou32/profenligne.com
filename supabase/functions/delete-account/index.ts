@@ -52,7 +52,8 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("delete-account error:", error);
+    return new Response(JSON.stringify({ error: "Impossible de supprimer le compte" }), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });

@@ -13,6 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { SUBJECTS, GRADE_LEVELS } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
+
+function validatePassword(pwd: string): string | null {
+  if (pwd.length < 8) return "Le mot de passe doit contenir au moins 8 caractères";
+  if (!/[A-Za-z]/.test(pwd) || !/\d/.test(pwd)) return "Le mot de passe doit contenir au moins une lettre et un chiffre";
+  return null;
+}
 const BIRTH_YEARS = Array.from({ length: 30 }, (_, i) => currentYear - 10 - i);
 
 export default function Signup() {
@@ -45,6 +51,11 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      toast.error(pwdError);
+      return;
+    }
     setIsLoading(true);
     try {
       const metadata: Record<string, string> = {
@@ -58,37 +69,25 @@ export default function Signup() {
         if (schoolType) metadata.school_type = schoolType;
       }
       if (selectedSubjects.length > 0) metadata.subjects = selectedSubjects.join(",");
-      const user = await signUp(email, password, metadata);
+      // Le parrainage est lié côté base à la création du compte (trigger handle_new_user)
+      if (referralCode) metadata.referral_code = referralCode;
 
-      // Link referral if a valid ?ref= code was present
-      if (referralCode && user?.id) {
-        try {
-          // Find the referrer by matching the first 8 chars of their user_id
-          const { data: referrerProfile } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .ilike("user_id", `${referralCode.toLowerCase()}%`)
-            .limit(1)
-            .single();
+      await signUp(email.trim(), password, metadata);
 
-          if (referrerProfile) {
-            await supabase.from("referrals").insert({
-              referrer_id: referrerProfile.user_id,
-              referred_user_id: user.id,
-              referral_code: referralCode,
-              status: "pending",
-              credits_awarded: 0,
-            });
-          }
-        } catch {
-          // Referral linking is best-effort — don't block signup
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Confirmation d'email activée : pas encore de session
+        toast.success("Compte créé ! Confirmez votre adresse via le lien reçu par email, puis connectez-vous.");
+        navigate("/login");
+        return;
       }
 
       toast.success("Compte créé avec succès ! Bienvenue 🎉");
-      navigate("/dashboard");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'inscription");
+      // Un prof doit compléter son profil (matières, tarif) pour apparaître dans la marketplace
+      navigate(role === "tutor" ? "/become-tutor" : "/dashboard");
+    } catch (error: unknown) {
+      const msg = (error as { message?: string })?.message || "";
+      toast.error(/already registered|already exists/i.test(msg) ? "Un compte existe déjà avec cet email" : msg || "Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
@@ -257,11 +256,12 @@ export default function Signup() {
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mot de passe</Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 rounded-xl bg-secondary/50 border-border/50 pr-10" />
+                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" aria-describedby="password-hint" className="h-11 rounded-xl bg-secondary/50 border-border/50 pr-10" />
                   <Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
                   </Button>
                 </div>
+                <p id="password-hint" className="text-xs text-muted-foreground">8 caractères minimum, avec au moins une lettre et un chiffre.</p>
               </div>
               <Button type="submit" className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold text-base btn-glow" disabled={isLoading}>
                 {isLoading ? (

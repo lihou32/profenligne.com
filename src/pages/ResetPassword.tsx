@@ -7,6 +7,7 @@ import { GraduationCap, Eye, EyeOff, Zap, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/credits";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -31,8 +32,8 @@ export default function ResetPassword() {
       if (error) throw error;
       toast.success("Mot de passe mis à jour !");
       navigate("/dashboard");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la mise à jour");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de la mise à jour"));
     } finally {
       setIsLoading(false);
     }

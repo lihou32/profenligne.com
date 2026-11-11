@@ -1,40 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Typed via Database - no cast needed
+const pctChange = (current: number, previous: number) =>
+  previous > 0 ? Math.round(((current - previous) / previous) * 100) : null;
 
+/** Chiffres clés du panneau admin (RPC admin_stats, réservée aux admins). */
 export function useAdminStats() {
   return useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+      const [statsRes, reviewsRes] = await Promise.all([
+        supabase.rpc("admin_stats"),
+        supabase.from("reviews").select("id", { count: "exact", head: true }),
+      ]);
+      if (statsRes.error) throw statsRes.error;
+      const s = statsRes.data?.[0];
+      if (!s) throw new Error("Statistiques indisponibles");
 
-      const [profilesRes, lessonsRes, lastMonthLessonsRes, earningsRes, lastMonthEarningsRes, reviewsRes] =
-        await Promise.all([
-          supabase.from("profiles").select("id", { count: "exact", head: true }),
-          supabase.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfMonth),
-          supabase.from("lessons").select("id", { count: "exact", head: true }).gte("scheduled_at", startOfLastMonth).lt("scheduled_at", startOfMonth),
-          supabase.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfMonth),
-          supabase.from("tutor_earnings").select("amount").eq("status", "paid").gte("created_at", startOfLastMonth).lt("created_at", startOfMonth),
-          supabase.from("tutor_reviews").select("rating"),
-        ]);
-
-      const totalUsers = profilesRes.count ?? 0;
-      const lessonsThisMonth = lessonsRes.count ?? 0;
-      const lessonsLastMonth = lastMonthLessonsRes.count ?? 0;
-      const lessonsChange = lessonsLastMonth > 0 ? Math.round(((lessonsThisMonth - lessonsLastMonth) / lessonsLastMonth) * 100) : null;
-
-      const revenueThisMonth = (earningsRes.data ?? []).reduce((s: number, e: any) => s + Number(e.amount), 0);
-      const revenueLastMonth = (lastMonthEarningsRes.data ?? []).reduce((s: number, e: any) => s + Number(e.amount), 0);
-      const revenueChange = revenueLastMonth > 0 ? Math.round(((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100) : null;
-
-      const reviews = reviewsRes.data ?? [];
-      const avgRating = reviews.length > 0 ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length : 0;
-      const satisfactionPct = Math.round((avgRating / 5) * 100);
-
-      return { totalUsers, lessonsThisMonth, lessonsChange, revenueThisMonth: Math.round(revenueThisMonth), revenueChange, satisfactionPct, reviewCount: reviews.length };
+      return {
+        totalUsers: Number(s.total_users),
+        totalTutors: Number(s.total_tutors),
+        lessonsThisMonth: Number(s.lessons_this_month),
+        lessonsChange: pctChange(Number(s.lessons_this_month), Number(s.lessons_last_month)),
+        revenueThisMonth: Math.round(Number(s.revenue_this_month)),
+        revenueChange: pctChange(Number(s.revenue_this_month), Number(s.revenue_last_month)),
+        satisfactionPct: Math.round((Number(s.avg_rating) / 5) * 100),
+        reviewCount: reviewsRes.count ?? 0,
+        preregistrations: Number(s.preregistrations),
+      };
     },
   });
 }

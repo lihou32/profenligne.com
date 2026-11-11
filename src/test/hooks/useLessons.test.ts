@@ -1,120 +1,94 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement, type ReactNode } from "react";
 
-// Mock supabase
-const mockSelect = vi.fn().mockReturnThis();
-const mockEq = vi.fn().mockReturnThis();
-const mockOrder = vi.fn().mockReturnThis();
-const mockInsert = vi.fn().mockReturnThis();
-const mockUpdate = vi.fn().mockReturnThis();
-const mockSingle = vi.fn();
-const mockGte = vi.fn().mockReturnThis();
-const mockMaybeSingle = vi.fn();
-
-const mockFrom = vi.fn(() => ({
-  select: mockSelect,
-  insert: mockInsert,
-  update: mockUpdate,
-  eq: mockEq,
-  order: mockOrder,
-  single: mockSingle,
-  gte: mockGte,
-  maybeSingle: mockMaybeSingle,
-}));
+const rpc = vi.fn();
+const invoke = vi.fn().mockResolvedValue({ error: null });
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: (...args: unknown[]) => mockFrom(...args),
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-    },
-    functions: { invoke: vi.fn() },
+    rpc: (...args: unknown[]) => rpc(...args),
+    functions: { invoke: (...args: unknown[]) => invoke(...args) },
+    from: vi.fn(),
   },
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ user: { id: "test-user-123" }, profile: null, roles: [], loading: false }),
+  useAuth: () => ({ user: { id: "student-1" }, profile: null, roles: ["student"], loading: false }),
 }));
 
-// We test the hook logic indirectly by verifying the query functions
-describe("useLessons hooks", () => {
+import { computeStudentStats, useCreateLesson, useCancelLesson, type Lesson } from "@/hooks/useLessons";
+
+const wrapper = ({ children }: { children: ReactNode }) =>
+  createElement(QueryClientProvider, { client: new QueryClient({ defaultOptions: { mutations: { retry: false } } }) }, children);
+
+const lesson = (over: Partial<Lesson>): Lesson => ({
+  id: "l", student_id: "student-1", tutor_id: "tutor-1", subject: "Maths", topic: null,
+  scheduled_at: new Date().toISOString(), duration_minutes: 60, status: "pending", notes: null,
+  rating: null, room_id: "l", credits_cost: 8, started_at: null, completed_at: null, cancelled_by: null,
+  created_at: "", updated_at: "", ...over,
+});
+
+describe("useLessons", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockOrder.mockReturnThis();
-    mockEq.mockReturnThis();
-    mockSelect.mockReturnThis();
+    rpc.mockReset();
+    invoke.mockClear();
   });
 
-  it("useLessons calls supabase.from('lessons') with correct filters", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
+  it("réserve via la RPC book_lesson (débit atomique des crédits côté base)", async () => {
+    rpc.mockResolvedValueOnce({ data: lesson({ id: "new-lesson" }), error: null });
+    const { result } = renderHook(() => useCreateLesson(), { wrapper });
 
-    // Simulate what useLessons queryFn does
-    mockOrder.mockResolvedValueOnce({ data: [{ id: "1", status: "confirmed" }], error: null });
+    await result.current.mutateAsync({
+      tutor_id: "tutor-1",
+      subject: "Maths",
+      topic: null,
+      scheduled_at: "2030-01-01T10:00:00.000Z",
+      duration_minutes: 60,
+    });
 
-    const result = await supabase
-      .from("lessons")
-      .select("*")
-      .eq("student_id", "test-user-123")
-      .order("scheduled_at", { ascending: true });
-
-    expect(mockFrom).toHaveBeenCalledWith("lessons");
-    expect(mockSelect).toHaveBeenCalledWith("*");
-    expect(mockEq).toHaveBeenCalledWith("student_id", "test-user-123");
+    expect(rpc).toHaveBeenCalledWith("book_lesson", {
+      p_tutor_id: "tutor-1",
+      p_subject: "Maths",
+      p_topic: "",
+      p_scheduled_at: "2030-01-01T10:00:00.000Z",
+      p_duration_minutes: 60,
+    });
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("notify-lesson-booking", { body: { lessonId: "new-lesson" } }));
   });
 
-  it("useDashboardStats computes correct values", () => {
-    // Test the computation logic
-    const lessons = [
-      { id: "1", status: "completed", duration_minutes: 60, rating: 15 },
-      { id: "2", status: "completed", duration_minutes: 90, rating: 18 },
-      { id: "3", status: "confirmed", duration_minutes: 60, rating: null },
-      { id: "4", status: "pending", duration_minutes: 45, rating: null },
-    ];
-
-    const completed = lessons.filter((l) => l.status === "completed");
-    const totalMinutes = completed.reduce((s, l) => s + (l.duration_minutes || 0), 0);
-    const rated = completed.filter((l) => l.rating != null);
-    const avgRating = rated.length
-      ? rated.reduce((s, l) => s + (l.rating || 0), 0) / rated.length
-      : 0;
-
-    expect(completed.length).toBe(2);
-    expect(totalMinutes).toBe(150);
-    expect((totalMinutes / 60).toFixed(1)).toBe("2.5");
-    expect(avgRating).toBe(16.5);
-    expect(lessons.filter((l) => l.status === "confirmed" || l.status === "pending").length).toBe(2);
+  it("remonte l'erreur de la base (ex. crédits insuffisants)", async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: "Crédits insuffisants : il vous faut 8 crédit(s), vous en avez 0" } });
+    const { result } = renderHook(() => useCreateLesson(), { wrapper });
+    await expect(
+      result.current.mutateAsync({ tutor_id: "t", subject: "Maths", topic: null, scheduled_at: "x", duration_minutes: 60 }),
+    ).rejects.toMatchObject({ message: expect.stringContaining("Crédits insuffisants") });
+    expect(invoke).not.toHaveBeenCalled();
   });
 
-  it("activeLesson uses duration_minutes instead of hardcoded 2h", () => {
-    const now = Date.now();
-    const lessons = [
-      {
-        id: "1",
-        status: "confirmed",
-        scheduled_at: new Date(now - 90 * 60 * 1000).toISOString(), // Started 90min ago
-        duration_minutes: 60, // Only 60 min lesson
-      },
-      {
-        id: "2",
-        status: "confirmed",
-        scheduled_at: new Date(now - 90 * 60 * 1000).toISOString(), // Started 90min ago
-        duration_minutes: 120, // 2h lesson
-      },
-    ];
+  it("n'envoie pas d'email au prof quand c'est l'élève qui annule", async () => {
+    rpc.mockResolvedValueOnce({ data: lesson({ status: "cancelled" }), error: null });
+    const { result } = renderHook(() => useCancelLesson(), { wrapper });
+    await result.current.mutateAsync({ id: "l", tutor_id: "tutor-1" });
+    expect(rpc).toHaveBeenCalledWith("cancel_lesson", { p_lesson_id: "l" });
+    expect(invoke).not.toHaveBeenCalled();
+  });
 
-    // Lesson 1: started 90min ago but lasts only 60min → should NOT be active
-    const l1 = lessons[0];
-    const start1 = new Date(l1.scheduled_at).getTime();
-    const duration1 = (l1.duration_minutes || 120) * 60 * 1000;
-    const isActive1 = l1.status === "in_progress" ||
-      (l1.status === "confirmed" && now >= start1 - 5 * 60 * 1000 && now < start1 + duration1);
-    expect(isActive1).toBe(false);
-
-    // Lesson 2: started 90min ago and lasts 2h → should be active
-    const l2 = lessons[1];
-    const start2 = new Date(l2.scheduled_at).getTime();
-    const duration2 = (l2.duration_minutes || 120) * 60 * 1000;
-    const isActive2 = l2.status === "in_progress" ||
-      (l2.status === "confirmed" && now >= start2 - 5 * 60 * 1000 && now < start2 + duration2);
-    expect(isActive2).toBe(true);
+  it("computeStudentStats : heures, cours terminés, note moyenne des avis", () => {
+    const stats = computeStudentStats(
+      [
+        lesson({ id: "1", status: "completed", duration_minutes: 60 }),
+        lesson({ id: "2", status: "completed", duration_minutes: 90 }),
+        lesson({ id: "3", status: "confirmed" }),
+        lesson({ id: "4", status: "in_progress" }),
+        lesson({ id: "5", status: "cancelled" }),
+      ],
+      [4, 5],
+    );
+    expect(stats.totalHours).toBe("2.5");
+    expect(stats.completedLessons).toBe(2);
+    expect(stats.averageRating).toBe("4.5");
+    expect(stats.upcomingLessons.map((l) => l.id)).toEqual(["3", "4"]);
   });
 });

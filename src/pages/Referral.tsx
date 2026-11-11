@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
+import { REFERRAL_BONUS_CREDITS, referralCodeFor } from "@/lib/credits"
 import {
-  Gift, Users, Copy, Check, Share2, Star,
-  ArrowRight, Trophy, Zap,
+  Gift, Users, Copy, Check, Share2, ArrowRight, Trophy, Zap,
 } from "lucide-react"
 
 // ─── How it works steps ───────────────────────────────────────────────────────
@@ -31,8 +31,8 @@ const HOW_IT_WORKS = [
   },
   {
     icon: Gift,
-    title: "Vous gagnez des crédits",
-    desc: "Dès que votre filleul réserve son premier cours, vous recevez 2 crédits offerts !",
+    title: "Vous gagnez tous les deux",
+    desc: `Dès que votre filleul termine son premier cours, vous recevez chacun ${REFERRAL_BONUS_CREDITS} crédits offerts !`,
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
@@ -46,7 +46,7 @@ export default function Referral() {
   const [copied, setCopied] = useState(false)
 
   // Build referral link from user id
-  const referralCode = user?.id?.slice(0, 8).toUpperCase() ?? "XXXXXXXX"
+  const referralCode = user ? referralCodeFor(user.id) : "XXXXXXXX"
   const referralLink = `${window.location.origin}/signup?ref=${referralCode}`
 
   const handleCopy = async () => {
@@ -82,14 +82,11 @@ export default function Referral() {
         .select("id, referred_user_id, status, credits_awarded, created_at")
         .eq("referrer_id", user!.id)
         .order("created_at", { ascending: false })
-      if (error) {
-        // Table may not exist yet — return empty
-        return { referrals: [], total: 0, creditsEarned: 0 }
-      }
+      if (error) throw error
       const referrals = data ?? []
       const creditsEarned = referrals
-        .filter((r: any) => r.status === "completed")
-        .reduce((acc: number, r: any) => acc + (r.credits_awarded ?? 2), 0)
+        .filter((r) => r.status === "completed")
+        .reduce((acc, r) => acc + (r.credits_awarded ?? 0), 0)
       return { referrals, total: referrals.length, creditsEarned }
     },
   })
@@ -109,7 +106,7 @@ export default function Referral() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Parrainez vos amis</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Invitez vos amis sur Prof en Ligne et gagnez <strong className="text-foreground">2 crédits</strong> à chaque fois qu'ils réservent leur premier cours !
+          Invitez vos amis sur Prof en Ligne et gagnez <strong className="text-foreground">{REFERRAL_BONUS_CREDITS} crédits</strong> chacun dès qu'ils terminent leur premier cours !
         </p>
       </div>
 
@@ -126,7 +123,7 @@ export default function Referral() {
           <CardContent className="pt-5 pb-4">
             <Trophy className="mx-auto h-6 w-6 text-yellow-500 mb-2" />
             <p className="text-3xl font-bold">
-              {referrals.filter((r: any) => r.status === "completed").length}
+              {referrals.filter((r) => r.status === "completed").length}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Cours réservés</p>
           </CardContent>
@@ -207,7 +204,7 @@ export default function Referral() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {referrals.slice(0, 10).map((r: any, i: number) => (
+            {referrals.slice(0, 10).map((r, i) => (
               <div key={r.id ?? i} className="flex items-center justify-between rounded-lg bg-muted/30 px-4 py-2.5">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -229,7 +226,7 @@ export default function Referral() {
                     : ""}
                 >
                   {r.status === "completed"
-                    ? `+${r.credits_awarded ?? 2} crédits`
+                    ? `+${r.credits_awarded} crédits`
                     : "En attente"}
                 </Badge>
               </div>

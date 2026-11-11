@@ -15,7 +15,7 @@ import {
   Globe,
   FlaskConical,
   Pen,
-  Music,
+  Laptop,
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
@@ -26,7 +26,7 @@ const SUBJECTS = [
   { icon: Globe, label: "Anglais", color: "text-emerald-400" },
   { icon: FlaskConical, label: "Physique-Chimie", color: "text-amber-400" },
   { icon: BookOpen, label: "Histoire-Géo", color: "text-purple-400" },
-  { icon: Music, label: "Musique", color: "text-cyan-400" },
+  { icon: Laptop, label: "Informatique", color: "text-cyan-400" },
 ];
 
 const STEPS = [
@@ -47,24 +47,22 @@ const STEPS = [
   },
 ];
 
-const TESTIMONIALS = [
+// Engagements réels de la plateforme (appliqués côté base de données)
+const PROMISES = [
   {
-    name: "Marie L.",
-    role: "Maman d'un élève de 3ème",
-    text: "Mon fils a gagné 4 points en maths en 2 mois. Les professeurs sont excellents et très pédagogues.",
-    rating: 5,
+    icon: Shield,
+    title: "Avis 100 % vérifiés",
+    text: "Seuls les élèves qui ont réellement suivi un cours peuvent noter un professeur. Aucun avis acheté ni inventé.",
   },
   {
-    name: "Thomas R.",
-    role: "Étudiant en Terminale",
-    text: "Grâce à Prof en Ligne, j'ai décroché une mention Bien au bac. Les cours en visio sont vraiment pratiques.",
-    rating: 5,
+    icon: CheckCircle2,
+    title: "Remboursé si le cours n'a pas lieu",
+    text: "Vos crédits vous sont rendus si le professeur refuse ou annule, et si vous annulez plus de 24 h avant.",
   },
   {
-    name: "Sophie D.",
-    role: "Professeure certifiée",
-    text: "La plateforme est intuitive et me permet de gérer facilement mes cours et mes élèves. Je recommande !",
-    rating: 5,
+    icon: Star,
+    title: "Des tarifs transparents",
+    text: "Chaque professeur affiche son tarif horaire. Vous voyez le coût exact en crédits avant de réserver.",
   },
 ];
 
@@ -118,9 +116,9 @@ export default function Landing() {
               </span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground sm:text-xl">
-              Réservez des cours particuliers en visio avec des professeurs
-              certifiés. Tableau blanc, suivi personnalisé et résultats
-              garantis.
+              Réservez un cours particulier en visio, de 20 minutes à 2 heures,
+              au créneau qui vous convient. Tableau blanc, quiz de révision
+              après chaque cours et avis 100 % vérifiés.
             </p>
             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link to="/tutors">
@@ -202,34 +200,21 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ─── Avis ─── */}
+      {/* ─── Engagements ─── */}
       <section className="border-t border-border/40 bg-muted/30 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-center font-display text-2xl font-bold sm:text-3xl">
-            Ce que disent nos utilisateurs
+            Nos engagements
           </h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {TESTIMONIALS.map((t) => (
-              <Card
-                key={t.name}
-                className="border-border/40 bg-card/50"
-              >
+            {PROMISES.map((p) => (
+              <Card key={p.title} className="border-border/40 bg-card/50">
                 <CardContent className="p-6">
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-4 w-4 fill-amber-500 text-amber-500"
-                      />
-                    ))}
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <p.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    "{t.text}"
-                  </p>
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
-                  </div>
+                  <p className="mt-4 font-semibold">{p.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.text}</p>
                 </CardContent>
               </Card>
             ))}

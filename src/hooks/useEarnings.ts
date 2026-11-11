@@ -27,17 +27,20 @@ export function useEarningsBalance() {
     queryKey: ["earnings-balance", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tutor_earnings")
-        .select("amount, status")
-        .eq("tutor_id", user!.id);
-      if (error) throw error;
+      const [earningsRes, availableRes] = await Promise.all([
+        supabase.from("tutor_earnings").select("amount, status").eq("tutor_id", user!.id),
+        supabase.rpc("tutor_available_balance", { _tutor_id: user!.id }),
+      ]);
+      if (earningsRes.error) throw earningsRes.error;
 
-      const total = (data || []).reduce((s: number, e: any) => s + Number(e.amount), 0);
-      const paid = (data || []).filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount), 0);
-      const pending = total - paid;
+      const round = (n: number) => Math.round(n * 100) / 100;
+      const data = earningsRes.data || [];
+      const total = data.reduce((s, e) => s + Number(e.amount), 0);
+      const paid = data.filter((e) => e.status === "paid").reduce((s, e) => s + Number(e.amount), 0);
+      // Disponible au retrait = gains − retraits déjà demandés (non rejetés)
+      const available = Number(availableRes.data ?? 0);
 
-      return { total: Math.round(total * 100) / 100, paid: Math.round(paid * 100) / 100, pending: Math.round(pending * 100) / 100 };
+      return { total: round(total), paid: round(paid), pending: round(total - paid), available: round(available) };
     },
   });
 }
@@ -64,12 +67,8 @@ export function useRequestWithdrawal() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (amount: number) => {
-      if (!user) throw new Error("Not authenticated");
-      const { data, error } = await supabase
-        .from("withdrawal_requests")
-        .insert({ tutor_id: user.id, amount })
-        .select()
-        .single();
+      if (!user) throw new Error("Non authentifié");
+      const { data, error } = await supabase.rpc("request_withdrawal", { p_amount: amount });
       if (error) throw error;
       return data;
     },

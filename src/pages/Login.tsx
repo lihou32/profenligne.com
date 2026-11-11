@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap, Eye, EyeOff, Sparkles, Zap } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,16 +16,25 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Page demandée avant la redirection vers /login (uniquement un chemin interne)
+  const from = (location.state as { from?: string } | null)?.from;
+  const redirectTo = from && from.startsWith("/") && !from.startsWith("//") ? from : "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(email.trim(), password);
       toast.success("Connexion réussie !");
-      navigate("/dashboard");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur de connexion");
+      navigate(redirectTo, { replace: true });
+    } catch (error: unknown) {
+      const msg = (error as { message?: string })?.message || "";
+      toast.error(
+        /invalid login credentials/i.test(msg) ? "Email ou mot de passe incorrect"
+          : /email not confirmed/i.test(msg) ? "Confirmez d'abord votre adresse email (lien reçu par mail)"
+          : msg || "Erreur de connexion",
+      );
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ import { GraduationCap, ArrowLeft, Mail, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/credits";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -23,8 +24,8 @@ export default function ForgotPassword() {
       if (error) throw error;
       setSent(true);
       toast.success("Email envoyé ! Vérifiez votre boîte de réception.");
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'envoi");
+    } catch (error: unknown) {
+      toast.error(friendlyError(error, "Erreur lors de l'envoi"));
     } finally {
       setIsLoading(false);
     }

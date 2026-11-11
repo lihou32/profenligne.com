@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -34,8 +34,8 @@ describe("useTutors logic", () => {
   });
 
   it("handles empty tutor list", () => {
-    const tutors: any[] = [];
-    const userIds = [...new Set(tutors.map((t: any) => t.user_id))];
+    const tutors: { user_id: string }[] = [];
+    const userIds = [...new Set(tutors.map((t) => t.user_id))];
     expect(userIds.length).toBe(0);
   });
 

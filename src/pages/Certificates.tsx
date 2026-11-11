@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -9,15 +8,27 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Award, BookOpen, Download, Star, Calendar, User } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import jsPDF from "jspdf"
 
 // ─── Certificate Card ─────────────────────────────────────────────────────────
-function CertificateCard({ cert }: { cert: any }) {
+interface Certificate {
+  id: string
+  subject: string
+  topic: string | null
+  duration_minutes: number
+  tutor_name: string
+  completed_at: string
+  rating: string | null
+  student_name: string
+}
+
+function CertificateCard({ cert }: { cert: Certificate }) {
   const completedDate = cert.completed_at
     ? format(new Date(cert.completed_at), "d MMMM yyyy", { locale: fr })
     : "Date inconnue"
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
+    // Chargé à la demande : jsPDF (~400 Ko) n'alourdit plus la page
+    const { default: jsPDF } = await import("jspdf")
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
     const w = doc.internal.pageSize.getWidth()
     const h = doc.internal.pageSize.getHeight()
@@ -176,16 +187,16 @@ function CertificateCard({ cert }: { cert: any }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function Certificates() {
   useDocumentTitle("Mes Certificats")
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   const { data: lessons = [], isLoading } = useQuery({
-    queryKey: ["certificates", user?.id],
+    queryKey: ["certificates", user?.id, profile?.first_name, profile?.last_name],
     enabled: !!user,
     queryFn: async () => {
       // Fetch completed lessons for this student
       const { data: ls, error } = await supabase
         .from("lessons")
-        .select("id, subject, topic, scheduled_at, duration_minutes, status, tutor_id, student_id")
+        .select("id, subject, topic, scheduled_at, duration_minutes, status, tutor_id, student_id, completed_at")
         .eq("student_id", user!.id)
         .eq("status", "completed")
         .order("scheduled_at", { ascending: false })
@@ -194,11 +205,12 @@ export default function Certificates() {
 
       // Fetch tutor profiles
       const tutorIds = [...new Set((ls ?? []).map((l) => l.tutor_id))]
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .in("user_id", tutorIds)
+      const [{ data: profiles }, { data: reviews }] = await Promise.all([
+        supabase.from("profiles").select("user_id, first_name, last_name").in("user_id", tutorIds),
+        supabase.from("reviews").select("lesson_id, rating").eq("student_id", user!.id),
+      ])
       const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]))
+      const ratingMap = new Map((reviews || []).map((r) => [r.lesson_id, r.rating]))
 
       return (ls ?? []).map((l) => {
         const p = profileMap.get(l.tutor_id)
@@ -208,13 +220,16 @@ export default function Certificates() {
         return {
           ...l,
           tutor_name: tutorName,
-          completed_at: l.scheduled_at,
-          // lessons.rating is 0-20, convert to 0-5 for display
-          rating: l.rating != null ? (l.rating / 4).toFixed(1) : null,
+          student_name: `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Élève",
+          completed_at: l.completed_at ?? l.scheduled_at,
+          // Note laissée par l'élève sur ce cours (1-5)
+          rating: ratingMap.has(l.id) ? Number(ratingMap.get(l.id)).toFixed(1) : null,
         }
       })
     },
   })
+
+  const ratedLessons = lessons.filter((l) => l.rating)
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in pb-16">
@@ -259,11 +274,8 @@ export default function Certificates() {
               <Star className="h-5 w-5 text-yellow-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {lessons.filter((l: any) => l.rating).length > 0
-                    ? (lessons.filter((l: any) => l.rating)
-                        .reduce((acc: number, l: any) => acc + Number(l.rating), 0) /
-                        lessons.filter((l: any) => l.rating).length
-                      ).toFixed(1)
+                  {ratedLessons.length > 0
+                    ? (ratedLessons.reduce((acc, l) => acc + Number(l.rating), 0) / ratedLessons.length).toFixed(1)
                     : "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">Note moyenne</p>

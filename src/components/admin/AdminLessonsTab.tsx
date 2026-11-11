@@ -1,3 +1,4 @@
+import { formatEur } from "@/lib/credits";
 import { useAdminLessons, type LessonStatus } from '@/hooks/useAdminLessons';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -12,19 +13,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const FILTERS: { value: LessonStatus; label: string }[] = [
   { value: 'all', label: 'Tous' },
   { value: 'pending', label: 'En attente' },
-  { value: 'accepted', label: 'Acceptés' },
+  { value: 'confirmed', label: 'Confirmés' },
   { value: 'in_progress', label: 'En cours' },
   { value: 'completed', label: 'Terminés' },
   { value: 'cancelled', label: 'Annulés' },
 ];
 
 const BADGE: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  pending: 'outline', accepted: 'secondary', in_progress: 'default',
+  pending: 'outline', confirmed: 'secondary', in_progress: 'default',
   completed: 'secondary', cancelled: 'destructive',
 };
 
 const LABELS: Record<string, string> = {
-  pending: 'En attente', accepted: 'Accepté', in_progress: 'En cours',
+  pending: 'En attente', confirmed: 'Confirmé', in_progress: 'En cours',
   completed: 'Terminé', cancelled: 'Annulé',
 };
 
@@ -110,7 +111,7 @@ export function AdminLessonsTab() {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-medium">
-                            {l.price ? `${l.price.toFixed(2)}€` : '—'}
+                            {l.price ? `${formatEur(l.price)} (${l.credits_cost} cr.)` : '—'}
                           </TableCell>
                         </TableRow>
                       ))}

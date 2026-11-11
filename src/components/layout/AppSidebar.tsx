@@ -11,8 +11,9 @@ import { useEffect } from "react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
   SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator, useSidebar,
 } from "@/components/ui/sidebar";
+import { useUserCredits } from "@/hooks/useCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -20,7 +21,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const studentPrincipalNav = [
   { title: "Tableau de bord", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Mes Leçons", icon: BookOpen, path: "/lessons" },
-  { title: "Messages", icon: Bell, path: "/notifications" },
+  { title: "Notifications", icon: Bell, path: "/notifications" },
 ];
 
 const studentApprentissageNav = [
@@ -29,13 +30,13 @@ const studentApprentissageNav = [
   { title: "Avis Profs", icon: Star, path: "/reviews" },
   { title: "Mes Certificats", icon: Award, path: "/certificates" },
   { title: "Parrainage", icon: Gift, path: "/referral" },
-  { title: "Acheter des crédits", icon: CreditCard, path: "/credits" },
+  { title: "Mes crédits", icon: CreditCard, path: "/credits" },
 ];
 
 const tutorPrincipalNav = [
   { title: "Tableau de bord", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Mes Cours", icon: BookOpen, path: "/lessons" },
-  { title: "Messages", icon: Bell, path: "/notifications" },
+  { title: "Notifications", icon: Bell, path: "/notifications" },
 ];
 
 const tutorActiviteNav = [
@@ -57,6 +58,10 @@ export function AppSidebar() {
   const { signOut, profile, hasRole, user } = useAuth();
   const isTutor = hasRole("tutor");
   const queryClient = useQueryClient();
+  const { isMobile, setOpenMobile } = useSidebar();
+  const { data: credits } = useUserCredits();
+  // Sur mobile, la sidebar est un tiroir : on le ferme après navigation
+  const closeOnMobile = () => { if (isMobile) setOpenMobile(false); };
 
   // Fetch current user's XP
   const { data: xpData } = useQuery({
@@ -124,6 +129,7 @@ export function AppSidebar() {
     items.map((item) => {
       const isActive = location.pathname === item.path;
       const badge = item.path === "/notifications" && unreadCount > 0 ? unreadCount : null;
+      const creditBadge = item.path === "/credits" && credits ? credits.balance : null;
       return (
         <SidebarMenuItem key={item.path}>
           <SidebarMenuButton
@@ -136,12 +142,17 @@ export function AppSidebar() {
                 : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
             }`}
           >
-            <Link to={item.path} aria-label={item.title} aria-current={isActive ? "page" : undefined} className="flex items-center w-full gap-2">
+            <Link to={item.path} onClick={closeOnMobile} aria-label={item.title} aria-current={isActive ? "page" : undefined} className="flex items-center w-full gap-2">
               <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="font-medium flex-1">{item.title}</span>
               {badge !== null && (
                 <span aria-label={`${badge} notifications non lues`} className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
                   {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+              {creditBadge !== null && (
+                <span aria-label={`${creditBadge} crédits`} className="ml-auto rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold tabular-nums">
+                  {creditBadge}
                 </span>
               )}
             </Link>
@@ -157,7 +168,7 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r-0" aria-label="Navigation principale">
       <SidebarHeader className="p-5">
-        <Link to="/dashboard" aria-label="Prof en Ligne - Retour au tableau de bord" className="flex items-center gap-3 group">
+        <Link to="/dashboard" onClick={closeOnMobile} aria-label="Prof en Ligne - Retour au tableau de bord" className="flex items-center gap-3 group">
           <div className="gradient-primary flex h-11 w-11 items-center justify-center rounded-xl glow transition-transform group-hover:scale-105 group-hover:rotate-3">
             <GraduationCap className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
           </div>
@@ -217,7 +228,7 @@ export function AppSidebar() {
                         : "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     }`}
                   >
-                    <Link to="/admin">
+                    <Link to="/admin" onClick={closeOnMobile}>
                       <Shield className="h-4 w-4" />
                       <span className="font-medium">Administration</span>
                     </Link>

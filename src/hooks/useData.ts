@@ -1,15 +1,19 @@
-// Re-export all data hooks for backward compatibility.
-// Prefer importing directly from the specialized hook files:
-//   - useLessons.ts  (useLessons, useCreateLesson, useUpdateLesson, useDashboardStats)
-//   - useTutors.ts   (useTutors, useTutorProfile, useTutorLessons, useTutorStats, useUpdateTutorStatus, useTutorReviews, useCreateReview)
-//   - useNotifications.ts (useNotifications, useMarkNotificationsRead)
+// Point d'entrée unique des hooks de données.
+// Les implémentations vivent dans les fichiers spécialisés :
+//   - useLessons.ts       (cours : réservation, confirmation, annulation, démarrage, fin)
+//   - useTutors.ts        (profs, avis)
+//   - useNotifications.ts (notifications)
 
 export {
   useLessons,
   useCreateLesson,
-  useUpdateLesson,
+  useConfirmLesson,
+  useCancelLesson,
+  useStartLesson,
+  useCompleteLesson,
   useDashboardStats,
 } from "./useLessons";
+export type { Lesson, StudentLesson, PersonSummary, BookLessonInput } from "./useLessons";
 
 export {
   useTutors,
@@ -20,6 +24,7 @@ export {
   useTutorReviews,
   useCreateReview,
 } from "./useTutors";
+export type { TutorWithProfile, TutorProfileSummary } from "./useTutors";
 
 export {
   useNotifications,

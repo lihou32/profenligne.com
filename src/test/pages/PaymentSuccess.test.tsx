@@ -8,13 +8,20 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: null, profile: null, roles: [], loading: false }),
+}))
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import PaymentSuccess from "@/pages/PaymentSuccess"
 
 function renderPage(search = "?credits=5") {
   return render(
-    <MemoryRouter initialEntries={[`/payment/success${search}`]}>
-      <PaymentSuccess />
-    </MemoryRouter>
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={[`/payment/success${search}`]}>
+        <PaymentSuccess />
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 

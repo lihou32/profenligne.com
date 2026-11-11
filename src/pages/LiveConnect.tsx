@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Video, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { useTutors, useLessons } from "@/hooks/useData";
+import { useTutors, useLessons, useTutorLessons } from "@/hooks/useData";
+import { useAuth } from "@/hooks/useAuth";
+import { isRoomOpen } from "@/lib/credits";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 
@@ -24,13 +26,20 @@ const statusLabels: Record<string, string> = {
 export default function LiveConnect() {
   useDocumentTitle("LiveConnect");
   const { data: tutors } = useTutors();
-  const { data: lessons } = useLessons();
+  const { hasRole } = useAuth();
+  const isTutor = hasRole("tutor");
+  const { data: studentLessons } = useLessons();
+  const { data: tutorLessons } = useTutorLessons();
+  const lessons = isTutor ? tutorLessons : studentLessons;
   const [search, setSearch] = useState("");
   const [bookingTutorId, setBookingTutorId] = useState<string | null>(null);
 
-  const activeLessons = (lessons || []).filter((l) => l.status === "in_progress");
+  // Cours en cours, ou confirmés dont la salle est ouverte
+  const activeLessons = (lessons || []).filter(
+    (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes)),
+  );
 
-  const filteredTutors = (tutors || []).filter((t: any) => {
+  const filteredTutors = (tutors || []).filter((t) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const name = `${t.profiles?.first_name || ""} ${t.profiles?.last_name || ""}`.toLowerCase();
@@ -39,7 +48,7 @@ export default function LiveConnect() {
   });
 
   // Trier : en ligne en premier
-  const sortedTutors = [...filteredTutors].sort((a: any, b: any) => {
+  const sortedTutors = [...filteredTutors].sort((a, b) => {
     const order: Record<string, number> = { online: 0, busy: 1, offline: 2 };
     return (order[a.status] ?? 2) - (order[b.status] ?? 2);
   });
@@ -47,7 +56,7 @@ export default function LiveConnect() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight font-display"><span className="gradient-text">LiveConnect</span></h1>
           <p className="text-muted-foreground">Rejoignez un cours en direct ou réservez avec un tuteur</p>
@@ -102,7 +111,7 @@ export default function LiveConnect() {
             Tuteurs disponibles
             {sortedTutors.length > 0 && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({sortedTutors.filter((t: any) => t.status === "online").length} en ligne)
+                ({sortedTutors.filter((t) => t.status === "online").length} en ligne)
               </span>
             )}
           </CardTitle>
@@ -123,7 +132,7 @@ export default function LiveConnect() {
             </p>
           )}
           <div className="grid gap-3 md:grid-cols-2">
-            {sortedTutors.map((tutor: any) => (
+            {sortedTutors.map((tutor) => (
               <div key={tutor.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/50">
                 <div className="flex items-center gap-3">
                   <div className="relative">
