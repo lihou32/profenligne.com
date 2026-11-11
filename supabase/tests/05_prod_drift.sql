@@ -1,0 +1,15 @@
+CREATE TABLE public.referrals (id uuid primary key default gen_random_uuid(), referrer_id uuid not null references auth.users(id) on delete cascade, referred_user_id uuid references auth.users(id) on delete set null, referral_code text not null, status text not null default 'pending' check (status in ('pending','completed')), credits_awarded int not null default 0, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can insert referral on signup" ON public.referrals FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Service role can update referrals" ON public.referrals FOR UPDATE USING (true);
+CREATE TABLE public.reviews (id uuid primary key default gen_random_uuid(), lesson_id uuid not null references lessons(id) on delete cascade, student_id uuid not null, tutor_id uuid not null, rating smallint not null check (rating between 1 and 5), comment text, created_at timestamptz default now(), unique (lesson_id, student_id));
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY reviews_select_all ON public.reviews FOR SELECT USING (true);
+CREATE POLICY reviews_insert_own ON public.reviews FOR INSERT TO authenticated WITH CHECK (auth.uid() = student_id);
+CREATE POLICY reviews_update_own ON public.reviews FOR UPDATE TO authenticated USING (auth.uid() = student_id);
+CREATE FUNCTION public.sync_lesson_rating() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE lessons SET rating = NEW.rating*4 WHERE id = NEW.lesson_id; RETURN NEW; END $$;
+CREATE TRIGGER trg_sync_lesson_rating AFTER INSERT ON public.reviews FOR EACH ROW EXECUTE FUNCTION sync_lesson_rating();
+CREATE FUNCTION public.become_tutor(p_subjects text[], p_hourly_rate numeric) RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ INSERT INTO tutors(user_id, subjects, hourly_rate) VALUES (auth.uid(), p_subjects, p_hourly_rate) $$;
+CREATE FUNCTION public.add_credits(p_user_id uuid, p_credits int, p_description text, p_stripe_session_id text) RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ UPDATE user_credits SET balance = balance + p_credits WHERE user_id = p_user_id $$;
+CREATE FUNCTION public.complete_referral(p_code text, p_user uuid) RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;
+ALTER TABLE public.notifications ADD COLUMN link text;

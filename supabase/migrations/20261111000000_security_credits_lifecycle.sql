@@ -24,6 +24,51 @@
 --  13. notifications.link utilisé par le front mais absent du schéma
 -- ════════════════════════════════════════════════════════════════════════════
 
+-- ─── 0. Réconciliation avec la base de production ──────────────────────────
+-- La base de prod a dérivé du repo (objets créés hors migrations) :
+-- table reviews existante, become_tutor/add_credits en void, complete_referral
+-- (SECURITY DEFINER appelable par tous : crédits gratuits), policies d'écriture
+-- côté client. On aligne avant d'appliquer le reste.
+
+DROP FUNCTION IF EXISTS public.become_tutor(TEXT[], NUMERIC);
+DROP FUNCTION IF EXISTS public.complete_referral(TEXT, UUID);
+DROP TRIGGER IF EXISTS trg_sync_lesson_rating ON public.reviews;
+DROP FUNCTION IF EXISTS public.sync_lesson_rating();
+
+-- reviews existante : lesson_id facultatif (avis historiques), un avis par cours
+DO $$
+BEGIN
+  IF to_regclass('public.reviews') IS NOT NULL THEN
+    ALTER TABLE public.reviews ALTER COLUMN lesson_id DROP NOT NULL;
+    ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+    ALTER TABLE public.reviews ALTER COLUMN created_at SET DEFAULT now();
+    UPDATE public.reviews SET created_at = now() WHERE created_at IS NULL;
+    ALTER TABLE public.reviews ALTER COLUMN created_at SET NOT NULL;
+    ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_comment_length;
+    ALTER TABLE public.reviews ADD CONSTRAINT reviews_comment_length
+      CHECK (comment IS NULL OR char_length(comment) <= 2000);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_reviews_lesson ON public.reviews(lesson_id);
+  END IF;
+END $$;
+
+-- Toutes les policies d'écriture côté client sur les tables sensibles :
+-- l'écriture passe désormais exclusivement par les RPC / triggers ci-dessous.
+DO $$
+DECLARE pol RECORD;
+BEGIN
+  FOR pol IN
+    SELECT tablename, policyname FROM pg_policies
+    WHERE schemaname = 'public'
+      AND cmd IN ('INSERT', 'UPDATE', 'ALL')
+      AND policyname NOT ILIKE '%admin%'
+      AND tablename IN ('reviews', 'referrals', 'user_xp', 'xp_transactions', 'tutor_earnings',
+                        'withdrawal_requests', 'credit_transactions', 'user_credits', 'user_roles',
+                        'tutor_reviews')
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+  END LOOP;
+END $$;
+
 -- ─── Constantes métier (modifiables en un seul endroit) ─────────────────────
 -- 1 crédit = 5 € de valeur faciale. Coût d'un cours = prix du prof × durée / 5 €,
 -- arrondi au crédit supérieur. Le prof touche (1 - commission) du prix du cours.
