@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard, BookOpen, Video, HelpCircle, LogOut, Shield, Star,
-  Wallet, Coins, Settings, Search, Award, Gift, UserRound,
+  Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap,
 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -20,6 +20,7 @@ type Item = { title: string; icon: React.ComponentType<{ className?: string }>; 
 const STUDENT: { label: string; items: Item[] }[] = [
   { label: "Apprendre", items: [
     { title: "Accueil", icon: LayoutDashboard, path: "/dashboard" },
+    { title: "Rejoindre un cours", icon: Zap, path: "/rejoindre" },
     { title: "Trouver un prof", icon: Search, path: "/tutors" },
     { title: "Mes cours", icon: BookOpen, path: "/lessons" },
     { title: "Salle de cours", icon: Video, path: "/live" },

@@ -272,6 +272,70 @@ export type Database = {
           },
         ]
       }
+      live_requests: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          lesson_id?: string | null
+          matched_at?: string | null
+          note?: string | null
+          status?: string
+          student_id: string
+          subject: string
+          topic?: string | null
+          tutor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          lesson_id?: string | null
+          matched_at?: string | null
+          note?: string | null
+          status?: string
+          student_id?: string
+          subject?: string
+          topic?: string | null
+          tutor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_requests_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_requests_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -961,6 +1025,12 @@ export type Database = {
         }
         Returns: number
       }
+      app_setting_live: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
       become_tutor: {
         Args: {
           p_subjects: string[]
@@ -1044,6 +1114,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancel_live_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: undefined
+      }
       complete_lesson: {
         Args: {
           p_lesson_id: string
@@ -1117,6 +1193,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_live_queue: {
+        Args: {
+          p_subject: string
+          p_topic: string
+          p_duration_minutes: number
+        }
+        Returns: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       late_surcharge_cents: {
         Args: {
           _starts_at: string
@@ -1136,6 +1238,27 @@ export type Database = {
           _duration: number
         }
         Returns: number
+      }
+      live_stats: {
+        Args: never
+        Returns: {
+          tutors_online: number
+          students_waiting: number
+        }[]
+      }
+      my_live_request: {
+        Args: never
+        Returns: {
+          id: string
+          status: string
+          subject: string
+          duration_minutes: number
+          lesson_id: string
+          note: string
+          created_at: string
+          queue_position: number
+          tutors_online: number
+        }[]
       }
       referral_code_for: {
         Args: {
@@ -1254,11 +1377,57 @@ export type Database = {
         }
         Returns: number
       }
+      tutor_accept_live_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: {
+          cancelled_by: string | null
+          completed_at: string | null
+          created_at: string
+          credits_cost: number
+          duration_minutes: number
+          id: string
+          is_instant: boolean
+          notes: string | null
+          price_cents: number
+          rating: number | null
+          room_id: string | null
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          student_id: string
+          subject: string
+          surcharge_cents: number
+          topic: string | null
+          tutor_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lessons"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       tutor_available_balance: {
         Args: {
           _tutor_id: string
         }
         Returns: number
+      }
+      tutor_live_queue: {
+        Args: never
+        Returns: {
+          id: string
+          subject: string
+          topic: string
+          duration_minutes: number
+          student_first_name: string
+          created_at: string
+          price_eur: number
+          mine: boolean
+        }[]
       }
     }
     Enums: {

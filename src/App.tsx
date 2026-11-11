@@ -38,6 +38,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const TutorProfile = lazy(() => import("./pages/TutorProfile"));
 const Tutors = lazy(() => import("./pages/Tutors"));
+const JoinLesson = lazy(() => import("./pages/JoinLesson"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Certificates = lazy(() => import("./pages/Certificates"));
@@ -107,6 +108,7 @@ function AppRoutes() {
       {/* ── Public discovery routes (no auth required) ── */}
       <Route element={<PublicLayout />}>
         <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
+        <Route path="/rejoindre" element={<Suspense fallback={<PageLoader />}><JoinLesson /></Suspense>} />
         <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
       </Route>
 

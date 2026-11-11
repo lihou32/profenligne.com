@@ -1,11 +1,11 @@
 import { useMemo } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { eachWeekOfInterval, endOfMonth, format, isWithinInterval, startOfMonth } from "date-fns"
 import { fr } from "date-fns/locale"
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { toast } from "sonner"
-import { ArrowRight, BookOpen, CalendarDays, Check, Inbox, Star, Users, Video, Wallet, X } from "lucide-react"
+import { ArrowRight, BookOpen, CalendarDays, Check, Inbox, Star, Users, Video, Wallet, X, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { useAuth } from "@/hooks/useAuth"
@@ -15,6 +15,7 @@ import { formatEur, friendlyError, isRoomOpen } from "@/lib/credits"
 import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner"
 import { StatTile } from "@/components/brand/PageHeader"
 import { cn } from "@/lib/utils"
+import { useAcceptLiveRequest, useTutorLiveQueue } from "@/hooks/useLiveQueue"
 
 export default function TutorDashboard() {
   const { profile } = useAuth()
@@ -78,7 +79,7 @@ export default function TutorDashboard() {
         </div>
         <label className="glass-strong flex cursor-pointer items-center gap-3 rounded-full py-2 pl-4 pr-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", isOnline ? "bg-mint" : "bg-ink-2/25")} />
-          <span className="text-sm font-bold text-ink-2">{isOnline ? "Disponible maintenant" : "Indisponible"}</span>
+          <span className="text-sm font-bold text-ink-2">{isOnline ? "En ligne : tu reçois les élèves" : tutorProfile?.status === "busy" ? "En cours" : "Hors ligne"}</span>
           <Switch checked={isOnline} onCheckedChange={toggleStatus} aria-label="Disponibilité" />
         </label>
       </header>
@@ -100,6 +101,8 @@ export default function TutorDashboard() {
       )}
 
       {active && <ActiveLessonBanner lesson={active} role="tutor" />}
+
+      {tutorProfile && !tutorProfile.is_suspended && <LiveQueueCard online={isOnline} busy={tutorProfile.status === "busy"} />}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 [&>*]:min-w-0">
         <StatTile label="Gagné ce mois" value={isLoading ? "…" : formatEur(stats?.monthlyRevenue ?? 0)} icon={Wallet} tone="mint" hint={<Link to="/earnings" className="font-semibold text-peri hover:underline">Retirer</Link>} />
@@ -205,5 +208,47 @@ export default function TutorDashboard() {
         )}
       </section>
     </div>
+  )
+}
+
+/** File des élèves qui veulent un cours en direct maintenant. */
+function LiveQueueCard({ online, busy }: { online: boolean; busy: boolean }) {
+  const navigate = useNavigate()
+  const { data: queue = [] } = useTutorLiveQueue()
+  const accept = useAcceptLiveRequest()
+  const take = async (id: string) => {
+    try {
+      const l = await accept.mutateAsync(id)
+      if (l?.id) navigate(`/room/${l.id}`)
+    } catch (e) {
+      toast.error(friendlyError(e))
+    }
+  }
+  return (
+    <section className="glass reveal bg-sun-soft p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 text-xl"><Zap className="h-5 w-5 fill-sun" /> Élèves en attente d'un cours en direct
+          {queue.length > 0 && <span className="grid h-7 min-w-7 place-items-center rounded-full border-2 border-ink-2 bg-hl px-1.5 text-sm text-white">{queue.length}</span>}
+        </h2>
+        <p className="text-sm font-semibold text-ink-2/70">
+          {online ? "Tu es en ligne : le prochain élève de ta matière t'est envoyé automatiquement." : busy ? "Tu es en cours. Tu repasses en ligne à la fin." : "Passe « en ligne » pour recevoir les élèves automatiquement."}
+        </p>
+      </div>
+      {queue.length === 0 ? (
+        <p className="mt-4 rounded-xl border-2 border-dashed border-ink-2/30 bg-white/60 px-4 py-5 text-center text-sm text-ink-2/70">Personne dans la file pour l'instant.</p>
+      ) : (
+        <ul className="mt-4 grid gap-2.5 md:grid-cols-2">
+          {queue.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border-2 border-ink-2 bg-white p-3">
+              <div className="min-w-0">
+                <p className="truncate font-bold">{r.student_first_name} · {r.subject} · {r.duration_minutes} min</p>
+                <p className="truncate text-xs text-ink-2/65">{r.topic || "Pas de précision"} · attend depuis {Math.max(1, Math.round((Date.now() - new Date(r.created_at).getTime()) / 60000))} min{r.mine ? "" : " · pas dans tes matières"}</p>
+              </div>
+              <Button size="sm" onClick={() => take(r.id)} disabled={accept.isPending || busy}>Prendre · {formatEur(Number(r.price_eur) * 0.8)}</Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

@@ -10,6 +10,7 @@ import { Backdrop } from "@/components/brand/Backdrop"
 import { PublicNav, SiteFooter } from "@/components/layout/PublicLayout"
 import { useReveal } from "@/hooks/useReveal"
 import { useTutors } from "@/hooks/useTutors"
+import { useLiveStats } from "@/hooks/useLiveQueue"
 import { SUBJECTS } from "@/lib/constants"
 import {
   FREE_CANCEL_HOURS, LATE_END_HOUR, LATE_START_HOUR, LATE_SURCHARGE_EUR, LESSON_DURATIONS, MIN_LESSON_PRICE_EUR,
@@ -72,21 +73,28 @@ export default function Landing() {
 const ROW_BG = ["bg-mint-soft", "bg-sky-soft", "bg-pink-soft", "bg-sun-soft", "bg-hl-soft", "bg-peri-soft"]
 
 function Hero() {
+  const { data: live } = useLiveStats()
+  const online = live?.tutors_online ?? 0
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pt-16 [&>*]:min-w-0">
       <div className="reveal">
-        <span className="eyebrow">🎓 Du collège au master</span>
-        <h1 className="mt-6 text-[clamp(2.7rem,6.2vw,4.7rem)]">
-          Des cours particuliers en visio, <span className="hl-mark">dès {MIN_LESSON_PRICE_EUR} €</span>.
+        <span className="eyebrow">🎓 Du collège au master · dès 20 minutes</span>
+        <h1 className="mt-6 text-[clamp(2.8rem,6.6vw,5rem)]">
+          Un prof en visio, <span className="hl-mark">dans la minute</span>.
         </h1>
-        <p className="mt-6 max-w-[32em] text-[1.15rem] leading-relaxed text-ink-2/80 sm:text-[1.2rem]">
-          Prends un cours <b className="text-ink-2">tout de suite</b> avec un prof en ligne, ou <b className="text-ink-2">réserve un créneau</b>.
-          Le prix est le même chez tous les profs.
+        <p className="mt-6 max-w-[32em] text-[1.15rem] leading-relaxed text-ink-2/80 sm:text-[1.22rem]">
+          Il est 23 h, ton DM est pour demain ? Choisis ta matière, clique sur <b className="text-ink-2">Rejoindre</b> : le premier prof libre te rejoint.
+          Personne de libre ? Tu passes en <b className="text-ink-2">file d'attente</b>.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg" variant="highlight" className="h-14 px-7 text-base"><Link to="/live"><Zap className="fill-ink-2" /> Cours en direct</Link></Button>
-          <Button asChild size="lg" className="h-14 px-7 text-base"><Link to="/tutors"><Search /> Réserver un prof</Link></Button>
+          <Button asChild size="lg" variant="highlight" className="h-16 px-8 text-lg"><Link to="/rejoindre"><Zap className="fill-ink-2" /> Rejoindre un cours maintenant</Link></Button>
+          <Button asChild size="lg" variant="outline" className="h-16 px-6 text-base"><Link to="/tutors"><Search /> Réserver un créneau</Link></Button>
         </div>
+        {online > 0 && (
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border-2 border-ink-2 bg-white px-3.5 py-1.5 text-sm font-bold">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-mint" /> {online} prof{online > 1 ? "s" : ""} en ligne maintenant
+          </p>
+        )}
         <p className="mt-5 text-sm font-semibold text-ink-2/70">
           Tu es prof ? <Link to="/signup?role=tutor" className="font-bold text-ink underline underline-offset-4">Donne des cours ici <ArrowRight className="inline h-3.5 w-3.5" /></Link>
         </p>
@@ -123,8 +131,8 @@ function Hero() {
 /* ─── 1 bis. L'essentiel en quatre cases ─────────────────────────────── */
 
 const FACTS = [
-  { e: "⚡", bg: "bg-sun-soft", t: "En direct ou sur réservation", d: "Un prof est en ligne ? Tu commences tout de suite. Sinon, tu choisis ton créneau." },
-  { e: "💶", bg: "bg-mint-soft", t: `Dès ${MIN_LESSON_PRICE_EUR} € le cours`, d: "Le prix dépend seulement de la durée, pas du prof." },
+  { e: "⚡", bg: "bg-sun-soft", t: "En cours dans la minute", d: "Tu cliques, le premier prof libre te rejoint. Sinon, file d'attente." },
+  { e: "⏱️", bg: "bg-mint-soft", t: `Dès 20 min, ${MIN_LESSON_PRICE_EUR} €`, d: "Juste le temps de débloquer ton exercice. Même prix chez tous les profs." },
   { e: "↩️", bg: "bg-sky-soft", t: `Annulation gratuite ${FREE_CANCEL_HOURS} h avant`, d: "Et toujours remboursé si le prof annule." },
   { e: "🎁", bg: "bg-pink-soft", t: "Jusqu'à +25 € offerts", d: "Recharge ton solde : plus la recharge est grosse, plus on t'en offre." },
 ]
@@ -171,16 +179,16 @@ function SubjectsStrip() {
 /* ─── 3. Comment ça marche : quatre cartes de couleur ─────────────────── */
 
 const STEPS = [
-  { icon: Search, bg: "bg-hl-soft", title: "Choisis ton prof", text: "Par matière et par niveau. Chaque prof a son profil, ses avis vérifiés et ses créneaux." },
-  { icon: CalendarCheck, bg: "bg-sky-soft", title: "Réserve un créneau", text: `Tu vois le prix avant de confirmer. Annulation gratuite jusqu'à ${FREE_CANCEL_HOURS} h avant.` },
-  { icon: MonitorPlay, bg: "bg-mint-soft", title: "Retrouve-le en visio", text: "Caméra, partage d'écran et tableau blanc, directement dans le navigateur." },
+  { icon: Search, bg: "bg-hl-soft", title: "Choisis ta matière", text: "Et ta durée : 20 min pour un exercice, 1 h pour un chapitre. Tu vois le prix tout de suite." },
+  { icon: Zap, bg: "bg-sky-soft", title: "Clique sur Rejoindre", text: "Le premier prof libre te rejoint. Sinon tu attends ton tour dans la file, ou tu réserves un créneau." },
+  { icon: MonitorPlay, bg: "bg-mint-soft", title: "Cours en visio", text: "Caméra, partage d'écran et tableau blanc, directement dans le navigateur. Rien à installer." },
   { icon: TrendingUp, bg: "bg-sun-soft", title: "Progresse", text: "Rapport de séance, XP et certificats : tu vois ce que tu as travaillé." },
 ]
 
 function HowItWorks() {
   return (
     <section id="comment" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-28">
-      <SectionHead eyebrow="⚡ Comment ça marche" title={<>Quatre étapes, <span className="hl-mark">zéro</span> prise de tête.</>} />
+      <SectionHead eyebrow="⚡ Comment ça marche" title={<>Trois clics, <span className="hl-mark">et tu es en cours</span>.</>} />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
         {STEPS.map((s, i) => (
           <article key={s.title} className={cn("sticker reveal lift relative flex flex-col rounded-[1.5rem] p-6", s.bg)} style={{ transitionDelay: `${i * 70}ms` }}>
@@ -203,11 +211,12 @@ function TwoWays() {
       <SectionHead eyebrow="💶 Tarifs" title={<>Deux façons d'avoir <span className="hl-mark">ton prof</span>.</>} sub="Le prix dépend seulement de la durée du cours. Il est débité de ton solde au moment où tu demandes le cours." />
       <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <article className="sticker reveal flex flex-col rounded-[1.75rem] bg-sun-soft p-7">
-          <span className="flex w-fit items-center gap-1.5 rounded-full border-2 border-ink-2 bg-white px-3 py-1 text-sm font-extrabold"><Zap className="h-4 w-4 fill-sun" /> En direct</span>
-          <h3 className="mt-4 text-[2rem]">Maintenant, sans réserver</h3>
-          <p className="mt-2 text-ink-2/75">Tu choisis un prof marqué « en ligne », il accepte et la salle s'ouvre. Idéal la veille d'un contrôle.</p>
+          <span className="flex w-fit items-center gap-1.5 rounded-full border-2 border-ink-2 bg-white px-3 py-1 text-sm font-extrabold"><Zap className="h-4 w-4 fill-sun" /> Rejoindre maintenant</span>
+          <h3 className="mt-4 text-[2rem]">Comme un Uber, mais pour tes cours</h3>
+          <p className="mt-2 text-ink-2/75">Tu choisis ta matière et ta durée, tu cliques : le premier prof libre te rejoint en visio. Aucun prof dispo ? Tu passes en file d'attente et tu es connecté dès qu'un prof se libère.</p>
           <ul className="mt-5 space-y-2 font-semibold">
-            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Même grille de prix que sur réservation</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Dès 20 minutes, même grille de prix</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />Rien n'est débité tant qu'aucun prof ne t'a rejoint</li>
             <li className="flex gap-2"><Check className="mt-0.5 h-5 w-5 shrink-0" />De {LATE_START_HOUR} h à {LATE_END_HOUR} h : <b>+{LATE_SURCHARGE_EUR} €</b>, quelle que soit la durée</li>
           </ul>
           <div className="mt-6 grid grid-cols-3 gap-2 text-center">
@@ -222,7 +231,7 @@ function TwoWays() {
               )
             })}
           </div>
-          <Button asChild size="lg" variant="highlight" className="mt-7 w-fit"><Link to="/live">Voir les profs en ligne <ArrowRight /></Link></Button>
+          <Button asChild size="lg" variant="highlight" className="mt-7 w-fit"><Link to="/rejoindre"><Zap className="fill-ink-2" /> Rejoindre un cours</Link></Button>
         </article>
 
         <article className="sticker reveal flex flex-col rounded-[1.75rem] bg-peri-soft p-7">
@@ -384,7 +393,7 @@ function Topups() {
 const FAQ = [
   ["Comment se passe un cours ?", "En visio, directement dans le navigateur : caméra, micro, partage d'écran et tableau blanc. La salle ouvre 15 minutes avant l'heure prévue. Rien à installer."],
   ["Combien coûte un cours ?", `Le même prix chez tous les profs : ${LESSON_DURATIONS.map((d) => `${d.label} ${d.priceEur} €`).join(", ")}. Un cours en direct (sans réservation) coûte ${LATE_SURCHARGE_EUR} € de plus s'il commence entre ${LATE_START_HOUR} h et ${LATE_END_HOUR} h.`],
-  ["C'est quoi un cours en direct ?", "Tu choisis un prof marqué « en ligne » et tu demandes un cours tout de suite, sans réserver. Dès qu'il accepte, la salle s'ouvre."],
+  ["C'est quoi « Rejoindre un cours » ?", "Tu choisis ta matière et ta durée (dès 20 min) et tu cliques : le premier prof en ligne te rejoint dans la minute. S'il n'y a personne de libre, tu passes en file d'attente et tu es connecté dès qu'un prof se libère (30 min maximum). Rien n'est débité tant qu'aucun prof ne t'a rejoint."],
   ["Comment je paie ?", "Tu recharges ton solde par WhatsApp, virement ou Revolut (à partir de 50 €, un bonus est offert). Le prix du cours est débité à la réservation, et ton solde n'expire jamais."],
   ["Et si je dois annuler ?", `Tant que le prof n'a pas confirmé, ou jusqu'à ${FREE_CANCEL_HOURS} h avant le cours, tu es remboursé intégralement. Si c'est le prof qui annule, tu es toujours remboursé.`],
   ["Quels niveaux ?", "Du collège au master : chaque prof indique ses matières et ses niveaux sur son profil."],
