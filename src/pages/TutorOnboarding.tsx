@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
+import { LEVELS } from "@/lib/agenda";
 import { LESSON_DURATIONS, MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION, WITHDRAWAL_FEE_RATE, formatEur, friendlyError, tutorShareEur } from "@/lib/credits";
 
 const MAX_SUBJECTS = 6;
@@ -40,10 +41,11 @@ export default function TutorOnboarding() {
       .slice(0, MAX_SUBJECTS),
   );
   const [bio, setBio] = useState(profile?.bio || "");
+  const [levels, setLevels] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canNext = () => {
-    if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS;
+    if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS && levels.length > 0;
     if (step === 1) return true;
     if (step === 2) return bio.trim().length >= 20;
     return false;
@@ -68,11 +70,12 @@ export default function TutorOnboarding() {
       });
 
       if (error) throw error;
+      await supabase.from("tutors").update({ levels }).eq("user_id", user.id);
 
-      toast.success("Bienvenue parmi les professeurs ! 🎉");
+      toast.success("Bienvenue parmi les professeurs ! Dernière étape : ouvre tes créneaux.");
 
-      // Force a page reload to refresh auth context (roles)
-      window.location.href = "/dashboard";
+      // Recharge la page pour rafraîchir les rôles, puis ouvre l'agenda
+      window.location.href = "/disponibilites";
     } catch (err: unknown) {
       toast.error(friendlyError(err, "Erreur lors de la création du profil professeur"));
     } finally {
@@ -126,7 +129,7 @@ export default function TutorOnboarding() {
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Quelles matières enseignez-vous ?</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Sélectionnez au moins une matière
+                    Au moins une matière et un niveau
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -160,6 +163,21 @@ export default function TutorOnboarding() {
                     {selectedSubjects.length} matière{selectedSubjects.length > 1 ? "s" : ""} sélectionnée{selectedSubjects.length > 1 ? "s" : ""}
                   </p>
                 )}
+                <div className="space-y-2 pt-2">
+                  <p className="text-center text-sm font-semibold text-ink-2">Et pour quels niveaux ?</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {LEVELS.map((lv) => {
+                      const on = levels.includes(lv);
+                      return (
+                        <button key={lv} type="button" aria-pressed={on}
+                          onClick={() => setLevels((prev) => on ? prev.filter((x) => x !== lv) : [...prev, lv])}
+                          className={`rounded-full border-2 border-ink-2 px-3.5 py-1.5 text-sm font-bold transition ${on ? "bg-sun" : "bg-white hover:bg-peri-soft"}`}>
+                          {lv}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 

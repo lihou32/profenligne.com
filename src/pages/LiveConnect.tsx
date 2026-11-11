@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LATE_START_HOUR, LATE_SURCHARGE_EUR, isRoomOpen } from "@/lib/credits";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
+import { isTutorLive } from "@/lib/agenda";
 
 const statusColors: Record<string, string> = {
   online: "bg-success",
@@ -35,7 +36,10 @@ export default function LiveConnect() {
     (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes)),
   );
 
-  const filteredTutors = (tutors || []).filter((t) => {
+  // Statut réel : « en ligne » seulement si l'appli du prof donne signe de vie
+  const filteredTutors = (tutors || []).map((t) => ({
+    ...t, status: isTutorLive(t) ? "online" : t.status === "busy" ? "busy" : "offline",
+  })).filter((t) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const name = `${t.profiles?.first_name || ""} ${t.profiles?.last_name || ""}`.toLowerCase();

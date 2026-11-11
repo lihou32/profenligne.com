@@ -609,6 +609,41 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_availability: {
+        Row: {
+          created_at: string
+          end_minute: number
+          id: string
+          start_minute: number
+          tutor_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_minute: number
+          id?: string
+          start_minute: number
+          tutor_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_minute?: number
+          id?: string
+          start_minute?: number
+          tutor_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_availability_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tutor_earnings: {
         Row: {
           amount: number
@@ -682,9 +717,12 @@ export type Database = {
       tutors: {
         Row: {
           created_at: string
+          headline: string | null
           hourly_rate: number | null
           id: string
           is_suspended: boolean
+          last_seen_at: string | null
+          levels: string[]
           rating: number | null
           status: string
           subjects: string[]
@@ -694,9 +732,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          headline?: string | null
           hourly_rate?: number | null
           id?: string
           is_suspended?: boolean
+          last_seen_at?: string | null
+          levels?: string[]
           rating?: number | null
           status?: string
           subjects?: string[]
@@ -706,9 +747,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          headline?: string | null
           hourly_rate?: number | null
           id?: string
           is_suspended?: boolean
+          last_seen_at?: string | null
+          levels?: string[]
           rating?: number | null
           status?: string
           subjects?: string[]
@@ -1025,6 +1069,12 @@ export type Database = {
         }
         Returns: number
       }
+      app_setting_agenda: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
       app_setting_live: {
         Args: {
           _key: string
@@ -1266,6 +1316,10 @@ export type Database = {
         }
         Returns: string
       }
+      refresh_lessons: {
+        Args: never
+        Returns: number
+      }
       request_topup: {
         Args: {
           p_amount_eur: number
@@ -1314,6 +1368,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_my_availability: {
+        Args: {
+          p_ranges: Json
+        }
+        Returns: number
       }
       start_lesson: {
         Args: {
@@ -1416,6 +1476,10 @@ export type Database = {
         }
         Returns: number
       }
+      tutor_heartbeat: {
+        Args: never
+        Returns: string
+      }
       tutor_live_queue: {
         Args: never
         Returns: {
@@ -1427,6 +1491,26 @@ export type Database = {
           created_at: string
           price_eur: number
           mine: boolean
+        }[]
+      }
+      tutor_open_slots: {
+        Args: {
+          p_tutor: string
+          p_from: unknown
+          p_days: number
+          p_duration: number
+        }
+        Returns: {
+          starts_at: string
+        }[]
+      }
+      tutors_next_slot: {
+        Args: {
+          p_duration?: number
+        }
+        Returns: {
+          tutor_id: string
+          next_slot: string
         }[]
       }
     }

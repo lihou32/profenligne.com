@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { ArrowRight, Loader2, X, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,8 @@ export default function JoinLesson() {
   const join = useJoinLiveQueue()
   const cancel = useCancelLiveRequest()
 
-  const [subject, setSubject] = useState("")
+  const [search] = useSearchParams()
+  const [subject, setSubject] = useState(() => search.get("subject") ?? "")
   const [duration, setDuration] = useState(20)
   const [topic, setTopic] = useState("")
 

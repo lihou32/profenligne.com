@@ -16,6 +16,8 @@ import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner"
 import { StatTile } from "@/components/brand/PageHeader"
 import { cn } from "@/lib/utils"
 import { useAcceptLiveRequest, useTutorLiveQueue } from "@/hooks/useLiveQueue"
+import { useTutorAvailability } from "@/hooks/useAgenda"
+import { weeklyHours } from "@/lib/agenda"
 
 export default function TutorDashboard() {
   const { profile } = useAuth()
@@ -26,6 +28,7 @@ export default function TutorDashboard() {
   const confirmLesson = useConfirmLesson()
   const cancelLesson = useCancelLesson()
   const isOnline = tutorProfile?.status === "online"
+  const { data: agenda, isLoading: agendaLoading } = useTutorAvailability(profile?.user_id)
 
   const now = Date.now()
   const pending = (lessons ?? []).filter((l) => l.status === "pending" && new Date(l.scheduled_at).getTime() > now)
@@ -79,7 +82,7 @@ export default function TutorDashboard() {
         </div>
         <label className="glass-strong flex cursor-pointer items-center gap-3 rounded-full py-2 pl-4 pr-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", isOnline ? "bg-mint" : "bg-ink-2/25")} />
-          <span className="text-sm font-bold text-ink-2">{isOnline ? "En ligne : tu reçois les élèves" : tutorProfile?.status === "busy" ? "En cours" : "Hors ligne"}</span>
+          <span className="text-sm font-bold text-ink-2">{isOnline ? "En ligne : garde cette page ouverte" : tutorProfile?.status === "busy" ? "En cours" : "Hors ligne"}</span>
           <Switch checked={isOnline} onCheckedChange={toggleStatus} aria-label="Disponibilité" />
         </label>
       </header>
@@ -101,6 +104,23 @@ export default function TutorDashboard() {
       )}
 
       {active && <ActiveLessonBanner lesson={active} role="tutor" />}
+
+      {tutorProfile && !tutorProfile.is_suspended && !agendaLoading && (
+        (agenda ?? []).length === 0 ? (
+          <div className="glass reveal flex flex-col gap-3 border-l-4 !border-l-sun p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold text-ink-2">Publie ton agenda pour recevoir des réservations</p>
+              <p className="text-sm text-muted-foreground">Les élèves réservent tes créneaux libres en deux clics, et le cours est confirmé tout de suite. Sans agenda, ils doivent te proposer une date.</p>
+            </div>
+            <Button asChild><Link to="/disponibilites"><CalendarDays /> Ouvrir mes créneaux</Link></Button>
+          </div>
+        ) : (
+          <Link to="/disponibilites" className="glass reveal flex items-center justify-between gap-3 p-4 text-sm hover:bg-white/70">
+            <span className="flex items-center gap-2 font-semibold text-ink-2"><CalendarDays className="h-4 w-4 text-peri" />Ton agenda est ouvert : {String(weeklyHours(agenda ?? [])).replace(".", ",")} h de créneaux par semaine</span>
+            <span className="flex items-center gap-1 font-bold text-peri">Modifier <ArrowRight className="h-4 w-4" /></span>
+          </Link>
+        )
+      )}
 
       {tutorProfile && !tutorProfile.is_suspended && <LiveQueueCard online={isOnline} busy={tutorProfile.status === "busy"} />}
 

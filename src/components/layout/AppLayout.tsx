@@ -9,6 +9,15 @@ import { useReveal } from "@/hooks/useReveal"
 import { supabase } from "@/integrations/supabase/client"
 import { LogoMark } from "@/components/brand/Logo"
 import { formatEur } from "@/lib/credits"
+import { useTutorProfile } from "@/hooks/useTutors"
+import { useTutorHeartbeat } from "@/hooks/useAgenda"
+
+/** Tant que l'appli d'un prof en ligne est ouverte, la base sait qu'il est là. */
+function TutorPresence() {
+  const { data: tutor } = useTutorProfile()
+  useTutorHeartbeat(tutor?.status === "online" || tutor?.status === "busy")
+  return null
+}
 
 /**
  * Espace connecté : barre latérale crème, contenu aéré sur fond crème.
@@ -35,6 +44,7 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
+      {hasRole("tutor") && <TutorPresence />}
       <SidebarInset className="relative min-w-0 bg-background">
         <TopBar isTutor={hasRole("tutor")} userId={user.id} initials={initials} avatar={profile?.avatar_url ?? null} name={profile?.first_name ?? ""} />
         <main className="relative flex-1 px-4 pb-20 pt-2 md:px-10">

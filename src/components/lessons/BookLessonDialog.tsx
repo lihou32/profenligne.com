@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
   const [tutorId, setTutorId] = useState(defaultTutorId || "");
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const createLesson = useCreateLesson();
   const { data: tutors } = useTutors();
   const { data: credits } = useUserCredits();
@@ -107,17 +108,18 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
       return;
     }
     try {
-      await createLesson.mutateAsync({
+      const lesson = await createLesson.mutateAsync({
         tutor_id: tutorId,
         subject,
         topic: topic.trim() || null,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: durationMin,
       });
-      toast.success(instant ? "Demande envoyée ! Le prof l'accepte et la salle s'ouvre." : "Demande envoyée ! Le professeur doit maintenant la confirmer.");
+      toast.success(instant ? "C'est parti ! Ton prof te rejoint dans la salle." : "Demande envoyée ! Si le prof ne la confirme pas avant l'heure, tu es remboursé.");
       setOpen(false);
       onClose?.();
       resetForm();
+      if (instant && lesson?.id) navigate(`/room/${lesson.id}`);
     } catch (error: unknown) {
       toast.error(friendlyError(error, "Erreur lors de la réservation"));
     }
@@ -138,13 +140,14 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">{instant ? <><Zap className="h-5 w-5" /> Cours en direct</> : "Réserver un cours"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{instant ? <><Zap className="h-5 w-5" /> Cours en direct</> : defaultTutorId ? "Proposer une date" : "Réserver un cours"}</DialogTitle>
           <DialogDescription>
-            Le prix est débité de ton solde à la réservation et remboursé si le professeur refuse,
+            Le prix est débité de ton solde et remboursé si le prof refuse ou ne confirme pas à temps,
             ou si tu annules plus de {FREE_CANCEL_HOURS} h avant.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!defaultTutorId && (
           <div className="space-y-2">
             <Label htmlFor="book-tutor">Professeur *</Label>
             <Select value={tutorId} onValueChange={setTutorId}>
@@ -163,6 +166,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
               </SelectContent>
             </Select>
           </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="book-subject">Matière *</Label>
@@ -183,7 +187,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
           {instant ? (
             <p className="rounded-xl border-2 border-ink-2 bg-sun-soft p-3 text-sm font-semibold">
-              ⚡ Le cours commence maintenant, dès que le prof accepte.
+              ⚡ Le cours commence maintenant : tu arrives dans la salle et ton prof te rejoint.
               {surcharge > 0 ? ` Après ${LATE_START_HOUR} h, un cours en direct coûte ${LATE_SURCHARGE_EUR} € de plus.` : ""}
             </p>
           ) : (

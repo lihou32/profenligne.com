@@ -16,6 +16,7 @@ import type { TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/credits";
 import { SUBJECTS, GRADE_LEVELS, SCHOOL_TYPES } from "@/lib/constants";
+import { LEVELS } from "@/lib/agenda";
 
 export default function Profile() {
   useDocumentTitle("Mon Profil");
@@ -30,6 +31,8 @@ export default function Profile() {
   const [gradeLevel, setGradeLevel] = useState("");
   const [schoolType, setSchoolType] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [headline, setHeadline] = useState("");
+  const [levels, setLevels] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -47,11 +50,13 @@ export default function Profile() {
     if (isTutor && user) {
       supabase
         .from("tutors")
-        .select("subjects")
+        .select("subjects, headline, levels")
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data }) => {
           if (data?.subjects) setSelectedSubjects(data.subjects);
+          setHeadline(data?.headline ?? "");
+          setLevels(data?.levels ?? []);
         });
     } else if (user?.user_metadata?.subjects) {
       setSelectedSubjects(user.user_metadata.subjects.split(","));
@@ -126,7 +131,7 @@ export default function Profile() {
       if (isTutor) {
         const { error: tutorError } = await supabase
           .from("tutors")
-          .update({ subjects: selectedSubjects })
+          .update({ subjects: selectedSubjects, headline: headline.trim() || null, levels })
           .eq("user_id", user.id);
         if (tutorError) throw tutorError;
       } else {
@@ -217,6 +222,32 @@ export default function Profile() {
             />
             <p className="text-xs text-muted-foreground text-right">{bio.length}/300</p>
           </div>
+
+          {isTutor && (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phrase d'accroche</Label>
+                <Input value={headline} maxLength={120} onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="Ex : Prépa MP, je rends les maths logiques" className="h-11 rounded-xl bg-secondary/50 border-border/50" />
+                <p className="text-xs text-muted-foreground">Affichée sur ta carte dans la liste des profs. {headline.length}/120</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Niveaux enseignés</Label>
+                <div className="flex flex-wrap gap-2">
+                  {LEVELS.map((lv) => {
+                    const on = levels.includes(lv);
+                    return (
+                      <button key={lv} type="button" aria-pressed={on}
+                        onClick={() => setLevels((prev) => on ? prev.filter((x) => x !== lv) : [...prev, lv])}
+                        className={`rounded-full border-2 border-ink-2 px-3.5 py-1.5 text-sm font-bold transition ${on ? "bg-sun" : "bg-white hover:bg-peri-soft"}`}>
+                        {lv}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
 
           {isStudent && (
             <>

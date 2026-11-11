@@ -32,6 +32,7 @@ const LessonRoom = lazy(() => import("./pages/LessonRoom"));
 const LessonReport = lazy(() => import("./pages/LessonReport"));
 const TutorReviews = lazy(() => import("./pages/TutorReviews"));
 const TutorEarnings = lazy(() => import("./pages/TutorEarnings"));
+const TutorAvailability = lazy(() => import("./pages/TutorAvailability"));
 const BuyCredits = lazy(() => import("./pages/BuyCredits"));
 // AI Tutor removed — feature supprimée du produit
 const Profile = lazy(() => import("./pages/Profile"));
@@ -122,6 +123,7 @@ function AppRoutes() {
         <Route path="/pricing" element={<Navigate to="/credits" replace />} />
         <Route path="/buy-credits" element={<Navigate to="/credits" replace />} />
         <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
+        <Route path="/disponibilites" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorAvailability /></Suspense></ProtectedRoute>} />
         <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
         <Route path="/credits" element={<Suspense fallback={<PageLoader />}><BuyCredits /></Suspense>} />
         {/* AI Tutor route removed */}

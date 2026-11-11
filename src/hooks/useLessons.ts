@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { refreshLessons } from "./useAgenda";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./useAuth";
@@ -37,6 +38,7 @@ export function useLessons() {
     queryKey: ["lessons", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<StudentLesson[]> => {
+      await refreshLessons();
       const { data, error } = await supabase
         .from("lessons")
         .select("*")
