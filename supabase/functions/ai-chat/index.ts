@@ -31,7 +31,7 @@ function aiProvider(): { url: string; key: string; model: string } | null {
     return {
       url: "https://api.groq.com/openai/v1/chat/completions",
       key: groq,
-      model: override ?? "llama-3.3-70b-versatile",
+      model: override ?? "openai/gpt-oss-120b",
     };
   }
   const lovable = Deno.env.get("LOVABLE_API_KEY");

@@ -69,6 +69,6 @@ Migration : `supabase/migrations/20261111000200_manual_payments.sql` (rejouable)
 
 **IA (quiz, cartes mentales)** : la fonction `ai-chat` accepte une clé gratuite. Ajouter dans Supabase → Edge Functions → Secrets **une** de ces clés :
 - `GEMINI_API_KEY` — Google AI Studio (aistudio.google.com/apikey), gratuit ; modèle `gemini-2.5-flash` ;
-- ou `GROQ_API_KEY` — console.groq.com, gratuit ; modèle `llama-3.3-70b-versatile`.
+- ou `GROQ_API_KEY` — console.groq.com, gratuit ; modèle `openai/gpt-oss-120b` (llama-3.3-70b-versatile est retiré des comptes gratuits depuis le 16/08/2026).
 
 `AI_MODEL` permet de forcer un autre modèle. `LOVABLE_API_KEY` reste accepté en dernier recours.
