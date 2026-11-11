@@ -66,6 +66,13 @@ export default function Tutors() {
         : sortBy === "price_asc" ? p(a) - p(b) : p(b) - p(a))
   }, [tutors, deferred, subject, maxPrice, minRating, onlineOnly, sortBy])
 
+  // Matières proposées = celles réellement enseignées par les profs (sinon la liste de référence)
+  const subjectChips = useMemo(() => {
+    const found = [...new Set(tutors.flatMap((t) => t.subjects ?? []))]
+    const order = (x: string) => { const i = SUBJECTS.indexOf(x); return i === -1 ? 99 : i }
+    return found.length ? found.sort((x, y) => order(x) - order(y) || x.localeCompare(y, "fr")) : SUBJECTS
+  }, [tutors])
+
   const activeFilters = (maxPrice < 150 ? 1 : 0) + (minRating > 0 ? 1 : 0) + (onlineOnly ? 1 : 0)
   const reset = () => { setSearch(""); setSubject("all"); setMaxPrice(150); setMinRating(0); setOnlineOnly(false) }
 
@@ -124,7 +131,7 @@ export default function Tutors() {
 
       {/* Matières */}
       <div className="reveal no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center">
-        {["all", ...SUBJECTS].map((s) => (
+        {["all", ...subjectChips].map((s) => (
           <button key={s} onClick={() => setSubject(s)}
             className={cn("shrink-0 rounded-full px-4 py-2 text-sm font-bold transition",
               subject === s ? "bg-primary text-white shadow-ink" : "bg-white/65 text-ink ring-1 ring-ink/5 hover:bg-white")}>
