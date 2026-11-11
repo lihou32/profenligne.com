@@ -96,8 +96,8 @@ export function AppSidebar() {
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={active} tooltip={item.title}
           className={cn(
-            "h-11 rounded-xl px-3.5 font-semibold transition-all",
-            active ? "!bg-white !text-ink-2 font-semibold ring-1 ring-border" : "text-ink-2/70 hover:!bg-secondary hover:!text-ink-2",
+            "h-11 rounded-xl border-2 px-3.5 font-bold transition-all",
+            active ? "border-ink-2 !bg-sun !text-ink-2 shadow-[2px_2px_0_0_hsl(var(--ink-2))]" : "border-transparent text-ink-2/75 hover:!bg-peri-soft hover:!text-ink-2",
           )}>
           <Link to={item.path} onClick={close} aria-current={active ? "page" : undefined}>
             <item.icon className="h-[18px] w-[18px]" />
@@ -109,7 +109,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="border-r-0" aria-label="Navigation principale">
+    <Sidebar className="border-r-2 border-ink-2" aria-label="Navigation principale">
       <SidebarHeader className="px-5 pb-4 pt-6">
         <Logo to="/dashboard" />
       </SidebarHeader>
@@ -133,9 +133,9 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        <div className="flex items-center gap-3 rounded-2xl bg-background p-2.5">
+        <div className="flex items-center gap-3 rounded-2xl border-2 border-ink-2 bg-peri-soft p-2.5">
           <Link to="/profile" onClick={close} className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft text-sm font-bold text-ink">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border-2 border-ink-2 bg-white text-sm font-bold text-ink-2">
               {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-xl object-cover" /> : initials}
             </span>
             <span className="min-w-0">

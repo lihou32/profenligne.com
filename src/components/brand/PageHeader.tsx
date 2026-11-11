@@ -26,18 +26,18 @@ export function StatTile({
   tone?: "peri" | "hl" | "mint" | "rose"; className?: string
 }) {
   const tones = {
-    peri: "bg-peri-soft text-peri",
-    hl: "bg-hl-soft text-hl",
-    mint: "bg-mint-soft text-mint",
-    rose: "bg-rose-soft text-rose",
+    peri: "bg-peri-soft",
+    hl: "bg-hl-soft",
+    mint: "bg-mint-soft",
+    rose: "bg-pink-soft",
   }
   return (
-    <div className={cn("glass reveal lift p-5", className)}>
+    <div className={cn("glass reveal lift p-5", tones[tone], className)}>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        {Icon && <span className={cn("grid h-9 w-9 place-items-center rounded-xl", tones[tone])}><Icon className="h-[18px] w-[18px]" /></span>}
+        <p className="text-sm font-bold text-ink-2/75">{label}</p>
+        {Icon && <span className="grid h-9 w-9 place-items-center rounded-xl border-2 border-ink-2 bg-white"><Icon className="h-[18px] w-[18px]" /></span>}
       </div>
-      <p className="mt-2 font-display text-[1.9rem] font-medium leading-tight text-ink-2 tabular">{value}</p>
+      <p className="mt-2 font-display text-[2rem] font-extrabold leading-tight text-ink-2 tabular">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   )
@@ -49,7 +49,7 @@ export function EmptyState({ icon: Icon, title, text, action }: {
 }) {
   return (
     <div className="glass reveal flex flex-col items-center px-6 py-12 text-center">
-      <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-peri-soft"><Icon className="h-6 w-6 text-peri" /></span>
+      <span className="mb-4 grid h-14 w-14 rotate-[-4deg] place-items-center rounded-2xl border-2 border-ink-2 bg-sun"><Icon className="h-6 w-6" /></span>
       <h3 className="text-lg">{title}</h3>
       {text && <p className="mt-1 max-w-sm text-sm text-muted-foreground">{text}</p>}
       {action && <div className="mt-5">{action}</div>}

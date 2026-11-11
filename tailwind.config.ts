@@ -13,9 +13,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Inter Variable"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Fraunces Variable"', 'Georgia', 'serif'],
-        serif: ['"Fraunces Variable"', 'Georgia', 'serif'],
+        sans: ['"Figtree Variable"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Bricolage Grotesque Variable"', '"Figtree Variable"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -50,6 +49,8 @@ export default {
         mint: { DEFAULT: "hsl(var(--mint))", soft: "hsl(var(--mint-soft))" },
         rose: { DEFAULT: "hsl(var(--rose))", soft: "hsl(var(--rose-soft))" },
         sky: { DEFAULT: "hsl(var(--sky))", soft: "hsl(var(--sky-soft))" },
+        sun: { DEFAULT: "hsl(var(--sun))", soft: "hsl(var(--sun-soft))" },
+        pink: { DEFAULT: "hsl(var(--pink))", soft: "hsl(var(--pink-soft))" },
       },
       borderRadius: {
         "4xl": "2rem",
@@ -60,8 +61,9 @@ export default {
       boxShadow: {
         soft: "var(--shadow-soft)",
         lift: "var(--shadow-lift)",
-        ink: "none",
-        card: "0 1px 2px hsl(40 20% 20% / 0.04)",
+        hard: "3px 3px 0 0 hsl(var(--ink-2))",
+        "hard-lg": "6px 6px 0 0 hsl(var(--ink-2))",
+        card: "0 1px 2px hsl(245 30% 13% / 0.05)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

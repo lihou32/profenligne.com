@@ -123,7 +123,7 @@ export default function Tutors() {
         {["all", ...subjectChips].map((s) => (
           <button key={s} onClick={() => setSubject(s)}
             className={cn("shrink-0 rounded-full px-4 py-2 text-sm font-bold transition",
-              subject === s ? "bg-primary text-white shadow-ink" : "bg-white/65 text-ink ring-1 ring-ink/5 hover:bg-white")}>
+              "border-2 border-ink-2", subject === s ? "bg-sun text-ink-2 shadow-[2px_2px_0_0_hsl(var(--ink-2))]" : "bg-white text-ink-2 hover:bg-peri-soft")}>
             {s === "all" ? "Toutes les matières" : s}
           </button>
         ))}

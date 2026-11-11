@@ -26,12 +26,12 @@ export function PublicLayout() {
 export function PublicNav({ loggedIn, links }: { loggedIn: boolean; links?: { href: string; label: string }[] }) {
   return (
     <div className="sticky top-3 z-50 px-3">
-      <nav className="glass-strong mx-auto flex h-16 max-w-6xl items-center gap-4 rounded-full pl-5 pr-2">
+      <nav className="sticker mx-auto flex h-16 max-w-6xl items-center gap-4 rounded-2xl bg-white pl-4 pr-2">
         <Logo />
         {links && (
           <div className="ml-6 hidden items-center gap-6 lg:flex">
             {links.map((l) => (
-              <a key={l.href} href={l.href} className="text-[15px] font-semibold text-muted-foreground transition hover:text-ink-2">{l.label}</a>
+              <a key={l.href} href={l.href} className="rounded-lg px-1 text-[15px] font-bold text-ink-2/75 transition hover:bg-sun-soft hover:text-ink-2">{l.label}</a>
             ))}
           </div>
         )}
@@ -52,13 +52,13 @@ export function PublicNav({ loggedIn, links }: { loggedIn: boolean; links?: { hr
 
 export function SiteFooter() {
   return (
-    <footer className="mx-auto flex max-w-6xl flex-col gap-4 px-6 pb-10 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center">
+    <footer className="mx-auto flex max-w-6xl flex-col gap-4 border-t-2 border-ink-2 px-6 pb-10 pt-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
       <Logo />
       <span className="sm:ml-4">Cours particuliers en visio, avec des profs choisis un par un.</span>
       <nav className="flex gap-4 sm:ml-auto">
-        <Link to="/tutors" className="hover:text-ink-2">Les profs</Link>
-        <Link to="/help" className="hover:text-ink-2">Aide</Link>
-        <Link to="/signup?role=tutor" className="hover:text-ink-2">Devenir prof</Link>
+        <Link to="/tutors" className="font-semibold hover:text-ink-2">Les profs</Link>
+        <Link to="/help" className="font-semibold hover:text-ink-2">Aide</Link>
+        <Link to="/signup?role=tutor" className="font-semibold hover:text-ink-2">Devenir prof</Link>
       </nav>
     </footer>
   )

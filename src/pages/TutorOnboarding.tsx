@@ -98,7 +98,7 @@ export default function TutorOnboarding() {
               <div
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   i === step
-                    ? "bg-primary text-white shadow-ink"
+                    ? "bg-primary text-white shadow-hard"
                     : i < step
                     ? "bg-mint-soft text-success"
                     : "bg-white/60 text-muted-foreground"

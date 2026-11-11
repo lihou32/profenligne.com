@@ -112,7 +112,7 @@ export default function StudentDashboard() {
         </section>
 
         {/* Niveau */}
-        <section className="glass reveal flex items-center gap-5 p-6">
+        <section className="glass reveal flex items-center gap-5 bg-sun-soft p-6">
           <div className="ring-progress h-28 w-28 shrink-0" style={{ "--p": lvl.pct, "--c": "hsl(var(--hl))" } as React.CSSProperties}>
             <div className="text-center">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Niveau</p>
@@ -208,7 +208,7 @@ export default function StudentDashboard() {
       </div>
 
       {(!profile?.bio || !profile?.grade_level) && (
-        <Link to="/profile" className="glass reveal lift flex items-center gap-4 p-4 sm:p-5">
+        <Link to="/profile" className="glass reveal lift flex items-center gap-4 bg-mint-soft p-4 sm:p-5">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-peri-soft [&>*]:min-w-0"><UserRound className="h-5 w-5 text-ink" /></span>
           <div className="flex-1">
             <p className="font-bold text-ink-2">Complète ton profil</p>

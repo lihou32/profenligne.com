@@ -35,7 +35,7 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="relative min-w-0 bg-background md:border-l">
+      <SidebarInset className="relative min-w-0 bg-background">
         <TopBar isTutor={hasRole("tutor")} userId={user.id} initials={initials} avatar={profile?.avatar_url ?? null} name={profile?.first_name ?? ""} />
         <main className="relative flex-1 px-4 pb-20 pt-2 md:px-10">
           <div className="mx-auto w-full max-w-6xl">
@@ -58,26 +58,26 @@ function TopBar({ isTutor, userId, initials, avatar, name }: { isTutor: boolean;
   })
 
   return (
-    <header className="sticky top-0 z-20 border-b bg-background/85 px-4 backdrop-blur md:px-10">
+    <header className="sticky top-0 z-20 border-b-2 border-ink-2 bg-background px-4 md:px-10">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3">
-        <SidebarTrigger className="h-10 w-10 rounded-xl border bg-white text-ink-2 md:hidden" />
-        <Link to="/tutors" className="hidden h-11 w-full max-w-sm items-center gap-2 rounded-xl border bg-white px-4 text-sm text-muted-foreground transition hover:border-ink-2/25 hover:text-ink-2 sm:flex">
+        <SidebarTrigger className="h-10 w-10 rounded-xl border-2 border-ink-2 bg-white text-ink-2 md:hidden" />
+        <Link to="/tutors" className="hidden h-11 w-full max-w-sm items-center gap-2 rounded-xl border-2 border-ink-2 bg-white px-4 text-sm text-muted-foreground transition hover:border-ink-2/25 hover:text-ink-2 sm:flex">
           <Search className="h-4 w-4" /> Rechercher un prof, une matière…
         </Link>
         <div className="ml-auto flex items-center gap-2">
           {!isTutor && (
             <Link to="/credits" aria-label={`Solde : ${formatEur(credits?.balanceEur ?? 0)} — recharger`}
-              className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3.5 text-sm font-semibold text-ink-2 transition hover:border-ink-2/25">
+              className="flex h-10 items-center gap-2 rounded-xl border-2 border-ink-2 bg-sun px-3.5 text-sm font-bold text-ink-2 shadow-[2px_2px_0_0_hsl(var(--ink-2))] transition hover:-translate-y-px">
               <Coins className="h-4 w-4" /><span className="tabular">{formatEur(credits?.balanceEur ?? 0)}</span>
             </Link>
           )}
           <Link to="/notifications" aria-label={unread ? `${unread} notifications non lues` : "Notifications"}
-            className="relative grid h-10 w-10 place-items-center rounded-xl border bg-white text-ink-2 transition hover:border-ink-2/25">
+            className="relative grid h-10 w-10 place-items-center rounded-xl border-2 border-ink-2 bg-white text-ink-2 transition hover:border-ink-2/25">
             <Bell className="h-[18px] w-[18px]" />
             {unread > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-hl px-1 text-[10px] font-bold text-white">{unread > 9 ? "9+" : unread}</span>}
           </Link>
           <Link to="/profile" className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-2 text-ink-2 transition hover:bg-secondary" aria-label="Mon profil">
-            {avatar ? <img src={avatar} alt="" className="h-9 w-9 rounded-lg object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-lg bg-peri-soft text-xs font-bold text-peri">{initials}</span>}
+            {avatar ? <img src={avatar} alt="" className="h-9 w-9 rounded-lg object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-lg border-2 border-ink-2 bg-peri-soft text-xs font-bold text-ink-2">{initials}</span>}
             <span className="hidden text-sm font-semibold lg:inline">{name}</span>
           </Link>
         </div>

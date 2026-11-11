@@ -3,166 +3,197 @@
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════════════════════════
-   Prof en Ligne — direction « éditoriale »
-   Fond crème, titres en serif (Fraunces), texte en Inter, boutons bleu nuit,
-   accents corail (#B95A5B) et violet (#6D67A5) issus des maquettes. Beaucoup
-   d'espace, peu d'effets. Les noms de jetons (ink, hl, peri…) sont conservés.
+   Prof en Ligne — direction « Pop scolaire »
+   Couleurs franches en aplats (violet, corail, jaune, menthe, bleu ciel, rose),
+   contours encre de 2 px et ombres décalées « autocollant », titres en
+   Bricolage Grotesque très gras, texte en Figtree. Pas de dégradés ni de flou :
+   c'est ce qui donnait l'effet « fait par une IA ».
+   Inspirations : Quizlet (cartes de couleur), Preply (aplats), Duolingo (ton).
    ════════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root, .light, .dark {
     color-scheme: light;
-    --background: 45 33% 98%;          /* crème #FBFAF7 */
-    --foreground: 236 28% 17%;         /* #1E1F35 */
+    --background: 37 100% 97%;         /* #FFF9F0 papier chaud */
+    --foreground: 245 30% 13%;         /* #17162B encre */
     --card: 0 0% 100%;
-    --card-foreground: 236 28% 17%;
+    --card-foreground: 245 30% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 236 28% 17%;
-    --primary: 236 28% 17%;            /* bleu nuit #1E1F35 — boutons */
+    --popover-foreground: 245 30% 13%;
+    --primary: 250 100% 65%;           /* #6B4EFF violet */
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 25% 93%;           /* #F1EEE8 */
-    --secondary-foreground: 236 28% 17%;
-    --muted: 40 25% 94%;
-    --muted-foreground: 238 10% 39%;   /* #5A5B6E */
-    --accent: 359 39% 54%;             /* corail #B95A5B */
+    --secondary: 251 100% 95%;
+    --secondary-foreground: 245 30% 13%;
+    --muted: 37 60% 93%;
+    --muted-foreground: 245 12% 38%;
+    --accent: 8 100% 67%;              /* #FF6F59 corail */
     --accent-foreground: 0 0% 100%;
-    --destructive: 357 55% 48%;
+    --destructive: 356 78% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 42 20% 88%;              /* #E7E3DA */
-    --input: 42 14% 82%;
-    --ring: 245 25% 53%;
-    --radius: 0.875rem;
+    --border: 245 30% 13%;             /* contours encre */
+    --input: 245 30% 13%;
+    --ring: 250 100% 65%;
+    --radius: 1rem;
 
-    --sidebar-background: 45 33% 98%;
-    --sidebar-foreground: 236 28% 17%;
-    --sidebar-primary: 236 28% 17%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 245 30% 13%;
+    --sidebar-primary: 250 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 25% 93%;
-    --sidebar-accent-foreground: 236 28% 17%;
-    --sidebar-border: 42 20% 88%;
-    --sidebar-ring: 245 25% 53%;
+    --sidebar-accent: 251 100% 95%;
+    --sidebar-accent-foreground: 245 30% 13%;
+    --sidebar-border: 245 30% 13%;
+    --sidebar-ring: 250 100% 65%;
 
     /* Couleurs de marque (noms historiques conservés) */
-    --ink: 245 33% 43%;                /* violet #4E4A93 — liens, accents */
-    --ink-2: 236 28% 17%;              /* bleu nuit — titres */
-    --ink-3: 236 22% 28%;              /* survol des boutons sombres */
-    --hl: 359 39% 54%;                 /* corail #B95A5B */
-    --hl-soft: 8 45% 94%;              /* #F6E9E7 */
-    --peri: 245 25% 53%;               /* #6D67A5 */
-    --peri-soft: 245 33% 94%;          /* #E9E8F5 */
-    --mint: 160 45% 32%;
-    --mint-soft: 150 30% 92%;
-    --rose: 359 39% 54%;
-    --rose-soft: 8 45% 94%;
-    --sky: 214 45% 45%;
-    --sky-soft: 214 45% 93%;
-    --gold: 40 88% 50%;
-    --gold-foreground: 32 70% 26%;
-    --gold-soft: 42 70% 92%;
-    --success: 160 45% 30%;
+    --ink: 250 72% 52%;                /* violet foncé — liens */
+    --ink-2: 245 30% 13%;              /* encre — titres, contours */
+    --ink-3: 250 90% 58%;              /* survol du bouton principal */
+    --hl: 8 100% 64%;                  /* corail */
+    --hl-soft: 13 100% 92%;
+    --peri: 250 100% 65%;              /* violet */
+    --peri-soft: 251 100% 94%;
+    --mint: 165 77% 36%;
+    --mint-soft: 161 70% 87%;
+    --sky: 208 100% 52%;
+    --sky-soft: 208 100% 91%;
+    --sun: 42 100% 58%;                /* jaune */
+    --sun-soft: 46 100% 86%;
+    --pink: 333 100% 72%;
+    --pink-soft: 333 100% 93%;
+    --rose: 8 100% 60%;
+    --rose-soft: 13 100% 92%;
+    --gold: 42 100% 50%;
+    --gold-foreground: 32 80% 26%;
+    --gold-soft: 46 100% 86%;
+    --success: 165 77% 30%;
     --success-foreground: 0 0% 100%;
-    --warning: 34 75% 36%;
+    --warning: 32 90% 40%;
     --warning-foreground: 0 0% 100%;
-    --info: 214 45% 45%;
+    --info: 208 100% 45%;
     --info-foreground: 0 0% 100%;
 
-    /* « dégradé » de marque = aplat bleu nuit dans cette direction */
-    --brand-gradient: linear-gradient(hsl(236 28% 17%), hsl(236 28% 17%));
-    --panel: 40 25% 93%;               /* #F1EEE8 */
-    --shadow-soft: 0 1px 2px hsl(40 20% 20% / 0.04);
-    --shadow-lift: 0 12px 32px hsl(236 28% 17% / 0.08);
-    --ease: cubic-bezier(.2, .7, .2, 1);
+    --brand-gradient: linear-gradient(hsl(250 100% 65%), hsl(250 100% 65%));
+    --panel: 251 100% 94%;
+    --line: 245 30% 13% / 0.12;        /* séparateurs discrets */
+    --shadow-soft: 0 1px 2px hsl(245 30% 13% / 0.05);
+    --shadow-lift: 5px 5px 0 0 hsl(245 30% 13%);
+    --ease: cubic-bezier(.2, .8, .2, 1);
   }
 }
 
 @layer base {
-  * { @apply border-border; }
+  * { border-color: hsl(var(--line)); }
   html {
     scroll-behavior: smooth;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter Variable", "Segoe UI", system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.65;
-    font-feature-settings: "cv11", "ss01";
+    font-family: "Figtree Variable", "Segoe UI", system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.6;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
   h1, h2, h3, h4 {
-    font-family: "Fraunces Variable", Georgia, serif;
-    font-weight: 500;
-    letter-spacing: -0.015em;
+    font-family: "Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif;
+    font-weight: 750;
+    letter-spacing: -0.025em;
     color: hsl(var(--ink-2));
     text-wrap: balance;
+    font-variation-settings: "wdth" 92;
   }
-  h1, h2 { line-height: 1.1; }
-  h3, h4 { line-height: 1.25; font-weight: 550; }
-  h5, h6 { font-weight: 600; color: hsl(var(--ink-2)); }
+  h1, h2 { line-height: 1.02; font-weight: 800; }
+  h3, h4 { line-height: 1.2; }
+  h5, h6 { font-weight: 700; color: hsl(var(--ink-2)); }
   p { text-wrap: pretty; }
-  :focus-visible { outline: 2px solid hsl(var(--peri)); outline-offset: 2px; border-radius: 6px; }
-  ::selection { background: hsl(var(--hl) / 0.18); color: hsl(var(--foreground)); }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  :focus-visible { outline: 3px solid hsl(var(--peri)); outline-offset: 2px; border-radius: 8px; }
+  ::selection { background: hsl(var(--sun)); color: hsl(var(--ink-2)); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(var(--ink-2) / 0.14); border-radius: 100px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--ink-2) / 0.25); border-radius: 100px; border: 3px solid transparent; background-clip: padding-box; }
 }
 
 @layer components {
-  /* Carte : blanche, fine bordure chaude, quasi sans ombre */
+  /* Carte blanche à contour encre */
   .glass, .glass-card, .stat-card, .glass-strong {
     background: #fff;
-    border: 1px solid hsl(var(--border));
-    box-shadow: var(--shadow-soft);
-    border-radius: 1.125rem;
+    border: 2px solid hsl(var(--ink-2));
+    border-radius: 1.25rem;
   }
-  /* Panneau crème plus foncé (comme le bloc de profs de la maquette) */
-  .glass-tint, .glass-hero { background: hsl(var(--panel)); border: 1px solid transparent; border-radius: 1.5rem; }
-  /* Bloc sombre (appel à l'action, temps forts) */
-  .glass-ink, .gradient-hero { background: hsl(var(--ink-2)); color: #fff; }
+  /* Panneau coloré (violet clair par défaut) */
+  .glass-tint, .glass-hero {
+    background: hsl(var(--peri-soft));
+    border: 2px solid hsl(var(--ink-2));
+    border-radius: 1.5rem;
+  }
+  /* Bloc encre */
+  .glass-ink, .gradient-hero { background: hsl(var(--ink-2)); color: #fff; border-radius: 1.75rem; }
   .glass-ink h1, .glass-ink h2, .glass-ink h3, .glass-ink h4, .gradient-hero h1, .gradient-hero h2, .gradient-hero h3 { color: #fff; }
 
-  .brand-gradient { background: hsl(var(--ink-2)); }
-  .brand-text { color: hsl(var(--ink-2)); }
-  .serif { font-family: "Fraunces Variable", Georgia, serif; }
+  /* Effet autocollant : ombre décalée nette */
+  .sticker { border: 2px solid hsl(var(--ink-2)); box-shadow: 4px 4px 0 0 hsl(var(--ink-2)); }
+  .sticker-sm { border: 2px solid hsl(var(--ink-2)); box-shadow: 2px 2px 0 0 hsl(var(--ink-2)); }
 
-  /* Étiquette de section : petites capitales discrètes */
+  .brand-gradient { background: hsl(var(--peri)); }
+  .brand-text { color: hsl(var(--peri)); }
+  .display { font-family: "Bricolage Grotesque Variable", system-ui, sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+
+  /* Étiquette de section : pastille colorée à contour */
   .eyebrow {
-    display: inline-flex; align-items: center; gap: .5rem;
-    font-family: "Inter Variable", system-ui, sans-serif;
-    font-weight: 600; font-size: .75rem; letter-spacing: .14em; text-transform: uppercase;
-    color: hsl(var(--hl));
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .3rem .8rem; border-radius: 999px;
+    border: 2px solid hsl(var(--ink-2));
+    background: hsl(var(--sun));
+    color: hsl(var(--ink-2));
+    font-weight: 800; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase;
   }
-  /* Mot mis en valeur : italique corail */
-  .hl-mark, .hl-mark-anim { font-style: italic; color: hsl(var(--hl)); }
-  .display { font-family: "Fraunces Variable", Georgia, serif; font-weight: 500; letter-spacing: -0.015em; }
+  /* Mot mis en valeur : surligneur jaune posé de travers */
+  .hl-mark, .hl-mark-anim {
+    position: relative; white-space: nowrap; z-index: 0;
+    padding: 0 .12em;
+  }
+  .hl-mark::before, .hl-mark-anim::before {
+    content: ""; position: absolute; z-index: -1;
+    left: 0; right: 0; bottom: .06em; height: .62em;
+    background: hsl(var(--sun)); border-radius: .14em;
+    transform: rotate(-1.5deg);
+  }
+  .hl-coral::before { background: hsl(var(--hl) / .55) !important; }
+  .hl-mint::before { background: hsl(var(--mint-soft)) !important; }
 
-  .lift { transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s; }
-  .lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); border-color: hsl(42 18% 80%); }
+  .lift { transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+  .lift:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 0 hsl(var(--ink-2)); }
 
-  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .wiggle:hover { animation: wiggle .5s ease; }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
 
   .ring-progress {
-    --p: 0; --c: hsl(var(--hl)); --track: hsl(var(--panel));
+    --p: 0; --c: hsl(var(--hl)); --track: hsl(var(--muted));
     border-radius: 50%; display: grid; place-items: center; position: relative;
     background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--track) 0);
+    border: 2px solid hsl(var(--ink-2));
   }
-  .ring-progress::before { content: ""; position: absolute; inset: 9%; border-radius: 50%; background: #fff; }
+  .ring-progress::before { content: ""; position: absolute; inset: 10%; border-radius: 50%; background: #fff; border: 2px solid hsl(var(--ink-2)); }
   .ring-progress > * { position: relative; }
 
+  /* Fond pointillé discret (papier) */
+  .dots { background-image: radial-gradient(hsl(var(--ink-2) / .12) 1.2px, transparent 1.2px); background-size: 22px 22px; }
+
   /* Compatibilité avec d'anciennes classes */
-  .gradient-primary { background: hsl(var(--ink-2)); color: #fff; }
-  .gradient-subtle { background: hsl(var(--panel)); }
-  .gradient-gold { background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
+  .gradient-primary { background: hsl(var(--peri)); color: #fff; }
+  .gradient-subtle { background: hsl(var(--peri-soft)); }
+  .gradient-gold { background: hsl(var(--sun-soft)); color: hsl(var(--gold-foreground)); }
   .gradient-text { color: hsl(var(--ink-2)); }
   .gold-text { color: hsl(var(--gold)); }
   .btn-glow, .glow, .glow-accent, .glow-gold, .progress-glow { box-shadow: none; }
   .mesh-bg { background: transparent; }
   .shimmer { background: linear-gradient(90deg, hsl(var(--muted)) 0%, #fff 50%, hsl(var(--muted)) 100%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
-  .xp-badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold; background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
+  .xp-badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold; background: hsl(var(--sun)); color: hsl(var(--ink-2)); border: 1.5px solid hsl(var(--ink-2)); }
   .blob { display: none; }
 }
 
@@ -174,13 +205,18 @@
   .tabular { font-variant-numeric: tabular-nums; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
+  .border-line { border-color: hsl(var(--line)); }
 }
 
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes marquee { to { transform: translateX(-50%); } }
 @keyframes fadeup { from { opacity: 0; transform: translateY(10px); } }
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes floaty { 0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translateY(-8px) rotate(var(--r, 0deg)); } }
+.floaty { animation: floaty 5s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; }
+  .floaty, .wiggle:hover { animation: none; }
 }
