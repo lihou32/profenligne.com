@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { BookOpenCheck, Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,10 @@ export default function Signup() {
   const [referralCode, setReferralCode] = useState<string | null>(null)
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  // Page à retrouver après l'inscription (chemin interne uniquement)
+  const fromState = (location.state as { from?: string } | null)?.from
+  const from = fromState && fromState.startsWith("/") && !fromState.startsWith("//") ? fromState : null
   const isStudent = role === "student"
 
   useEffect(() => {
@@ -69,12 +73,12 @@ export default function Signup() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         toast.success("Compte créé ! Confirme ton adresse via le lien reçu par email, puis connecte-toi.")
-        navigate("/login")
+        navigate("/login", from ? { state: { from } } : undefined)
         return
       }
       toast.success("Bienvenue sur Prof en Ligne !")
       // Un prof doit compléter son profil (matières, tarif) pour apparaître dans la liste
-      navigate(role === "tutor" ? "/become-tutor" : "/dashboard")
+      navigate(role === "tutor" ? "/become-tutor" : from ?? "/dashboard")
     } catch (error: unknown) {
       const msg = (error as { message?: string })?.message || ""
       toast.error(/already registered|already exists/i.test(msg) ? "Un compte existe déjà avec cet email" : msg || "Inscription impossible")
@@ -93,7 +97,7 @@ export default function Signup() {
       aside={role}
       title={isStudent ? "Crée ton compte" : "Deviens prof"}
       subtitle={isStudent ? "Une minute, et tu peux réserver ton premier cours." : "Crée ton compte, puis complète ton profil (matières, tarif)."}
-      footer={<>Déjà un compte ? <Link to="/login" className="font-bold text-ink-2 underline-offset-4 hover:underline">Se connecter</Link></>}
+      footer={<>Déjà un compte ? <Link to="/login" state={from ? { from } : undefined} className="font-bold text-ink-2 underline-offset-4 hover:underline">Se connecter</Link></>}
     >
       {/* Choix du rôle */}
       <div role="radiogroup" aria-label="Je suis" className="grid grid-cols-2 gap-2 rounded-[1.25rem] bg-ink/[0.05] p-1.5">

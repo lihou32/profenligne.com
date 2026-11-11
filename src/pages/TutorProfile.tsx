@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -33,6 +33,7 @@ export default function TutorProfile() {
   const navigate = useNavigate()
   const { user, hasRole } = useAuth()
   const [bookingOpen, setBookingOpen] = useState(false)
+  const [params, setParams] = useSearchParams()
   const [duration, setDuration] = useState(60)
 
   const { data: tutor, isLoading, isFetching } = useQuery({
@@ -63,6 +64,14 @@ export default function TutorProfile() {
     },
   })
 
+  // Retour après inscription : rouvre la réservation si le compte peut réserver
+  const wantsBooking = params.get("book") === "1"
+  useEffect(() => {
+    if (!wantsBooking || !tutor || !user) return
+    if (hasRole("student") && user.id !== tutor.user_id && !tutor.is_suspended) setBookingOpen(true)
+    const p = new URLSearchParams(params); p.delete("book"); setParams(p, { replace: true })
+  }, [wantsBooking, tutor, user, hasRole, params, setParams])
+
   if (!id || (isLoading && isFetching)) {
     return <div className="grid gap-4 pt-6 lg:grid-cols-[1fr_360px] [&>*]:min-w-0"><div className="glass h-80 animate-pulse" /><div className="glass h-80 animate-pulse" /></div>
   }
@@ -90,7 +99,8 @@ export default function TutorProfile() {
   const seoSubjects = (tutor.subjects ?? []).slice(0, 3).join(", ")
 
   const book = () => {
-    if (!user) { navigate("/signup", { state: { from: `/tutors/${tutor.user_id}` } }); return }
+    // Après inscription ou connexion, on revient ici et la réservation s'ouvre (?book=1)
+    if (!user) { navigate("/signup", { state: { from: `/tutors/${tutor.user_id}?book=1` } }); return }
     setBookingOpen(true)
   }
 
