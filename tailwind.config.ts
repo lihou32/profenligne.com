@@ -13,8 +13,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Montserrat Variable"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Montserrat Variable"', 'system-ui', 'sans-serif'],
+        sans: ['"Inter Variable"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Fraunces Variable"', 'Georgia', 'serif'],
+        serif: ['"Fraunces Variable"', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -59,8 +60,8 @@ export default {
       boxShadow: {
         soft: "var(--shadow-soft)",
         lift: "var(--shadow-lift)",
-        ink: "0 8px 20px hsl(246 30% 45% / 0.28)",
-        card: "0 1px 2px hsl(240 30% 20% / 0.04), 0 8px 24px hsl(240 30% 20% / 0.06)",
+        ink: "none",
+        card: "0 1px 2px hsl(40 20% 20% / 0.04)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

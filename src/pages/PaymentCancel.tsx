@@ -17,7 +17,7 @@ export default function PaymentCancel() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold font-display">Paiement annulé</h1>
+          <h1 className="text-3xl font-display">Paiement annulé</h1>
           <p className="mt-2 text-muted-foreground">
             Vous avez annulé le paiement. Aucun frais n'a été débité.
           </p>

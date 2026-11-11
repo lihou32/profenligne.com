@@ -71,10 +71,10 @@ export default function TutorDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="reveal flex min-h-[120px] flex-col gap-4 pb-6 pt-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="reveal flex flex-col gap-4 pb-4 pt-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium capitalize text-white/75">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
-          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight text-white">Bonjour{profile?.first_name ? `, ${profile.first_name}` : ""}</h1>
+          <p className="text-sm font-medium text-muted-foreground first-letter:uppercase">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
+          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight">Bonjour{profile?.first_name ? `, ${profile.first_name}` : ""}</h1>
         </div>
         <label className="glass-strong flex cursor-pointer items-center gap-3 rounded-full py-2 pl-4 pr-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", isOnline ? "bg-mint" : "bg-ink-2/25")} />
@@ -124,7 +124,7 @@ export default function TutorDashboard() {
               {pending.slice(0, 5).map((l) => (
                 <li key={l.id} className="rounded-2xl bg-white/70 p-3.5 ring-1 ring-ink/5">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-bold text-ink [&>*]:min-w-0">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-peri-soft font-display text-sm font-medium text-ink [&>*]:min-w-0">
                       {(l.student_profile?.first_name?.[0] ?? "É").toUpperCase()}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -154,8 +154,8 @@ export default function TutorDashboard() {
               <AreaChart data={chart} margin={{ left: -18, right: 6, top: 10 }}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(233 90% 66%)" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="hsl(233 90% 66%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(245 25% 53%)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="hsl(245 25% 53%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="hsl(233 52% 20% / 0.08)" />
@@ -163,7 +163,7 @@ export default function TutorDashboard() {
                 <YAxis tickLine={false} axisLine={false} fontSize={12} unit=" €" stroke="hsl(231 14% 42%)" allowDecimals={false} />
                 <Tooltip cursor={{ stroke: "hsl(233 52% 20% / 0.15)" }} formatter={(v: number) => [formatEur(v), "Revenus"]}
                   contentStyle={{ borderRadius: 14, border: "1px solid hsl(228 35% 87%)", boxShadow: "0 10px 30px hsl(233 52% 20% / .12)" }} />
-                <Area type="monotone" dataKey="revenus" stroke="hsl(233 90% 60%)" strokeWidth={3} fill="url(#rev)" dot={{ r: 4, fill: "#fff", strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="revenus" stroke="hsl(245 25% 53%)" strokeWidth={3} fill="url(#rev)" dot={{ r: 4, fill: "#fff", strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

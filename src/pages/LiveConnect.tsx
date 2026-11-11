@@ -87,7 +87,7 @@ export default function LiveConnect() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-semibold">{lesson.subject} — {lesson.topic || "Cours"}</h3>
+                  <h3 className="">{lesson.subject} — {lesson.topic || "Cours"}</h3>
                   <p className="text-xs text-muted-foreground">En cours</p>
                 </div>
               </div>

@@ -3,73 +3,74 @@
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════════════════════════
-   Prof en Ligne — design system tiré des maquettes Figma
-   Dégradé signature corail → bleu-violet (#B95A5B → #6D67A5), cartes blanches,
-   titres bleu nuit et violet, boutons pilule, typo Montserrat. Sobre et pro.
-   Les noms de jetons (ink, hl, peri…) sont conservés pour ne pas réécrire les pages.
+   Prof en Ligne — direction « éditoriale »
+   Fond crème, titres en serif (Fraunces), texte en Inter, boutons bleu nuit,
+   accents corail (#B95A5B) et violet (#6D67A5) issus des maquettes. Beaucoup
+   d'espace, peu d'effets. Les noms de jetons (ink, hl, peri…) sont conservés.
    ════════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root, .light, .dark {
     color-scheme: light;
-    --background: 250 33% 97%;         /* #F6F5FB */
-    --foreground: 236 30% 18%;         /* #20223F */
+    --background: 45 33% 98%;          /* crème #FBFAF7 */
+    --foreground: 236 28% 17%;         /* #1E1F35 */
     --card: 0 0% 100%;
-    --card-foreground: 236 30% 18%;
+    --card-foreground: 236 28% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 236 30% 18%;
-    --primary: 245 30% 50%;            /* violet #5F59A6 */
+    --popover-foreground: 236 28% 17%;
+    --primary: 236 28% 17%;            /* bleu nuit #1E1F35 — boutons */
     --primary-foreground: 0 0% 100%;
-    --secondary: 247 30% 95%;
-    --secondary-foreground: 245 30% 40%;
-    --muted: 247 25% 95%;
-    --muted-foreground: 240 9% 44%;    /* #66677B */
-    --accent: 359 52% 55%;             /* corail #CB5A5E */
+    --secondary: 40 25% 93%;           /* #F1EEE8 */
+    --secondary-foreground: 236 28% 17%;
+    --muted: 40 25% 94%;
+    --muted-foreground: 238 10% 39%;   /* #5A5B6E */
+    --accent: 359 39% 54%;             /* corail #B95A5B */
     --accent-foreground: 0 0% 100%;
-    --destructive: 355 62% 52%;
+    --destructive: 357 55% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 247 22% 90%;             /* #E3E2EE */
-    --input: 247 20% 86%;
-    --ring: 245 30% 58%;
-    --radius: 1rem;
+    --border: 42 20% 88%;              /* #E7E3DA */
+    --input: 42 14% 82%;
+    --ring: 245 25% 53%;
+    --radius: 0.875rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 236 30% 18%;
-    --sidebar-primary: 245 30% 50%;
+    --sidebar-background: 45 33% 98%;
+    --sidebar-foreground: 236 28% 17%;
+    --sidebar-primary: 236 28% 17%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 247 30% 96%;
-    --sidebar-accent-foreground: 236 30% 18%;
-    --sidebar-border: 247 22% 92%;
-    --sidebar-ring: 245 30% 58%;
+    --sidebar-accent: 40 25% 93%;
+    --sidebar-accent-foreground: 236 28% 17%;
+    --sidebar-border: 42 20% 88%;
+    --sidebar-ring: 245 25% 53%;
 
     /* Couleurs de marque (noms historiques conservés) */
-    --ink: 245 30% 46%;                /* violet profond #5A549B — liens, accents */
-    --ink-2: 234 45% 18%;              /* bleu nuit #19204B — titres */
-    --ink-3: 245 30% 40%;              /* survol */
-    --hl: 359 52% 55%;                 /* corail #CB5A5E — accent principal */
-    --hl-soft: 358 70% 95%;            /* #FBEAEA */
-    --peri: 245 25% 53%;               /* bleu-violet #6D67A5 */
-    --peri-soft: 247 33% 94%;          /* #ECEBF6 */
-    --mint: 160 50% 36%;               /* #2E8A6C */
-    --mint-soft: 152 40% 92%;
-    --rose: 352 61% 60%;               /* #D85A6B */
-    --rose-soft: 352 70% 95%;
-    --sky: 214 55% 48%;
-    --sky-soft: 214 60% 94%;
-    --gold: 40 88% 50%;                /* étoiles #F0A81A */
+    --ink: 245 33% 43%;                /* violet #4E4A93 — liens, accents */
+    --ink-2: 236 28% 17%;              /* bleu nuit — titres */
+    --ink-3: 236 22% 28%;              /* survol des boutons sombres */
+    --hl: 359 39% 54%;                 /* corail #B95A5B */
+    --hl-soft: 8 45% 94%;              /* #F6E9E7 */
+    --peri: 245 25% 53%;               /* #6D67A5 */
+    --peri-soft: 245 33% 94%;          /* #E9E8F5 */
+    --mint: 160 45% 32%;
+    --mint-soft: 150 30% 92%;
+    --rose: 359 39% 54%;
+    --rose-soft: 8 45% 94%;
+    --sky: 214 45% 45%;
+    --sky-soft: 214 45% 93%;
+    --gold: 40 88% 50%;
     --gold-foreground: 32 70% 26%;
-    --gold-soft: 42 90% 92%;
-    --success: 160 50% 34%;
+    --gold-soft: 42 70% 92%;
+    --success: 160 45% 30%;
     --success-foreground: 0 0% 100%;
-    --warning: 34 80% 38%;
+    --warning: 34 75% 36%;
     --warning-foreground: 0 0% 100%;
-    --info: 214 55% 48%;
+    --info: 214 45% 45%;
     --info-foreground: 0 0% 100%;
 
-    --brand-gradient: linear-gradient(135deg, #B95A5B 0%, #975B76 45%, #6D67A5 100%);
-    --brand-gradient-soft: linear-gradient(135deg, #F8E9EA 0%, #EFE9F4 50%, #E9E8F5 100%);
-    --shadow-soft: 0 1px 2px hsl(240 30% 20% / 0.04), 0 8px 24px hsl(240 30% 20% / 0.06);
-    --shadow-lift: 0 2px 4px hsl(240 30% 20% / 0.05), 0 16px 36px hsl(245 30% 30% / 0.12);
+    /* « dégradé » de marque = aplat bleu nuit dans cette direction */
+    --brand-gradient: linear-gradient(hsl(236 28% 17%), hsl(236 28% 17%));
+    --panel: 40 25% 93%;               /* #F1EEE8 */
+    --shadow-soft: 0 1px 2px hsl(40 20% 20% / 0.04);
+    --shadow-lift: 0 12px 32px hsl(236 28% 17% / 0.08);
     --ease: cubic-bezier(.2, .7, .2, 1);
   }
 }
@@ -82,82 +83,86 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
-    font-size: 15.5px;
-    line-height: 1.6;
+    font-family: "Inter Variable", "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    font-feature-settings: "cv11", "ss01";
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  h1, h2, h3, h4 {
+    font-family: "Fraunces Variable", Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
     color: hsl(var(--ink-2));
     text-wrap: balance;
   }
+  h1, h2 { line-height: 1.1; }
+  h3, h4 { line-height: 1.25; font-weight: 550; }
+  h5, h6 { font-weight: 600; color: hsl(var(--ink-2)); }
   p { text-wrap: pretty; }
   :focus-visible { outline: 2px solid hsl(var(--peri)); outline-offset: 2px; border-radius: 6px; }
-  ::selection { background: hsl(var(--peri) / 0.22); color: hsl(var(--foreground)); }
+  ::selection { background: hsl(var(--hl) / 0.18); color: hsl(var(--foreground)); }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(var(--ink-2) / 0.15); border-radius: 100px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--ink-2) / 0.14); border-radius: 100px; border: 2px solid transparent; background-clip: padding-box; }
 }
 
 @layer components {
-  /* Carte : blanc franc, fine bordure, ombre douce */
-  .glass, .glass-card, .stat-card {
+  /* Carte : blanche, fine bordure chaude, quasi sans ombre */
+  .glass, .glass-card, .stat-card, .glass-strong {
     background: #fff;
-    border: 1px solid hsl(var(--border) / 0.8);
+    border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-soft);
-    border-radius: 1.25rem;
+    border-radius: 1.125rem;
   }
-  .glass-strong { background: #fff; border: 1px solid hsl(var(--border) / 0.8); box-shadow: var(--shadow-lift); }
-  /* Carte légèrement teintée (dégradé signature très clair) */
-  .glass-tint, .glass-hero { background: var(--brand-gradient-soft); border: 1px solid hsl(var(--border) / 0.6); box-shadow: var(--shadow-soft); }
-  /* Bloc plein au dégradé signature */
-  .glass-ink, .gradient-hero { background: var(--brand-gradient); color: #fff; box-shadow: 0 18px 40px hsl(330 25% 35% / 0.25); }
+  /* Panneau crème plus foncé (comme le bloc de profs de la maquette) */
+  .glass-tint, .glass-hero { background: hsl(var(--panel)); border: 1px solid transparent; border-radius: 1.5rem; }
+  /* Bloc sombre (appel à l'action, temps forts) */
+  .glass-ink, .gradient-hero { background: hsl(var(--ink-2)); color: #fff; }
   .glass-ink h1, .glass-ink h2, .glass-ink h3, .glass-ink h4, .gradient-hero h1, .gradient-hero h2, .gradient-hero h3 { color: #fff; }
 
-  .brand-gradient { background: var(--brand-gradient); }
-  .brand-text { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .brand-gradient { background: hsl(var(--ink-2)); }
+  .brand-text { color: hsl(var(--ink-2)); }
+  .serif { font-family: "Fraunces Variable", Georgia, serif; }
 
-  /* Petite étiquette de section, comme sur la maquette */
+  /* Étiquette de section : petites capitales discrètes */
   .eyebrow {
-    display: inline-flex; align-items: center; gap: .4rem;
-    font-weight: 700; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
-    color: hsl(var(--hl)); background: hsl(var(--hl-soft)); padding: 5px 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: "Inter Variable", system-ui, sans-serif;
+    font-weight: 600; font-size: .75rem; letter-spacing: .14em; text-transform: uppercase;
+    color: hsl(var(--hl));
   }
-  /* Mot mis en valeur : corail, comme « Perfect Tutor » sur la maquette */
-  .hl-mark, .hl-mark-anim { color: hsl(var(--hl)); }
-  .display { font-weight: 700; letter-spacing: -0.025em; }
+  /* Mot mis en valeur : italique corail */
+  .hl-mark, .hl-mark-anim { font-style: italic; color: hsl(var(--hl)); }
+  .display { font-family: "Fraunces Variable", Georgia, serif; font-weight: 500; letter-spacing: -0.015em; }
 
-  .lift { transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
-  .lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .lift { transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s; }
+  .lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); border-color: hsl(42 18% 80%); }
 
-  /* Apparition douce au défilement (useReveal) */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
 
   .ring-progress {
-    --p: 0; --c: hsl(var(--hl)); --track: hsl(var(--peri) / 0.15);
+    --p: 0; --c: hsl(var(--hl)); --track: hsl(var(--panel));
     border-radius: 50%; display: grid; place-items: center; position: relative;
     background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--track) 0);
   }
-  .ring-progress::before { content: ""; position: absolute; inset: 11%; border-radius: 50%; background: #fff; }
+  .ring-progress::before { content: ""; position: absolute; inset: 9%; border-radius: 50%; background: #fff; }
   .ring-progress > * { position: relative; }
 
   /* Compatibilité avec d'anciennes classes */
-  .gradient-primary { background: var(--brand-gradient); color: #fff; }
-  .gradient-subtle { background: var(--brand-gradient-soft); }
+  .gradient-primary { background: hsl(var(--ink-2)); color: #fff; }
+  .gradient-subtle { background: hsl(var(--panel)); }
   .gradient-gold { background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
   .gradient-text { color: hsl(var(--ink-2)); }
   .gold-text { color: hsl(var(--gold)); }
-  .btn-glow, .glow, .glow-accent, .glow-gold, .progress-glow { box-shadow: 0 8px 20px hsl(246 30% 45% / 0.22); }
+  .btn-glow, .glow, .glow-accent, .glow-gold, .progress-glow { box-shadow: none; }
   .mesh-bg { background: transparent; }
   .shimmer { background: linear-gradient(90deg, hsl(var(--muted)) 0%, #fff 50%, hsl(var(--muted)) 100%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
-  .xp-badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold; background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
+  .xp-badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold; background: hsl(var(--gold-soft)); color: hsl(var(--gold-foreground)); }
   .blob { display: none; }
 }
 
@@ -165,6 +170,7 @@
   .text-ink { color: hsl(var(--ink)); }
   .text-ink-2 { color: hsl(var(--ink-2)); }
   .text-peri { color: hsl(var(--peri)); }
+  .bg-panel { background: hsl(var(--panel)); }
   .tabular { font-variant-numeric: tabular-nums; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }

@@ -88,7 +88,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
           {counterpart !== undefined ? (
             <Avatar className="h-12 w-12 shrink-0 rounded-2xl">
               {counterpart?.avatar_url && <AvatarImage src={counterpart.avatar_url} alt={name} />}
-              <AvatarFallback className="rounded-2xl bg-peri-soft font-display font-bold text-ink">
+              <AvatarFallback className="rounded-2xl bg-peri-soft font-display font-medium text-ink">
                 {(counterpart?.first_name?.[0] || fallbackName[0]).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -98,7 +98,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
             </div>
           )}
           <div className="min-w-0">
-            <h3 className="truncate text-base font-bold">
+            <h3 className="truncate text-base">
               {lesson.subject}
               {counterpart !== undefined && (
                 <span className="font-normal text-muted-foreground"> · {name || fallbackName}</span>

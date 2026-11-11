@@ -47,109 +47,97 @@ export default function Landing() {
   )
 }
 
-/* ─── 1. Hero : cartes en verre qui suivent la souris ───────────────────── */
+/* ─── 1. Hero : titre en serif, panneau crème avec de vrais profs ─────── */
 
 function Hero() {
-  const art = useRef<HTMLDivElement>(null)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-
-  useEffect(() => {
-    const el = art.current
-    if (!el || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect()
-      setTilt({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 })
-    }
-    window.addEventListener("pointermove", onMove, { passive: true })
-    return () => window.removeEventListener("pointermove", onMove)
-  }, [])
-
-  const layer = (depth: number) => ({ transform: `translate3d(${tilt.x * depth}px, ${tilt.y * depth}px, 0)`, transition: "transform .4s cubic-bezier(.2,.7,.2,1)" })
+  const { data: tutors } = useTutors()
+  const shown = useMemo(() => (tutors ?? [])
+    .filter((t) => t.profiles?.first_name)
+    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+    .slice(0, 3), [tutors])
 
   return (
-    <section className="mx-auto grid min-h-[88vh] max-w-6xl items-center gap-12 px-5 pb-16 pt-14 lg:grid-cols-[1.05fr_1fr] lg:pt-6">
+    <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-16 lg:grid-cols-[1.1fr_1fr] lg:pt-24 [&>*]:min-w-0">
       <div className="reveal">
-        <span className="eyebrow">Cours particuliers en visio · du collège au master</span>
-        <h1 className="mt-5 text-[clamp(2.4rem,5.2vw,4rem)] font-bold leading-[1.05]">
-          Trouve le <span className="hl-mark">prof idéal</span> en moins d'une minute.
+        <h1 className="text-[clamp(2.6rem,6vw,4.4rem)] leading-[1.04] tracking-[-0.02em]">
+          Le bon prof,<br />pour <span className="hl-mark">chaque</span> élève.
         </h1>
-        <p className="mt-6 max-w-xl text-[1.18rem] leading-relaxed text-muted-foreground">
-          Choisis ton prof, réserve un créneau et retrouve-le en visio avec un tableau blanc partagé.
-          Tu paies au cours, avec des crédits qui n'expirent jamais.
+        <p className="mt-7 max-w-[30em] text-[1.15rem] leading-[1.7] text-muted-foreground sm:text-[1.2rem]">
+          Des cours particuliers en visio, du collège au master. Compare les profs, réserve un créneau,
+          et paie au cours avec des crédits qui n'expirent jamais.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg"><Link to="/tutors"><Search /> Trouver mon prof</Link></Button>
-          <Button asChild size="lg" variant="outline"><Link to="/signup?role=tutor"><GraduationCap /> Je suis prof</Link></Button>
+        <div className="mt-9 flex flex-wrap gap-3">
+          <Button asChild size="lg"><Link to="/tutors">Trouver mon prof <ArrowRight /></Link></Button>
+          <Button asChild size="lg" variant="outline"><Link to="/signup?role=tutor">Je suis prof</Link></Button>
         </div>
-        <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-muted-foreground">
-          {["Dès 10 € de l'heure", `Annulation gratuite jusqu'à ${FREE_CANCEL_HOURS} h avant`, "Sans abonnement"].map((t) => (
-            <li key={t} className="flex items-center gap-2"><Check className="h-4 w-4 text-mint" />{t}</li>
-          ))}
-        </ul>
+        <dl className="mt-12 grid max-w-md grid-cols-3 gap-4 text-sm sm:gap-6 [&>*]:min-w-0 text-muted-foreground">
+          <div><dt className="sr-only">Prix</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">Dès 10 €</b>de l'heure</dd></div>
+          <div><dt className="sr-only">Annulation</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">{FREE_CANCEL_HOURS} h</b>pour annuler sans frais</dd></div>
+          <div><dt className="sr-only">Abonnement</dt><dd><b className="block font-display text-[1.35rem] font-medium text-ink-2 sm:text-[1.6rem]">0</b>abonnement</dd></div>
+        </dl>
       </div>
 
-      <div ref={art} className="relative hidden h-[560px] lg:block" aria-hidden="true">
-        {/* carte prof */}
-        <div style={layer(-18)} className="absolute left-0 top-0 z-10 w-[260px]">
-          <div className="glass float-a p-5">
-            <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-bold text-ink">CL</span>
-              <div>
-                <p className="font-display font-bold text-ink-2">Camille L.</p>
-                <p className="text-xs text-muted-foreground">Maths · Physique-Chimie</p>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="flex items-center gap-1 text-sm font-bold text-ink-2"><Star className="h-4 w-4 fill-gold text-gold" /> 4,9</span>
-              <span className="rounded-full bg-mint-soft px-2.5 py-1 text-xs font-bold text-mint">Disponible</span>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">Exemple de profil</p>
-          </div>
-        </div>
-        {/* réservation */}
-        <div style={layer(26)} className="absolute right-0 top-[150px] z-20 w-[290px]">
-          <div className="glass float-b p-5">
-            <p className="font-display font-bold text-ink-2">Mercredi 18 h 00</p>
-            <p className="text-sm text-muted-foreground">Dérivées · 1 h</p>
-            <div className="mt-4 grid grid-cols-4 gap-1.5">
-              {["16:00", "17:00", "18:00", "19:00"].map((h) => (
-                <span key={h} className={cn("rounded-xl py-2 text-center text-xs font-bold", h === "18:00" ? "bg-primary text-white" : "bg-white/80 text-ink")}>{h}</span>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-hl-soft px-3 py-2.5">
-              <span className="text-sm font-bold text-ink-2">7 crédits</span>
-              <span className="text-xs text-muted-foreground">35 € de l'heure</span>
-            </div>
-          </div>
-        </div>
-        {/* salle de cours */}
-        <div style={layer(12)} className="absolute bottom-6 left-0 z-10 w-[330px]">
-          <div className="glass-ink float-c rounded-3xl p-4">
-            <div className="flex items-center justify-between text-xs text-white/70">
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 animate-pulse rounded-full bg-rose" /> En direct</span>
-              <span>23:41</span>
-            </div>
-            <div className="mt-3 rounded-2xl bg-white p-4">
-              <svg viewBox="0 0 280 90" className="h-[90px] w-full">
-                <path d="M10 70 C 60 70, 70 20, 120 22 S 200 70, 270 18" fill="none" stroke="hsl(245 25% 53%)" strokeWidth="3" strokeLinecap="round" />
-                <path d="M10 80 H 270 M 20 10 V 85" stroke="hsl(233 52% 20% / .25)" strokeWidth="1.5" />
-                <text x="150" y="16" fontSize="13" fontWeight="700" fill="hsl(234 45% 18%)">f'(x) = 0</text>
-                <rect x="140" y="20" width="62" height="5" rx="2.5" fill="hsl(359 52% 55%)" opacity=".8" />
-              </svg>
-            </div>
-            <p className="mt-3 text-sm font-semibold">Tableau blanc partagé</p>
-          </div>
-        </div>
-        {/* XP */}
-        <div style={layer(-30)} className="absolute bottom-24 right-2 z-30 w-[200px]">
-          <div className="glass float-a p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Après le cours</p>
-            <p className="display mt-1 text-3xl text-ink-2">+100 XP</p>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/10"><div className="h-full w-2/3 rounded-full bg-hl" /></div>
-          </div>
-        </div>
+      <div className="reveal glass-tint grid gap-3.5 p-5 sm:p-7 [&>*]:min-w-0">
+        {shown.length > 0 ? (
+          <>
+            <p className="px-1 text-sm font-medium text-muted-foreground">Quelques profs inscrits</p>
+            {shown.map((t) => <HeroTutor key={t.id} tutor={t} />)}
+            <Link to="/tutors" className="px-1 pt-1 text-sm font-semibold text-ink hover:underline">Voir tous les profs →</Link>
+          </>
+        ) : <HeroExample />}
       </div>
     </section>
+  )
+}
+
+function HeroTutor({ tutor }: { tutor: NonNullable<ReturnType<typeof useTutors>["data"]>[number] }) {
+  const p = tutor.profiles
+  const name = `${p?.first_name ?? ""} ${p?.last_name?.[0] ? p.last_name[0] + "." : ""}`.trim()
+  const initials = `${p?.first_name?.[0] ?? ""}${p?.last_name?.[0] ?? ""}`.toUpperCase()
+  const reviews = tutor.total_reviews ?? 0
+  return (
+    <Link to={`/tutors/${tutor.user_id}`} className="lift block rounded-2xl border bg-white p-4 sm:p-5">
+      <div className="flex items-center gap-3.5">
+        {p?.avatar_url
+          ? <img src={p.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover" />
+          : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-peri-soft text-sm font-semibold text-ink">{initials}</span>}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-ink-2">{name}</p>
+          <p className="truncate text-sm text-muted-foreground">{(tutor.subjects ?? []).slice(0, 2).join(" · ") || "Toutes matières"}</p>
+        </div>
+        {tutor.hourly_rate != null && <span className="font-display text-xl text-ink-2">{Number(tutor.hourly_rate)} €</span>}
+      </div>
+      <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+        {reviews > 0
+          ? <><Star className="h-4 w-4 fill-gold text-gold" /><span className="font-semibold text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</span> · {reviews} avis</>
+          : "Nouveau sur Prof en Ligne"}
+      </p>
+    </Link>
+  )
+}
+
+/** Sans profs à montrer : un exemple de réservation, présenté comme tel. */
+function HeroExample() {
+  return (
+    <div aria-label="Exemple de réservation" className="grid gap-3.5 [&>*]:min-w-0">
+      <p className="px-1 text-sm font-medium text-muted-foreground">Exemple de réservation</p>
+      <div className="rounded-2xl border bg-white p-5">
+        <p className="font-semibold text-ink-2">Mathématiques · dérivées</p>
+        <p className="text-sm text-muted-foreground">Mercredi · 1 h en visio</p>
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {["16:00", "17:00", "18:00", "19:00"].map((h) => (
+            <span key={h} className={cn("rounded-lg border py-2 text-center text-sm", h === "18:00" ? "border-ink-2 bg-ink-2 text-white" : "bg-white text-ink-2")}>{h}</span>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between rounded-2xl border bg-white p-5">
+        <div>
+          <p className="font-semibold text-ink-2">Prof à 35 € de l'heure</p>
+          <p className="text-sm text-muted-foreground">Payé en crédits, annulable {FREE_CANCEL_HOURS} h avant</p>
+        </div>
+        <span className="font-display text-xl text-ink-2">{lessonCreditCost(35, 60)} crédits</span>
+      </div>
+    </div>
   )
 }
 
@@ -233,7 +221,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   const item = cn("transition-all duration-500", on ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0")
   if (index === 0) return (
     <div>
-      <p className="font-display text-lg font-bold text-ink-2">Profs de maths · Terminale</p>
+      <p className="font-display text-lg font-medium text-ink-2">Profs de maths · Terminale</p>
       <div className="mt-4 flex flex-col gap-2.5">
         {[["Camille L.", "35 €/h", "4,9"], ["Yanis B.", "28 €/h", "4,8"], ["Inès M.", "40 €/h", "5,0"], ["Hugo D.", "22 €/h", "4,7"]].map(([n, p, r], i) => (
           <div key={n} style={anim(i * 80)} className={cn(item, "flex items-center gap-3 rounded-2xl bg-background px-3 py-2.5")}>
@@ -248,7 +236,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   )
   if (index === 1) return (
     <div>
-      <p className="font-display text-lg font-bold text-ink-2">Réserver avec Camille</p>
+      <p className="font-display text-lg font-medium text-ink-2">Réserver avec Camille</p>
       <div className="mt-4 grid grid-cols-7 gap-1.5 text-center text-xs">
         {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => <span key={i} className="font-bold text-muted-foreground">{d}</span>)}
         {Array.from({ length: 14 }, (_, i) => (
@@ -265,7 +253,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   if (index === 2) return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between">
-        <p className="font-display text-lg font-bold text-ink-2">Salle de cours</p>
+        <p className="font-display text-lg font-medium text-ink-2">Salle de cours</p>
         <span className="flex items-center gap-1.5 rounded-full bg-rose-soft px-2.5 py-1 text-xs font-bold text-rose"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose" />En direct</span>
       </div>
       <div className="mt-3 grid flex-1 grid-cols-[1fr_88px] gap-2.5">
@@ -285,7 +273,7 @@ function StepScreen({ index, on }: { index: number; on: boolean }) {
   )
   return (
     <div>
-      <p className="font-display text-lg font-bold text-ink-2">Ta progression</p>
+      <p className="font-display text-lg font-medium text-ink-2">Ta progression</p>
       <div className="mt-4 flex h-[200px] items-end gap-3 border-b-2 border-border px-1 pb-0.5">
         {[34, 48, 55, 68, 82].map((h, i) => (
           <div key={i} className={cn("flex-1 rounded-t-xl transition-all duration-700", i === 4 ? "bg-hl" : "bg-peri-soft")}
@@ -312,14 +300,14 @@ function PriceSimulator() {
         <div className="space-y-8">
           <div>
             <div className="flex items-baseline justify-between">
-              <label className="font-display font-bold text-ink-2" htmlFor="rate">Tarif du prof</label>
+              <label className="font-display font-medium text-ink-2" htmlFor="rate">Tarif du prof</label>
               <span className="display text-2xl text-ink-2 tabular">{rate} €<span className="text-base text-muted-foreground"> / h</span></span>
             </div>
             <Slider id="rate" className="mt-4" min={MIN_HOURLY_RATE} max={80} step={1} value={[rate]} onValueChange={([v]) => setRate(v)} aria-label="Tarif horaire du prof" />
             <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>{MIN_HOURLY_RATE} €</span><span>80 € et plus</span></div>
           </div>
           <div>
-            <p className="font-display font-bold text-ink-2">Durée du cours</p>
+            <p className="font-display font-medium text-ink-2">Durée du cours</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {LESSON_DURATIONS.map((d) => (
                 <button key={d.value} type="button" onClick={() => setDuration(d.value)}
@@ -333,7 +321,7 @@ function PriceSimulator() {
         <div className="flex flex-col justify-center rounded-3xl bg-hl-soft p-6 text-center">
           <p className="text-sm font-semibold text-muted-foreground">Ce cours te coûte</p>
           <p className="display mt-1 text-[3.6rem] leading-none text-ink-2 tabular">{credits}</p>
-          <p className="font-display font-bold text-ink-2">crédit{credits > 1 ? "s" : ""}</p>
+          <p className="font-display font-medium text-ink-2">crédit{credits > 1 ? "s" : ""}</p>
           <p className="mt-3 text-sm text-muted-foreground">soit {formatEur(credits * CREDIT_VALUE_EUR)} (prix exact : {formatEur(price)}, arrondi au crédit supérieur)</p>
         </div>
       </div>
@@ -374,9 +362,9 @@ function TutorMiniCard({ tutor }: { tutor: NonNullable<ReturnType<typeof useTuto
       <div className="flex items-center gap-3">
         {p?.avatar_url
           ? <img src={p.avatar_url} alt="" className="h-14 w-14 rounded-2xl object-cover" />
-          : <span className="grid h-14 w-14 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-bold text-ink">{initials}</span>}
+          : <span className="grid h-14 w-14 place-items-center rounded-2xl bg-peri-soft font-display text-lg font-medium text-ink">{initials}</span>}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-bold text-ink-2">{name}</p>
+          <p className="truncate font-display text-lg font-medium text-ink-2">{name}</p>
           <p className="truncate text-sm text-muted-foreground">{(tutor.subjects ?? []).slice(0, 2).join(" · ") || "Toutes matières"}</p>
         </div>
         <ArrowRight className="h-5 w-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-ink" />
@@ -404,10 +392,10 @@ function ForTutors() {
   return (
     <section id="devenir-prof" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-24">
       <div className="glass-ink reveal relative overflow-hidden rounded-[2rem] p-6 sm:p-12">
-        <span aria-hidden className="blob" style={{ width: 380, height: 380, top: -120, right: -80, background: "hsl(233 90% 66%)", opacity: 0.35 }} />
+        <span aria-hidden className="blob" style={{ width: 380, height: 380, top: -120, right: -80, background: "hsl(245 25% 53%)", opacity: 0.35 }} />
         <div className="relative grid gap-10 lg:grid-cols-2">
           <div>
-            <span className="eyebrow !bg-white/15 !text-white">Pour les profs</span>
+            <span className="eyebrow !text-[#E9A39F]">Pour les profs</span>
             <h2 className="mt-4 text-[clamp(2rem,4.2vw,3rem)] leading-[1.05]">Enseigne à ton rythme.<br />Garde {Math.round((1 - PLATFORM_COMMISSION) * 100)} % de ce que tu factures.</h2>
             <ul className="mt-6 space-y-3 text-white/90">
               {[
@@ -423,7 +411,7 @@ function ForTutors() {
             <Button asChild variant="highlight" size="lg" className="mt-8"><Link to="/signup?role=tutor">Devenir prof <ArrowRight /></Link></Button>
           </div>
           <div className="rounded-3xl bg-white/[0.07] p-6 ring-1 ring-white/10 sm:p-8">
-            <p className="font-display font-bold">Simule tes revenus</p>
+            <p className="font-display font-medium">Simule tes revenus</p>
             <div className="mt-6 space-y-7">
               <div>
                 <div className="flex justify-between text-sm"><span className="text-white/70">Ton tarif</span><b className="tabular">{rate} €/h</b></div>
@@ -459,7 +447,7 @@ function Packs() {
           const saving = Math.round((1 - price / p.credits / CREDIT_VALUE_EUR) * 100)
           return (
             <div key={p.credits} className={cn("reveal lift relative rounded-[1.25rem] p-7 text-center", p.popular ? "glass-ink md:-my-3 md:py-10" : "glass")}>
-              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-hl shadow-card">Le plus choisi</span>}
+              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-hl shadow-card">Recommandé</span>}
               <p className={cn("display text-5xl", p.popular ? "text-white" : "text-ink-2")}>{p.credits}</p>
               <p className={cn("font-semibold", p.popular ? "text-white/80" : "text-muted-foreground")}>crédits</p>
               <p className={cn("display mt-5 text-3xl", p.popular ? "text-white" : "text-ink-2")}>{price} €</p>
@@ -496,7 +484,7 @@ function Faq() {
       <div className="mt-2 space-y-3">
         {FAQ.map(([q, a]) => (
           <details key={q} className="glass reveal group px-6 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-display text-[1.08rem] font-bold text-ink-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-display text-[1.08rem] font-medium text-ink-2">
               {q}<ChevronDown className="h-5 w-5 shrink-0 text-peri transition-transform group-open:rotate-180" />
             </summary>
             <p className="pb-5 text-muted-foreground">{a}</p>

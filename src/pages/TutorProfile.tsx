@@ -122,7 +122,7 @@ export default function TutorProfile() {
               <div className="-mt-12 flex flex-wrap items-end gap-4">
                 {p?.avatar_url
                   ? <img src={p.avatar_url} alt="" className="h-24 w-24 rounded-3xl object-cover ring-4 ring-white" />
-                  : <span className="grid h-24 w-24 place-items-center rounded-3xl bg-white font-display text-3xl font-bold text-ink ring-4 ring-white [&>*]:min-w-0">{initials}</span>}
+                  : <span className="grid h-24 w-24 place-items-center rounded-3xl bg-white font-display text-3xl font-medium text-ink ring-4 ring-white [&>*]:min-w-0">{initials}</span>}
                 <span className={cn("mb-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold", status.cls)}>
                   <span className={cn("h-2 w-2 rounded-full", status.dot)} />{status.label}
                 </span>

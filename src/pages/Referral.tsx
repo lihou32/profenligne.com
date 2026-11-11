@@ -174,7 +174,7 @@ export default function Referral() {
                 <step.icon className={`h-5 w-5 ${step.color}`} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-sm">{step.title}</h3>
+                <h3 className="text-sm">{step.title}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
               </div>
               {i < HOW_IT_WORKS.length - 1 && (

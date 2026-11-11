@@ -57,7 +57,7 @@ export default function PaymentSuccess() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold font-display gradient-text">Paiement réussi !</h1>
+          <h1 className="text-3xl font-display gradient-text">Paiement réussi !</h1>
           <p className="mt-2 text-muted-foreground">Merci pour votre achat</p>
         </div>
 

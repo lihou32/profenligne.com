@@ -132,7 +132,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Certificat de réussite</p>
-            <h3 className="font-bold text-lg leading-tight">{cert.subject}</h3>
+            <h3 className="text-lg leading-tight">{cert.subject}</h3>
           </div>
         </div>
         {cert.rating && (
@@ -284,7 +284,7 @@ export default function Certificates() {
         <Card className="glass-card">
           <CardContent className="py-20 text-center">
             <Award className="mx-auto h-16 w-16 mb-4 text-muted-foreground/20" />
-            <h2 className="text-xl font-semibold mb-2">Aucun certificat pour l'instant</h2>
+            <h2 className="text-xl mb-2">Aucun certificat pour l'instant</h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               Terminez votre premier cours pour obtenir votre certificat de réussite !
             </p>

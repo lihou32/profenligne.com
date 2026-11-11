@@ -288,7 +288,7 @@ export default function LessonRoom() {
       {whiteboardOpen && (
         <Card className="glass-card flex flex-col w-full lg:w-[min(520px,40vw)] h-[60vh] min-h-[320px] lg:h-auto shrink-0">
           <div className="border-b p-3">
-            <h3 className="text-sm font-semibold">Tableau blanc collaboratif</h3>
+            <h3 className="text-sm">Tableau blanc collaboratif</h3>
           </div>
           <div className="flex-1 p-3 min-h-0">
             <Whiteboard roomId={roomId} />

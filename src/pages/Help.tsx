@@ -45,7 +45,7 @@ export default function Help() {
 
       <Card className="glass-card">
         <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
-          <h3 className="font-semibold">Besoin d'aide supplémentaire ?</h3>
+          <h3 className="">Besoin d'aide supplémentaire ?</h3>
           <p className="text-sm text-muted-foreground">Notre équipe est disponible pour vous aider</p>
           <div className="flex gap-3">
             <Button variant="outline" asChild>

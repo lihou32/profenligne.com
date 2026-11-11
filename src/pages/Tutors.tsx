@@ -181,7 +181,7 @@ function TutorCard({ tutor, tone, highlight }: { tutor: TutorWithProfile; tone: 
           <span className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-white", status.dot)} title={status.label} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-bold text-ink-2">{name}</p>
+          <p className="truncate font-display text-lg font-medium text-ink-2">{name}</p>
           <p className="mt-0.5 flex items-center gap-1 text-sm">
             {reviews > 0
               ? <><Star className="h-4 w-4 fill-gold text-gold" /><b className="text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">· {reviews} avis</span></>

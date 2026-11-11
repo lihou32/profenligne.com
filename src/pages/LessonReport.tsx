@@ -173,7 +173,7 @@ export default function LessonReport() {
       </Button>
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight font-display">Rapport de cours</h1>
+        <h1 className="text-2xl tracking-tight font-display">Rapport de cours</h1>
         <p className="text-muted-foreground">
           {subject} — {topic} · Session #{id}
         </p>

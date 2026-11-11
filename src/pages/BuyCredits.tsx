@@ -91,9 +91,9 @@ export default function BuyCredits() {
           const saving = Math.round((1 - perCredit / CREDIT_VALUE_EUR) * 100)
           return (
             <div key={pack.credits} className={cn("glass reveal lift relative flex flex-col p-6", pack.popular && "ring-2 ring-hl")}>
-              {pack.popular && <span className="absolute -top-3 left-6 rounded-full bg-hl px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-2">Le plus choisi</span>}
+              {pack.popular && <span className="absolute -top-3 left-6 rounded-full bg-hl px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Recommandé</span>}
               <span className={cn("grid h-12 w-12 place-items-center rounded-2xl", style.color)}><style.icon className="h-6 w-6 text-ink" /></span>
-              <p className="mt-4"><span className="display text-5xl text-ink-2">{pack.credits}</span> <span className="font-display font-bold text-muted-foreground">crédits</span></p>
+              <p className="mt-4"><span className="display text-5xl text-ink-2">{pack.credits}</span> <span className="font-display font-medium text-muted-foreground">crédits</span></p>
               <p className="text-sm text-muted-foreground">{pack.description} · {pack.credits * CREDIT_VALUE_EUR} € de cours</p>
               <div className="mt-5 flex items-baseline gap-2">
                 <span className="display text-3xl text-ink-2">{price} €</span>

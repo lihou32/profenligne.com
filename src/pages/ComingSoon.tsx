@@ -86,7 +86,7 @@ const ComingSoon = () => {
           <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
             <Rocket className="w-6 h-6 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl tracking-tight">
             <span className="gradient-text">Prof en Ligne</span>
           </h1>
         </div>
@@ -114,7 +114,7 @@ const ComingSoon = () => {
           {registered ? (
             <div className="flex flex-col items-center gap-4 py-4">
               <CheckCircle className="w-12 h-12 text-success" />
-              <h2 className="text-xl font-semibold text-foreground">Merci pour votre préinscription !</h2>
+              <h2 className="text-xl text-foreground">Merci pour votre préinscription !</h2>
               <p className="text-muted-foreground text-center text-sm">
                 Vous recevrez un email dès le lancement de la plateforme.
               </p>
@@ -122,7 +122,7 @@ const ComingSoon = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="text-center space-y-1">
-                <h2 className="text-xl font-semibold text-foreground">Préinscrivez-vous</h2>
+                <h2 className="text-xl text-foreground">Préinscrivez-vous</h2>
                 <p className="text-sm text-muted-foreground">
                   Soyez parmi les premiers à rejoindre la plateforme
                 </p>

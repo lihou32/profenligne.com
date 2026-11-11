@@ -97,7 +97,7 @@ export function AppSidebar() {
         <SidebarMenuButton asChild isActive={active} tooltip={item.title}
           className={cn(
             "h-11 rounded-xl px-3.5 font-semibold transition-all",
-            active ? "!bg-[image:var(--brand-gradient)] !text-white shadow-ink" : "text-ink-2/70 hover:!bg-peri-soft hover:!text-ink-2",
+            active ? "!bg-white !text-ink-2 font-semibold ring-1 ring-border" : "text-ink-2/70 hover:!bg-secondary hover:!text-ink-2",
           )}>
           <Link to={item.path} onClick={close} aria-current={active ? "page" : undefined}>
             <item.icon className="h-[18px] w-[18px]" />

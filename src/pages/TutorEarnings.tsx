@@ -61,7 +61,7 @@ export default function TutorEarnings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold font-display mt-1">
+                  <p className="text-3xl font-medium font-display mt-1">
                     {isLoading ? <span className="shimmer inline-block h-8 w-16 rounded" /> : stat.value}
                   </p>
                 </div>

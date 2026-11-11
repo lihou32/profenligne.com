@@ -66,19 +66,19 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="reveal flex min-h-[120px] flex-col gap-4 pb-6 pt-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="reveal flex flex-col gap-4 pb-4 pt-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium capitalize text-white/75">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
-          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight text-white">{hello}{firstName ? `, ${firstName}` : ""}</h1>
+          <p className="text-sm font-medium text-muted-foreground first-letter:uppercase">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
+          <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight">{hello}{firstName ? `, ${firstName}` : ""}</h1>
         </div>
-        <div className="[&_button]:!bg-none [&_button]:!bg-white [&_button]:!text-ink [&_a]:!bg-none [&_a]:!bg-white [&_a]:!text-ink"><BookLessonDialog /></div>
+        <div><BookLessonDialog /></div>
       </header>
 
       {active && <ActiveLessonBanner lesson={active} role="student" />}
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
         {/* Prochain cours */}
-        <section className="glass-tint reveal relative overflow-hidden rounded-[1.75rem] p-6 sm:p-7">
+        <section className="glass-tint reveal relative overflow-hidden p-6 sm:p-8">
           {next ? (
             <>
               <span className="eyebrow"><CalendarDays className="h-3.5 w-3.5" /> Prochain cours</span>
@@ -120,7 +120,7 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div>
-            <p className="flex items-center gap-1.5 font-display font-bold text-ink-2"><Trophy className="h-4 w-4 text-gold" />{xp.toLocaleString("fr-FR")} XP</p>
+            <p className="flex items-center gap-1.5 font-display font-medium text-ink-2"><Trophy className="h-4 w-4 text-gold" />{xp.toLocaleString("fr-FR")} XP</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {lvl.toNext > 0 ? <>Encore <b className="text-ink-2">{lvl.toNext} XP</b> pour le niveau {lvl.level + 1}. Un cours terminé = 100 XP.</> : "Niveau maximum atteint, bravo !"}
             </p>
@@ -190,7 +190,7 @@ export default function StudentDashboard() {
                     <Link to={`/tutors/${t.user_id}`} className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-white/70">
                       {p.avatar_url
                         ? <img src={p.avatar_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
-                        : <span className="grid h-11 w-11 place-items-center rounded-xl bg-hl-soft font-display font-bold text-ink [&>*]:min-w-0">{(p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "")}</span>}
+                        : <span className="grid h-11 w-11 place-items-center rounded-xl bg-hl-soft font-display font-medium text-ink [&>*]:min-w-0">{(p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "")}</span>}
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-bold text-ink-2">{p.first_name} {p.last_name?.[0] ? `${p.last_name[0]}.` : ""}</p>
                         <p className="truncate text-xs text-muted-foreground">{(t.subjects ?? []).slice(0, 2).join(" · ")}</p>

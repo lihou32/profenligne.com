@@ -150,7 +150,7 @@ export default function TutorReviews() {
         <Card className="glass-card">
           <CardContent className="flex flex-wrap items-center gap-6 p-6">
             <div className="text-center">
-              <p className="text-4xl font-bold font-display">{reviews.length ? avg.toFixed(1) : "—"}</p>
+              <p className="text-4xl font-medium font-display">{reviews.length ? avg.toFixed(1) : "—"}</p>
               <Stars value={Math.round(avg)} />
             </div>
             <div className="text-sm text-muted-foreground">
