@@ -271,7 +271,7 @@ function TutorsShowcase() {
   if (shown.length === 0) return null
   return (
     <section id="profs" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-28">
-      <SectionHead eyebrow="👋 Les profs" title={<>Des profs <span className="hl-mark">en chair et en os</span>.</>} sub="Ils sont inscrits sur Prof en Ligne. Clique pour voir leur profil, leurs matières et leurs avis." />
+      <SectionHead eyebrow="👋 Les profs" title={<>Des profs <span className="hl-mark">en chair et en os</span>.</>} sub="Ils sont inscrits sur Ton Prof en Ligne. Clique pour voir leur profil, leurs matières et leurs avis." />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
         {shown.map((t, i) => <TutorMiniCard key={t.id} tutor={t} bg={AVATAR_BG[i % AVATAR_BG.length]} />)}
       </div>

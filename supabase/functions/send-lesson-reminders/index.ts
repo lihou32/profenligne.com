@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
                 <p style="margin: 0; font-size: 14px; color: #4b5563;">⏱ ${lesson.duration_minutes} minutes avec <strong>${partnerName}</strong></p>
               </div>
               <p style="font-size: 14px; color: #4b5563;">Connectez-vous quelques minutes avant l'heure pour rejoindre la salle de cours.</p>
-              <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">À tout de suite,<br/>L'équipe Prof en Ligne</p>
+              <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">À tout de suite,<br/>L'équipe Ton Prof en Ligne</p>
             </div>
           </div>
         `;
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: "Prof en Ligne <onboarding@resend.dev>",
+            from: "Ton Prof en Ligne <onboarding@resend.dev>",
             to: [authUser.email],
             subject: `⏰ Rappel : cours de ${lesson.subject} à ${timeStr} (dans 1h)`,
             html: emailHtml,
