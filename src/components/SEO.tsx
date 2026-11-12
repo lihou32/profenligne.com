@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = "Ton Prof en Ligne";
-const BASE_URL = "https://profenligne-com.vercel.app";
+const BASE_URL = "https://www.tonprofenligne.com";
 const DEFAULT_DESC =
   "Ton Prof en Ligne : cours particuliers en visio avec des profs choisis un par un, au même prix selon la durée, dès 15 €.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;

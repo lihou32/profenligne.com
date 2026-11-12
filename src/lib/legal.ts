@@ -6,8 +6,7 @@
  */
 export const LEGAL = {
   brand: "Ton Prof en Ligne",
-  /** TODO : passer à https://tonprofenligne.com une fois le domaine acheté. */
-  siteUrl: "https://profenligne-com.vercel.app",
+  siteUrl: "https://www.tonprofenligne.com",
   /** Date de dernière mise à jour des documents (CGU/CGV, confidentialité). */
   updatedAt: "12 novembre 2026",
 
