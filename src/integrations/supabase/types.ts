@@ -188,6 +188,70 @@ export type Database = {
           },
         ]
       }
+      lesson_boards: {
+        Row: {
+          elements: Json
+          files: Json
+          lesson_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          elements?: Json
+          files?: Json
+          lesson_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          elements?: Json
+          files?: Json
+          lesson_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_boards_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          lesson_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          sender_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_messages_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           cancelled_by: string | null
@@ -1248,6 +1312,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_use_lesson_channel: {
+        Args: {
+          p_topic: string
+        }
+        Returns: boolean
+      }
       cancel_credit_purchase: {
         Args: {
           p_request_id: string
@@ -1369,6 +1439,13 @@ export type Database = {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_lesson_participant: {
+        Args: {
+          p_lesson: string
+          p_active_only?: boolean
         }
         Returns: boolean
       }
@@ -1544,6 +1621,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      save_lesson_board: {
+        Args: {
+          p_lesson: string
+          p_elements: Json
+          p_files?: Json
+        }
+        Returns: string
       }
       set_my_availability: {
         Args: {
@@ -1724,6 +1809,7 @@ export type Database = {
     }
   }
 }
+
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
