@@ -26,10 +26,16 @@ export function saveConsent(choice: ConsentChoice) {
   window.dispatchEvent(new CustomEvent<ConsentChoice>(EVENT, { detail: choice }))
 }
 
-export function onConsentChange(cb: (choice: ConsentChoice) => void) {
+/** Changement de choix, dans cet onglet ou dans un autre (événement `storage`). */
+export function onConsentChange(cb: (choice: ConsentChoice | null) => void) {
   const handler = (e: Event) => cb((e as CustomEvent<ConsentChoice>).detail)
+  const fromOtherTab = (e: StorageEvent) => { if (e.key === KEY) cb(readConsent()) }
   window.addEventListener(EVENT, handler)
-  return () => window.removeEventListener(EVENT, handler)
+  window.addEventListener("storage", fromOtherTab)
+  return () => {
+    window.removeEventListener(EVENT, handler)
+    window.removeEventListener("storage", fromOtherTab)
+  }
 }
 
 /** Rouvre le bandeau (lien « Modifier mes choix de cookies »). */

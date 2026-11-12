@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { LEGAL } from "@/lib/legal"
+import { markTermsPendingForOAuth, termsMetadata } from "@/lib/terms"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
@@ -72,8 +72,7 @@ export default function Signup() {
       // Le parrainage est lié côté base à la création du compte (trigger handle_new_user)
       if (referralCode) metadata.referral_code = referralCode
       // Trace de l'acceptation des CGU/CGV (date et version)
-      metadata.terms_accepted_at = new Date().toISOString()
-      metadata.terms_version = LEGAL.updatedAt
+      Object.assign(metadata, termsMetadata())
 
       await signUp(email.trim(), password, metadata)
 
@@ -95,6 +94,8 @@ export default function Signup() {
   }
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
+    // Continuer avec Google vaut acceptation des CGU (mention sous le bouton)
+    markTermsPendingForOAuth()
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } })
     if (error) toast.error(error.message)
   }
