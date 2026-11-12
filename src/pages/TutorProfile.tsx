@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { CalendarClock, CalendarDays, ChevronLeft, GraduationCap, MessageSquareQuote, Send, ShieldCheck, Star, Video, Zap } from "lucide-react"
+import { CalendarClock, CalendarDays, ChevronLeft, Eye, GraduationCap, MessageSquareQuote, Send, ShieldCheck, Star, Video, Zap } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
@@ -130,6 +130,13 @@ export default function TutorProfile() {
       <SEO title={`${fullName} — prof de ${seoSubjects}`} path={`/tutors/${id}`} type="profile"
         description={`Réserve un cours avec ${fullName}.${seoSubjects ? ` Matières : ${seoSubjects}.` : ""} Dès ${MIN_LESSON_PRICE_EUR} € le cours.`} />
 
+      {isSelf && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-ink-2 bg-sun-soft p-4 text-sm">
+          <Eye className="h-5 w-5 shrink-0" />
+          <span className="font-semibold">C'est ta fiche publique : voici ce que voient les élèves.</span>
+          <Link to="/profile" className="ml-auto font-bold text-ink underline">Modifier</Link>
+        </div>
+      )}
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-ink-2">
         <ChevronLeft className="h-4 w-4" /> Retour
       </button>

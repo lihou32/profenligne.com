@@ -1,175 +1,188 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { CalendarClock, CalendarDays, DoorOpen, Inbox, Video, Zap } from "lucide-react";
 import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Video, Search, CalendarDays } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { useTutors, useLessons, useTutorLessons } from "@/hooks/useData";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LATE_START_HOUR, LATE_SURCHARGE_EUR, isRoomOpen } from "@/lib/credits";
+import { useLessons, useTutorLessons } from "@/hooks/useData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
-import { isTutorLive } from "@/lib/agenda";
+import { friendlySlot } from "@/lib/agenda";
+import { ROOM_OPEN_MINUTES_BEFORE, isRoomOpen } from "@/lib/credits";
 
-const statusColors: Record<string, string> = {
-  online: "bg-success",
-  busy: "bg-warning",
-  offline: "bg-muted-foreground",
-};
+interface Person {
+  first_name: string | null;
+  last_name: string | null;
+}
 
+interface RoomLesson {
+  id: string;
+  subject: string;
+  topic: string | null;
+  status: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  person: Person | null;
+}
+
+function personName(p: Person | null, fallback: string) {
+  if (!p?.first_name) return fallback;
+  return `${p.first_name}${p.last_name ? ` ${p.last_name[0]}.` : ""}`;
+}
+
+/** Salle de cours : les cours ouverts maintenant et les prochains, pour l'élève comme pour le prof. */
 export default function LiveConnect() {
-  useDocumentTitle("Cours en direct");
-  const { data: tutors } = useTutors();
+  useDocumentTitle("Salle de cours");
   const { mode } = useAuth();
   const isTutor = mode === "tutor";
-  const { data: studentLessons } = useLessons();
-  const { data: tutorLessons } = useTutorLessons();
-  const lessons = isTutor ? tutorLessons : studentLessons;
-  const [search, setSearch] = useState("");
-  const [bookingTutorId, setBookingTutorId] = useState<string | null>(null);
-  const [bookingInstant, setBookingInstant] = useState(false);
+  const { data: studentLessons, isLoading: loadingStudent } = useLessons();
+  const { data: tutorLessons, isLoading: loadingTutor } = useTutorLessons();
+  const loading = isTutor ? loadingTutor : loadingStudent;
+  const [now, setNow] = useState(() => Date.now());
 
-  // Cours en cours, ou confirmés dont la salle est ouverte
-  const activeLessons = (lessons || []).filter(
-    (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes)),
+  // La salle s'ouvre toute seule à l'heure : on recalcule chaque minute
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const lessons: RoomLesson[] = isTutor
+    ? (tutorLessons ?? []).map((l) => ({ ...l, person: l.student_profile }))
+    : (studentLessons ?? []).map((l) => ({ ...l, person: l.tutor_profile }));
+
+  const open = lessons.filter(
+    (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes, now)),
   );
-
-  // Statut réel : « en ligne » seulement si l'appli du prof donne signe de vie
-  const filteredTutors = (tutors || []).map((t) => ({
-    ...t, status: isTutorLive(t) ? "online" : t.status === "busy" ? "busy" : "offline",
-  })).filter((t) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    const name = `${t.profiles?.first_name || ""} ${t.profiles?.last_name || ""}`.toLowerCase();
-    const subjects = (t.subjects || []).join(" ").toLowerCase();
-    return name.includes(q) || subjects.includes(q);
-  });
-
-  // Trier : en ligne en premier
-  const sortedTutors = [...filteredTutors].sort((a, b) => {
-    const order: Record<string, number> = { online: 0, busy: 1, offline: 2 };
-    return (order[a.status] ?? 2) - (order[b.status] ?? 2);
-  });
+  const upcoming = lessons
+    .filter((l) => (l.status === "confirmed" || l.status === "pending") && !open.includes(l) && new Date(l.scheduled_at).getTime() > now)
+    .slice(0, 6);
+  const pendingForTutor = isTutor ? lessons.filter((l) => l.status === "pending").length : 0;
+  const other = isTutor ? "ton élève" : "ton prof";
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle={<>Prends un cours tout de suite avec un prof en ligne (⚡ En direct), ou réserve un créneau. Après {LATE_START_HOUR} h, un cours en direct coûte {LATE_SURCHARGE_EUR} € de plus.</>} actions={<Button asChild variant="outline"><Link to="/tutors"><CalendarDays /> Réserver un créneau</Link></Button>} />
+      <PageHeader
+        eyebrow="Salle de cours"
+        title="Tes cours en visio"
+        subtitle={`La salle ouvre ${ROOM_OPEN_MINUTES_BEFORE} min avant chaque cours : visio, tableau et chat avec ${other}.`}
+        actions={
+          isTutor ? (
+            <Button asChild variant="outline"><Link to="/disponibilites"><CalendarClock /> Mes disponibilités</Link></Button>
+          ) : (
+            <>
+              <Button asChild><Link to="/rejoindre"><Zap /> Un prof tout de suite</Link></Button>
+              <Button asChild variant="outline"><Link to="/tutors"><CalendarDays /> Réserver un créneau</Link></Button>
+            </>
+          )
+        }
+      />
 
-      {/* Sessions en cours */}
+      {pendingForTutor > 0 && (
+        <Link
+          to="/lessons"
+          className="flex items-center gap-3 rounded-2xl border-2 border-ink-2 bg-sun-soft p-4 text-sm font-semibold shadow-hard transition hover:-translate-y-px"
+        >
+          <Inbox className="h-5 w-5 shrink-0" />
+          {pendingForTutor === 1 ? "1 demande de cours attend ta réponse" : `${pendingForTutor} demandes de cours attendent ta réponse`}
+          <span className="ml-auto text-ink">Répondre →</span>
+        </Link>
+      )}
+
       <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Video className="h-5 w-5 text-accent" />
-            Sessions en cours
-            {activeLessons.length > 0 && (
-              <Badge variant="secondary">{activeLessons.length}</Badge>
-            )}
+            <DoorOpen className="h-5 w-5 text-accent" />
+            Ouvert maintenant
+            {open.length > 0 && <Badge variant="secondary">{open.length}</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {activeLessons.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">Aucune session en cours</p>
+          {!loading && open.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Aucun cours ouvert pour l'instant. La salle de ton prochain cours s'ouvrira ici.
+            </p>
           )}
-          {activeLessons.map((lesson) => (
-            <div key={lesson.id} className="flex items-center justify-between rounded-lg border border-border/50 p-4 transition-colors hover:bg-muted/50">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="gradient-primary flex h-12 w-12 items-center justify-center rounded-xl">
-                    <Video className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <span className="absolute -right-1 -top-1 flex h-3 w-3">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-success" />
-                  </span>
-                </div>
-                <div>
-                  <h3 className="">{lesson.subject} — {lesson.topic || "Cours"}</h3>
-                  <p className="text-xs text-muted-foreground">En cours</p>
+          {open.map((l) => (
+            <div key={l.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-ink-2 bg-mint-soft p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="relative flex h-3 w-3 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-mint" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
+                    {l.subject}{l.topic ? ` — ${l.topic}` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Avec {personName(l.person, other)} · {l.status === "in_progress" ? "en cours" : `commence ${friendlySlot(new Date(l.scheduled_at))}`} · {l.duration_minutes} min
+                  </p>
                 </div>
               </div>
               <Button asChild>
-                <Link to={`/room/${lesson.id}`}>Rejoindre</Link>
+                <Link to={`/room/${l.id}`}><Video /> Entrer dans la salle</Link>
               </Button>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Tuteurs disponibles */}
       <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <CardTitle className="text-lg">
-            Tuteurs disponibles
-            {sortedTutors.length > 0 && (
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({sortedTutors.filter((t) => t.status === "online").length} en ligne)
-              </span>
-            )}
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CalendarClock className="h-5 w-5 text-primary" />
+            Prochains cours
           </CardTitle>
-          <div className="relative w-56">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9 h-8 text-sm"
-              placeholder="Nom, matière..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
         </CardHeader>
-        <CardContent>
-          {sortedTutors.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              {search ? "Aucun tuteur trouvé pour cette recherche" : "Aucun tuteur inscrit"}
-            </p>
-          )}
-          <div className="grid gap-3 md:grid-cols-2">
-            {sortedTutors.map((tutor) => (
-              <div key={tutor.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="gradient-primary flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-primary-foreground">
-                      {(tutor.profiles?.first_name?.[0] || "T").toUpperCase()}
-                    </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${statusColors[tutor.status] || statusColors.offline}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {tutor.profiles?.first_name
-                        ? `${tutor.profiles.first_name} ${tutor.profiles.last_name || ""}`
-                        : "Tuteur"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(tutor.subjects || []).join(", ") || "Aucune matière"}
-                    </p>
-                  </div>
-                </div>
-                {tutor.status === "online" ? (
-                  <Button size="sm" onClick={() => { setBookingInstant(true); setBookingTutorId(tutor.user_id) }}>
-                    ⚡ En direct
-                  </Button>
+        <CardContent className="space-y-3">
+          {!loading && upcoming.length === 0 && (
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {isTutor
+                  ? "Aucun cours prévu. Ouvre des créneaux dans ton agenda, ou passe « En ligne » depuis l'accueil pour recevoir des élèves en direct."
+                  : "Aucun cours prévu. Prends un cours tout de suite ou réserve un créneau avec le prof de ton choix."}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {isTutor ? (
+                  <>
+                    <Button asChild size="sm"><Link to="/disponibilites">Ouvrir des créneaux</Link></Button>
+                    <Button asChild size="sm" variant="outline"><Link to="/dashboard">Passer en ligne</Link></Button>
+                  </>
                 ) : (
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to={`/tutors/${tutor.user_id}#agenda`}>Voir l'agenda</Link>
-                  </Button>
+                  <>
+                    <Button asChild size="sm"><Link to="/rejoindre">Un prof tout de suite</Link></Button>
+                    <Button asChild size="sm" variant="outline"><Link to="/tutors">Trouver un prof</Link></Button>
+                  </>
                 )}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+          {upcoming.map((l) => {
+            const opensAt = new Date(new Date(l.scheduled_at).getTime() - ROOM_OPEN_MINUTES_BEFORE * 60_000);
+            return (
+              <div key={l.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-ink-2/15 p-4">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
+                    {l.subject}{l.topic ? ` — ${l.topic}` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {friendlySlot(new Date(l.scheduled_at))} · {l.duration_minutes} min · avec {personName(l.person, other)}
+                  </p>
+                </div>
+                {l.status === "pending" ? (
+                  isTutor ? (
+                    <Button asChild size="sm" variant="outline"><Link to="/lessons">Accepter ou refuser</Link></Button>
+                  ) : (
+                    <Badge variant="secondary">En attente du prof</Badge>
+                  )
+                ) : (
+                  <span className="text-xs font-medium text-muted-foreground">Salle ouverte {friendlySlot(opensAt)}</span>
+                )}
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
-
-      {/* Dialog de réservation avec tuteur pré-sélectionné */}
-      {bookingTutorId && (
-        <BookLessonDialog
-          defaultTutorId={bookingTutorId}
-          defaultOpen={true}
-          instant={bookingInstant}
-          onClose={() => setBookingTutorId(null)}
-        />
-      )}
     </div>
   );
 }
