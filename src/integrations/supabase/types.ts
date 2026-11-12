@@ -196,6 +196,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -209,6 +210,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         Insert: {
@@ -218,6 +220,7 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_express?: boolean
           is_instant?: boolean
           notes?: string | null
           price_cents?: number
@@ -231,6 +234,7 @@ export type Database = {
           surcharge_cents?: number
           topic?: string | null
           tutor_id: string
+          tutor_payout_cents?: number | null
           updated_at?: string
         }
         Update: {
@@ -240,6 +244,7 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_express?: boolean
           is_instant?: boolean
           notes?: string | null
           price_cents?: number
@@ -253,6 +258,7 @@ export type Database = {
           surcharge_cents?: number
           topic?: string | null
           tutor_id?: string
+          tutor_payout_cents?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -277,9 +283,11 @@ export type Database = {
           created_at: string
           duration_minutes: number
           id: string
+          is_express: boolean
           lesson_id: string | null
           matched_at: string | null
           note: string | null
+          priority: number
           status: string
           student_id: string
           subject: string
@@ -290,9 +298,11 @@ export type Database = {
           created_at?: string
           duration_minutes: number
           id?: string
+          is_express?: boolean
           lesson_id?: string | null
           matched_at?: string | null
           note?: string | null
+          priority?: number
           status?: string
           student_id: string
           subject: string
@@ -303,9 +313,11 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          is_express?: boolean
           lesson_id?: string | null
           matched_at?: string | null
           note?: string | null
+          priority?: number
           status?: string
           student_id?: string
           subject?: string
@@ -335,6 +347,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      member_offers: {
+        Row: {
+          body: string | null
+          code: string | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          plans: string[]
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          code?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plans?: string[]
+          title: string
+        }
+        Update: {
+          body?: string | null
+          code?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plans?: string[]
+          title?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -582,6 +624,30 @@ export type Database = {
           },
         ]
       }
+      revision_periods: {
+        Row: {
+          created_at: string
+          ends_on: string
+          id: string
+          label: string
+          starts_on: string
+        }
+        Insert: {
+          created_at?: string
+          ends_on: string
+          id?: string
+          label: string
+          starts_on: string
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string
+          id?: string
+          label?: string
+          starts_on?: string
+        }
+        Relationships: []
+      }
       room_messages: {
         Row: {
           content: string
@@ -608,6 +674,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          plan: string
+          starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          plan: string
+          starts_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          plan?: string
+          starts_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tutor_availability: {
         Row: {
@@ -1010,6 +1114,17 @@ export type Database = {
           created_at: string
         }[]
       }
+      admin_membership_stats: {
+        Args: never
+        Returns: {
+          plus_active: number
+          bac_active: number
+          ending_7d: number
+          express_this_month: number
+          express_cost_eur: number
+          revenue_30d_eur: number
+        }[]
+      }
       admin_reject_credit_purchase: {
         Args: {
           p_request_id: string
@@ -1081,6 +1196,12 @@ export type Database = {
         }
         Returns: number
       }
+      app_setting_member: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
       become_tutor: {
         Args: {
           p_subjects: string[]
@@ -1103,6 +1224,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1116,6 +1238,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1142,6 +1265,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1155,6 +1279,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1181,6 +1306,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1194,6 +1320,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1214,6 +1341,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1227,6 +1355,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1243,6 +1372,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_express_queue: {
+        Args: {
+          p_subject: string
+          p_topic: string
+        }
+        Returns: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          is_express: boolean
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          priority: number
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       join_live_queue: {
         Args: {
           p_subject: string
@@ -1253,9 +1409,11 @@ export type Database = {
           created_at: string
           duration_minutes: number
           id: string
+          is_express: boolean
           lesson_id: string | null
           matched_at: string | null
           note: string | null
+          priority: number
           status: string
           student_id: string
           subject: string
@@ -1308,7 +1466,25 @@ export type Database = {
           created_at: string
           queue_position: number
           tutors_online: number
+          priority: unknown
+          is_express: boolean
         }[]
+      }
+      my_membership: {
+        Args: never
+        Returns: {
+          plan: string
+          ends_at: string
+          active: boolean
+          revision_label: string
+          revision_ends_on: unknown
+          express_left_today: number
+          cancel_hours: number
+        }[]
+      }
+      my_plan: {
+        Args: never
+        Returns: string
       }
       referral_code_for: {
         Args: {
@@ -1386,6 +1562,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1399,6 +1576,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1431,6 +1609,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      subscribe: {
+        Args: {
+          p_plan: string
+        }
+        Returns: {
+          created_at: string
+          ends_at: string
+          id: string
+          plan: string
+          starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       topup_bonus_eur: {
         Args: {
           _amount: number
@@ -1448,6 +1646,7 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
           is_instant: boolean
           notes: string | null
           price_cents: number
@@ -1461,6 +1660,7 @@ export type Database = {
           surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1491,6 +1691,8 @@ export type Database = {
           created_at: string
           price_eur: number
           mine: boolean
+          is_express: boolean
+          payout_eur: number
         }[]
       }
       tutor_open_slots: {

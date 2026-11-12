@@ -120,9 +120,9 @@ export function referralCodeFor(userId: string): string {
 }
 
 /** Le cours peut-il encore être annulé avec remboursement par l'élève ? */
-export function isFreeCancellation(status: string, scheduledAt: string, now = Date.now()): boolean {
+export function isFreeCancellation(status: string, scheduledAt: string, now = Date.now(), cancelHours = FREE_CANCEL_HOURS): boolean {
   if (status === "pending") return true;
-  return new Date(scheduledAt).getTime() - now > FREE_CANCEL_HOURS * 3600 * 1000;
+  return new Date(scheduledAt).getTime() - now > cancelHours * 3600 * 1000;
 }
 
 /** La salle est-elle ouverte (on peut démarrer le cours) ? */

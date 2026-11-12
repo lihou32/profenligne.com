@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Video, Search } from "lucide-react";
+import { Video, Search, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useTutors, useLessons, useTutorLessons } from "@/hooks/useData";
@@ -56,7 +56,7 @@ export default function LiveConnect() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle={<>Prends un cours tout de suite avec un prof en ligne (⚡ En direct), ou réserve un créneau. Après {LATE_START_HOUR} h, un cours en direct coûte {LATE_SURCHARGE_EUR} € de plus.</>} actions={<BookLessonDialog />} />
+      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle={<>Prends un cours tout de suite avec un prof en ligne (⚡ En direct), ou réserve un créneau. Après {LATE_START_HOUR} h, un cours en direct coûte {LATE_SURCHARGE_EUR} € de plus.</>} actions={<Button asChild variant="outline"><Link to="/tutors"><CalendarDays /> Réserver un créneau</Link></Button>} />
 
       {/* Sessions en cours */}
       <Card className="glass-card">
@@ -151,8 +151,8 @@ export default function LiveConnect() {
                     ⚡ En direct
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={() => { setBookingInstant(false); setBookingTutorId(tutor.user_id) }}>
-                    Réserver
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/tutors/${tutor.user_id}#agenda`}>Voir l'agenda</Link>
                   </Button>
                 )}
               </div>

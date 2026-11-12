@@ -5,6 +5,7 @@ import { format, formatDistanceToNowStrict, isToday, isTomorrow } from "date-fns
 import { fr } from "date-fns/locale"
 import {
   ArrowRight, CalendarDays, Clock, Coins, GraduationCap, Search, Sparkles, Star, Trophy, UserRound, Video,
+  Plus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
@@ -12,7 +13,6 @@ import { useUserCredits } from "@/hooks/useCredits"
 import { useDashboardStats, useTutors } from "@/hooks/useData"
 import { supabase } from "@/integrations/supabase/client"
 import { formatEur, isRoomOpen } from "@/lib/credits"
-import { BookLessonDialog } from "@/components/lessons/BookLessonDialog"
 import { ActiveLessonBanner } from "@/components/lessons/ActiveLessonBanner"
 import { StatTile } from "@/components/brand/PageHeader"
 import { cn } from "@/lib/utils"
@@ -71,7 +71,7 @@ export default function StudentDashboard() {
           <p className="text-sm font-medium text-muted-foreground first-letter:uppercase">{format(new Date(), "EEEE d MMMM", { locale: fr })}</p>
           <h1 className="mt-1 text-[clamp(1.7rem,3.2vw,2.4rem)] leading-tight">{hello}{firstName ? `, ${firstName}` : ""}</h1>
         </div>
-        <div><BookLessonDialog /></div>
+        <div><Button asChild><Link to="/tutors"><Plus /> Réserver un cours</Link></Button></div>
       </header>
 
       {active && <ActiveLessonBanner lesson={active} role="student" />}

@@ -12,6 +12,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCancelLesson, useConfirmLesson, type Lesson } from "@/hooks/useData";
+import { useMyMembership } from "@/hooks/useMembership";
 import { FREE_CANCEL_HOURS, ROOM_OPEN_MINUTES_BEFORE, formatEur, friendlyError, isFreeCancellation, isRoomOpen, lessonPaidEur } from "@/lib/credits";
 
 export const LESSON_STATUS: Record<string, { label: string; className: string }> = {
@@ -54,7 +55,9 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
     lesson.status === "in_progress" ||
     (lesson.status === "confirmed" && isRoomOpen(lesson.scheduled_at, lesson.duration_minutes));
   const canCancel = ["pending", "confirmed"].includes(lesson.status) && !isPast;
-  const freeCancel = viewer === "tutor" || isFreeCancellation(lesson.status, lesson.scheduled_at);
+  const { data: membership } = useMyMembership();
+  const cancelHours = viewer === "student" ? membership?.cancel_hours ?? FREE_CANCEL_HOURS : FREE_CANCEL_HOURS;
+  const freeCancel = viewer === "tutor" || isFreeCancellation(lesson.status, lesson.scheduled_at, Date.now(), cancelHours);
   const busy = confirmLesson.isPending || cancelLesson.isPending;
 
   const name = counterpart
@@ -151,7 +154,7 @@ export function LessonCard({ lesson, viewer, counterpart, index = 0 }: LessonCar
                       ? `L'élève sera prévenu et remboursé de ${formatEur(lessonPaidEur(lesson))}.`
                       : freeCancel
                         ? `Vous serez remboursé de ${formatEur(lessonPaidEur(lesson))} sur votre solde.`
-                        : `Le cours commence dans moins de ${FREE_CANCEL_HOURS} h : le cours ne sera pas remboursé.`}
+                        : `Le cours commence dans moins de ${cancelHours} h : le cours ne sera pas remboursé.`}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

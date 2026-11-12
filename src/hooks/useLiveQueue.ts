@@ -10,7 +10,7 @@ import { useAuth } from "./useAuth";
 export type LiveRequest = {
   id: string; status: "waiting" | "matched" | "cancelled" | "expired"; subject: string;
   duration_minutes: number; lesson_id: string | null; note: string | null; created_at: string;
-  queue_position: number; tutors_online: number;
+  queue_position: number; tutors_online: number; priority?: number; is_express?: boolean;
 };
 
 /** Profs en ligne et élèves en attente (public, pour l'accueil). */

@@ -259,12 +259,12 @@ function LiveQueueCard({ online, busy }: { online: boolean; busy: boolean }) {
       ) : (
         <ul className="mt-4 grid gap-2.5 md:grid-cols-2">
           {queue.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border-2 border-ink-2 bg-white p-3">
+            <li key={r.id} className={`flex items-center justify-between gap-3 rounded-xl border-2 border-ink-2 p-3 ${r.is_express ? "bg-sun-soft" : "bg-white"}`}>
               <div className="min-w-0">
-                <p className="truncate font-bold">{r.student_first_name} · {r.subject} · {r.duration_minutes} min</p>
+                <p className="truncate font-bold">{r.is_express && <span className="mr-1.5 rounded-full bg-hl px-2 py-0.5 text-[10px] font-extrabold uppercase text-white">Question express</span>}{r.student_first_name} · {r.subject} · {r.duration_minutes} min</p>
                 <p className="truncate text-xs text-ink-2/65">{r.topic || "Pas de précision"} · attend depuis {Math.max(1, Math.round((Date.now() - new Date(r.created_at).getTime()) / 60000))} min{r.mine ? "" : " · pas dans tes matières"}</p>
               </div>
-              <Button size="sm" onClick={() => take(r.id)} disabled={accept.isPending || busy}>Prendre · {formatEur(Number(r.price_eur) * 0.8)}</Button>
+              <Button size="sm" onClick={() => take(r.id)} disabled={accept.isPending || busy}>Prendre · {formatEur(r.payout_eur != null ? Number(r.payout_eur) : Number(r.price_eur) * 0.8)}</Button>
             </li>
           ))}
         </ul>

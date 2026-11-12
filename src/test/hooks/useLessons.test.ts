@@ -26,7 +26,7 @@ const wrapper = ({ children }: { children: ReactNode }) =>
 const lesson = (over: Partial<Lesson>): Lesson => ({
   id: "l", student_id: "student-1", tutor_id: "tutor-1", subject: "Maths", topic: null,
   scheduled_at: new Date().toISOString(), duration_minutes: 60, status: "pending", notes: null,
-  rating: null, room_id: "l", credits_cost: 0, price_cents: 3500, surcharge_cents: 0, is_instant: false, started_at: null, completed_at: null, cancelled_by: null,
+  rating: null, room_id: "l", credits_cost: 0, price_cents: 3500, surcharge_cents: 0, is_instant: false, is_express: false, tutor_payout_cents: null, started_at: null, completed_at: null, cancelled_by: null,
   created_at: "", updated_at: "", ...over,
 });
 

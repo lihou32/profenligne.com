@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { ArrowRight, Loader2, X, Zap } from "lucide-react"
+import { ArrowRight, Crown, Loader2, X, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { useUserCredits } from "@/hooks/useCredits"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useCancelLiveRequest, useJoinLiveQueue, useLiveStats, useMyLiveRequest } from "@/hooks/useLiveQueue"
+import { useJoinExpress, useMyMembership } from "@/hooks/useMembership"
+import { EXPRESS_MINUTES, planName } from "@/lib/membership"
 import { SUBJECTS } from "@/lib/constants"
 import {
   LATE_START_HOUR, LATE_SURCHARGE_EUR, LESSON_DURATIONS, formatEur, friendlyError, lateSurchargeEur, lessonPriceEur,
@@ -33,6 +35,8 @@ export default function JoinLesson() {
   const { data: credits } = useUserCredits()
   const { data: request, isLoading } = useMyLiveRequest()
   const join = useJoinLiveQueue()
+  const joinExpress = useJoinExpress()
+  const { data: membership } = useMyMembership()
   const cancel = useCancelLiveRequest()
 
   const [search] = useSearchParams()
@@ -67,6 +71,18 @@ export default function JoinLesson() {
     }
   }
 
+  const askExpress = async () => {
+    if (!subject) { toast.error("Choisis d'abord ta matière"); return }
+    try {
+      const r = await joinExpress.mutateAsync({ subject, topic: topic.trim() })
+      if (r?.status === "matched" && r.lesson_id) navigate(`/room/${r.lesson_id}`)
+    } catch (e) {
+      toast.error(friendlyError(e, "Question express impossible"))
+    }
+  }
+  const expressLeft = membership?.express_left_today ?? 0
+  const member = membership?.active ? membership.plan : null
+
   const tutorsOnline = stats?.tutors_online ?? 0
   const durations = useMemo(() => LESSON_DURATIONS.filter((d) => d.value <= 60), [])
 
@@ -74,7 +90,7 @@ export default function JoinLesson() {
     return <div className="flex justify-center py-24"><Loader2 className="h-6 w-6 animate-spin" /></div>
   }
 
-  if (waiting && request) return <Waiting request={request} onCancel={() => cancel.mutate(request.id)} cancelling={cancel.isPending} />
+  if (waiting && request) return <Waiting request={request} member={member} onCancel={() => cancel.mutate(request.id)} cancelling={cancel.isPending} />
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 pb-10 pt-2">
@@ -94,6 +110,20 @@ export default function JoinLesson() {
       {ended && (
         <div className="sticker-sm rounded-2xl bg-hl-soft p-4 text-sm font-semibold">
           {request!.status === "expired" ? "Aucun prof ne s'est libéré à temps pour ta dernière demande. Réessaie, ou réserve un créneau." : `Ta dernière demande a été annulée${request!.note ? ` : ${request!.note}` : "."}`}
+        </div>
+      )}
+
+      {expressLeft > 0 && (
+        <div className="sticker reveal flex flex-col gap-3 rounded-2xl bg-sun p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="flex items-center gap-2 font-display text-xl font-extrabold"><Crown className="h-5 w-5" /> Ta question express du jour</p>
+            <p className="text-sm font-semibold text-ink-2/80">
+              {membership?.revision_label} : {EXPRESS_MINUTES} min avec un prof de permanence, gratuit avec ton abonnement Bac. Choisis ta matière ci-dessous.
+            </p>
+          </div>
+          <Button size="lg" variant="outline" className="shrink-0 bg-white" onClick={askExpress} disabled={joinExpress.isPending}>
+            {joinExpress.isPending ? <Loader2 className="animate-spin" /> : <Zap />} Poser ma question
+          </Button>
         </div>
       )}
 
@@ -140,6 +170,9 @@ export default function JoinLesson() {
               ? <p className="text-xs font-semibold text-ink-2/70">dont {formatEur(surcharge)} : cours en direct après {LATE_START_HOUR} h</p>
               : <p className="text-xs font-semibold text-ink-2/70">Après {LATE_START_HOUR} h : +{LATE_SURCHARGE_EUR} €. Débité seulement quand un prof te rejoint.</p>}
             {user && <p className="mt-1 text-xs font-semibold">Ton solde : {formatEur(balance)}</p>}
+            {member
+              ? <p className="mt-1 inline-flex items-center gap-1 text-xs font-extrabold text-peri"><Crown className="h-3.5 w-3.5" />Abonné {planName(member)} : tu passes devant dans la file</p>
+              : <Link to="/abonnement" className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-peri underline"><Crown className="h-3.5 w-3.5" />Passer devant dans la file avec Plus</Link>}
           </div>
           {missing > 0 ? (
             <Button asChild size="lg" variant="highlight"><Link to="/credits">Recharger ({formatEur(missing)} manquants)</Link></Button>
@@ -154,7 +187,7 @@ export default function JoinLesson() {
   )
 }
 
-function Waiting({ request, onCancel, cancelling }: { request: NonNullable<ReturnType<typeof useMyLiveRequest>["data"]>; onCancel: () => void; cancelling: boolean }) {
+function Waiting({ request, member, onCancel, cancelling }: { request: NonNullable<ReturnType<typeof useMyLiveRequest>["data"]>; member: string | null; onCancel: () => void; cancelling: boolean }) {
   const [seconds, setSeconds] = useState(() => Math.floor((Date.now() - new Date(request.created_at).getTime()) / 1000))
   useEffect(() => {
     const t = setInterval(() => setSeconds(Math.floor((Date.now() - new Date(request.created_at).getTime()) / 1000)), 1000)
@@ -171,7 +204,12 @@ function Waiting({ request, onCancel, cancelling }: { request: NonNullable<Retur
           <span className="font-display text-5xl font-extrabold">n° {request.queue_position}</span>
         </span>
       </div>
-      <h1 className="mt-8 text-[2.4rem]">Tu es dans la file</h1>
+      <h1 className="mt-8 text-[2.4rem]">{request.is_express ? "Question express envoyée" : "Tu es dans la file"}</h1>
+      {(member || request.is_express) && (
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border-2 border-ink-2 bg-sun px-3 py-1 text-sm font-extrabold">
+          <Crown className="h-4 w-4" />{request.is_express ? "Prioritaire : prof de permanence" : `Prioritaire avec ${planName(member)}`}
+        </p>
+      )}
       <p className="mt-3 text-lg text-ink-2/75">
         {request.subject} · {request.duration_minutes} min. Dès qu'un prof se libère, tu es envoyé en cours automatiquement.
         Garde cette page ouverte.
@@ -180,7 +218,7 @@ function Waiting({ request, onCancel, cancelling }: { request: NonNullable<Retur
         <div className="sticker-sm rounded-2xl bg-mint-soft p-4"><p className="text-sm font-bold">Profs en ligne en {request.subject}</p><p className="font-display text-3xl font-extrabold">{request.tutors_online}</p></div>
         <div className="sticker-sm rounded-2xl bg-sky-soft p-4"><p className="text-sm font-bold">Temps d'attente</p><p className="font-display text-3xl font-extrabold tabular">{mm}:{ss}</p></div>
       </div>
-      <p className="mt-4 text-sm text-ink-2/60">Rien n'est débité tant qu'aucun prof ne t'a rejoint. Ta demande expire au bout de 30 minutes.</p>
+      <p className="mt-4 text-sm text-ink-2/60">{request.is_express ? "Gratuit avec ton abonnement Bac." : "Rien n'est débité tant qu'aucun prof ne t'a rejoint."} Ta demande expire au bout de 30 minutes.</p>
       <Button variant="outline" className="mt-6" onClick={onCancel} disabled={cancelling}><X /> Quitter la file</Button>
       <p className="mt-6 text-sm"><Link to="/tutors" className="font-bold underline">Ou réserve un créneau plus tard <ArrowRight className="inline h-3.5 w-3.5" /></Link></p>
     </div>

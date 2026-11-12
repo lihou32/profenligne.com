@@ -3,10 +3,10 @@ import { PageHeader } from "@/components/brand/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Sparkles, Filter } from "lucide-react";
+import { BookOpen, Sparkles, Filter, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useLessons } from "@/hooks/useData";
-import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
 import { LessonCard } from "@/components/lessons/LessonCard";
 
 export default function StudentLessons() {
@@ -23,7 +23,7 @@ export default function StudentLessons() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Mes cours" title="Ton planning" subtitle="Tes réservations, à venir et passées." actions={<BookLessonDialog />} />
+      <PageHeader eyebrow="Mes cours" title="Ton planning" subtitle="Tes réservations, à venir et passées." actions={<Button asChild><Link to="/tutors"><Plus /> Réserver un cours</Link></Button>} />
 
       {subjects.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -67,7 +67,7 @@ export default function StudentLessons() {
               <CardContent className="flex flex-col items-center gap-3 p-8">
                 <BookOpen className="h-12 w-12 text-muted-foreground/20" />
                 <p className="text-muted-foreground">Aucun cours pour le moment</p>
-                <BookLessonDialog />
+                <Button asChild><Link to="/tutors"><Plus /> Réserver un cours</Link></Button>
               </CardContent>
             </Card>
           )}

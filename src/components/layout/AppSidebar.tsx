@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard, BookOpen, Video, HelpCircle, LogOut, Shield, Star,
-  Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap, CalendarClock,
+  Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap, CalendarClock, Crown,
 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -27,6 +27,7 @@ const STUDENT: { label: string; items: Item[] }[] = [
   ] },
   { label: "Mon compte", items: [
     { title: "Mon solde", icon: Coins, path: "/credits" },
+    { title: "Abonnement", icon: Crown, path: "/abonnement" },
     { title: "Certificats", icon: Award, path: "/certificates" },
     { title: "Avis", icon: Star, path: "/reviews" },
     { title: "Parrainage", icon: Gift, path: "/referral" },

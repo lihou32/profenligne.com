@@ -17,6 +17,7 @@ import {
   MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION, TOPUP_PACKS, WITHDRAWAL_FEE_RATE, formatEur, tutorShareEur,
 } from "@/lib/credits"
 import { cn } from "@/lib/utils"
+import { PLANS } from "@/lib/membership"
 
 const NAV_LINKS = [
   { href: "#tarifs", label: "Tarifs" },
@@ -59,6 +60,7 @@ export default function Landing() {
         <HowItWorks />
         <TutorsShowcase />
         <Topups />
+        <Plans />
         <ForTutors />
         <Faq />
         <FinalCta />
@@ -122,7 +124,7 @@ function Hero() {
             <p className="text-[0.98rem] font-bold leading-snug">Cours en direct après {LATE_START_HOUR} h : <span className="whitespace-nowrap">+{LATE_SURCHARGE_EUR} €</span>, quelle que soit la durée.</p>
           </div>
         </div>
-        <span aria-hidden className="sticker floaty absolute -right-3 -top-5 hidden rounded-2xl sm:block bg-hl px-3 py-1.5 font-display text-lg font-extrabold text-white" style={{ ["--r" as string]: "8deg" }}>Sans abonnement</span>
+        <span aria-hidden className="sticker floaty absolute -right-3 -top-5 hidden rounded-2xl sm:block bg-hl px-3 py-1.5 font-display text-lg font-extrabold text-white" style={{ ["--r" as string]: "8deg" }}>Sans engagement</span>
       </div>
     </section>
   )
@@ -388,6 +390,28 @@ function Topups() {
   )
 }
 
+function Plans() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pt-28">
+      <SectionHead eyebrow="👑 Abonnements" title={<>Facultatif, mais <span className="hl-mark">tu passes devant</span>.</>} sub="Sans engagement : tu paies 30 jours depuis ton solde, rien ne se renouvelle tout seul." />
+      <div className="grid gap-5 md:grid-cols-2 [&>*]:min-w-0">
+        {PLANS.map((p) => (
+          <div key={p.id} className={cn("sticker reveal lift relative rounded-[1.75rem] p-7", p.id === "bac" ? "bg-sun" : "bg-peri-soft")}>
+            {p.id === "bac" && <span className="absolute -top-4 right-6 rotate-2 rounded-full border-2 border-ink-2 bg-hl px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-white">Spécial examens</span>}
+            <p className="font-display text-2xl font-extrabold">{p.name}</p>
+            <p className="mt-1 font-display text-[2.6rem] font-extrabold leading-none">{formatEur(p.priceEur)}<span className="text-base font-bold text-ink-2/60"> / 30 jours</span></p>
+            <p className="mt-2 text-sm font-semibold text-ink-2/70">{p.tagline}</p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {p.perks.map((perk) => <li key={perk} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" />{perk}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="reveal mt-8 text-center"><Button asChild size="lg" variant="outline"><Link to="/abonnement">Voir les abonnements <ArrowRight /></Link></Button></div>
+    </section>
+  )
+}
+
 /* ─── 8. FAQ ──────────────────────────────────────────────────────────── */
 
 const FAQ = [
@@ -396,6 +420,7 @@ const FAQ = [
   ["C'est quoi « Rejoindre un cours » ?", "Tu choisis ta matière et ta durée (dès 20 min) et tu cliques : le premier prof en ligne te rejoint dans la minute. S'il n'y a personne de libre, tu passes en file d'attente et tu es connecté dès qu'un prof se libère (30 min maximum). Rien n'est débité tant qu'aucun prof ne t'a rejoint."],
   ["Comment je paie ?", "Tu recharges ton solde par WhatsApp, virement ou Revolut (à partir de 50 €, un bonus est offert). Le prix du cours est débité à la réservation, et ton solde n'expire jamais."],
   ["Et si je dois annuler ?", `Tant que le prof n'a pas confirmé, ou jusqu'à ${FREE_CANCEL_HOURS} h avant le cours, tu es remboursé intégralement. Si c'est le prof qui annule, tu es toujours remboursé.`],
+  ["À quoi sert l'abonnement ?", "Il est facultatif. Plus (9,99 €) te fait passer devant dans la file « Rejoindre un cours », allonge l'annulation gratuite jusqu'à 2 h avant et donne accès aux offres membres. Bac (15,99 €) ajoute, pendant les semaines de révision, une question express gratuite par jour avec un prof de permanence, à toute heure."],
   ["Quels niveaux ?", "Du collège au master : chaque prof indique ses matières et ses niveaux sur son profil."],
   ["Je suis prof, comment je suis payé ?", `Tu touches ${Math.round((1 - PLATFORM_COMMISSION) * 100)} % du prix de chaque cours terminé. Tu demandes un retrait depuis ton espace dès ${MIN_WITHDRAWAL_EUR} € (frais de retrait : ${Math.round(WITHDRAWAL_FEE_RATE * 100)} %).`],
   ["Les avis sont-ils vrais ?", "Seul un élève qui a terminé un cours avec le prof peut laisser un avis, une fois par cours."],
@@ -431,7 +456,7 @@ function FinalCta() {
           <Button asChild size="lg" variant="highlight" className="h-14 px-7 text-base"><Link to="/signup">Créer mon compte <ArrowRight /></Link></Button>
           <Button asChild size="lg" variant="outline" className="h-14 px-7 text-base"><a href="#faq"><MessageCircle /> J'ai une question</a></Button>
         </div>
-        <p className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-white/90"><Check className="h-4 w-4" /> Sans abonnement · paiement au cours</p>
+        <p className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-white/90"><Check className="h-4 w-4" /> Sans engagement · paiement au cours</p>
       </div>
     </section>
   )

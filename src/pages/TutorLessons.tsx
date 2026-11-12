@@ -21,7 +21,7 @@ export default function TutorLessons() {
     <div className="space-y-6">
       <PageHeader eyebrow="Mes cours" title="Demandes et planning" subtitle="Accepte les demandes, retrouve tes cours à venir et ton historique." />
 
-      <Tabs defaultValue={pending.length > 0 || upcoming.length === 0 ? "pending" : "upcoming"}>
+      <Tabs defaultValue={pending.length > 0 ? "pending" : "upcoming"}>
         <TabsList>
           <TabsTrigger value="pending" className={tabClass}>En attente ({pending.length})</TabsTrigger>
           <TabsTrigger value="upcoming" className={tabClass}>À venir ({upcoming.length})</TabsTrigger>
