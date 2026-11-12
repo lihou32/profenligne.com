@@ -9,7 +9,7 @@ export default function Fonctionnement() {
       title="Fonctionnement de la plateforme"
       intro={`Comment ${LEGAL.brand} met en relation élèves et profs, classe les profs et publie les avis.`}
     >
-      <Section title="Le rôle de Prof en Ligne">
+      <Section title={`Le rôle de ${LEGAL.brand}`}>
         <p>
           {LEGAL.brand} met en relation des élèves avec des profs particuliers pour des cours en visio. La plateforme gère la
           réservation, la salle de cours, le solde et les avis ; les cours eux-mêmes sont donnés par les profs. Le contrat de

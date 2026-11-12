@@ -111,7 +111,7 @@ export function useJitsi({ roomId, displayName, email, onReadyToClose }: UseJits
           // Disable "add people" dialog
           hideConferenceSubject: false,
           // Set subject
-          subject: `Prof en Ligne — Cours`,
+          subject: `Ton Prof en Ligne — Cours`,
           // No password by default
           enableInsecureRoomNameWarning: false,
           // Disable deep linking (don't prompt to open in Jitsi app)
@@ -129,7 +129,7 @@ export function useJitsi({ roomId, displayName, email, onReadyToClose }: UseJits
         },
         interfaceConfigOverwrite: {
           // Branding
-          APP_NAME: "Prof en Ligne",
+          APP_NAME: "Ton Prof en Ligne",
           SHOW_JITSI_WATERMARK: false,
           SHOW_WATERMARK_FOR_GUESTS: false,
           DEFAULT_BACKGROUND: "#1a1625",

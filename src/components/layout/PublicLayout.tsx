@@ -40,11 +40,11 @@ export function PublicNav({ loggedIn, links }: { loggedIn: boolean; links?: { hr
         )}
         <div className="ml-auto flex items-center gap-1.5">
           {loggedIn ? (
-            <Button asChild><Link to="/dashboard">Mon espace <ArrowRight /></Link></Button>
+            <Button asChild className="max-[399px]:h-10 max-[399px]:px-3"><Link to="/dashboard">Mon espace <ArrowRight className="max-[399px]:hidden" /></Link></Button>
           ) : (
             <>
               <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link to="/login">Connexion</Link></Button>
-              <Button asChild><Link to="/signup">Commencer <ArrowRight /></Link></Button>
+              <Button asChild className="max-[399px]:h-10 max-[399px]:px-3"><Link to="/signup">Commencer <ArrowRight className="max-[399px]:hidden" /></Link></Button>
             </>
           )}
         </div>

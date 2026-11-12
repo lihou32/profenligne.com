@@ -89,7 +89,7 @@ const ComingSoon = () => {
             <Rocket className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="text-3xl tracking-tight">
-            <span className="gradient-text">Prof en Ligne</span>
+            <span className="gradient-text">Ton Prof en Ligne</span>
           </h1>
         </div>
 

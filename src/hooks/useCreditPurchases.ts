@@ -38,7 +38,7 @@ export function availableMethods(s: PaymentSettings | null | undefined): Payment
 
 /** Lien WhatsApp avec un message pré-rempli contenant la référence. */
 export function whatsappLink(number: string, req: Pick<CreditPurchaseRequest, "amount_eur" | "reference">): string {
-  const text = `Bonjour, je souhaite recharger mon solde Prof en Ligne de ${Number(req.amount_eur)} €. Référence : ${req.reference}`;
+  const text = `Bonjour, je souhaite recharger mon solde sur Ton Prof en Ligne de ${Number(req.amount_eur)} €. Référence : ${req.reference}`;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 

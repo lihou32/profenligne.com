@@ -111,7 +111,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
     // Footer
     doc.setFontSize(9)
     doc.setTextColor(160, 160, 160)
-    doc.text("Prof en Ligne \u2014 plateforme de cours particuliers", w / 2, h - 22, { align: "center" })
+    doc.text("Ton Prof en Ligne \u2014 plateforme de cours particuliers", w / 2, h - 22, { align: "center" })
 
     // Download
     const fileName = `certificat_${cert.subject.replace(/\s+/g, "_")}_${completedDate.replace(/\s+/g, "_")}.pdf`

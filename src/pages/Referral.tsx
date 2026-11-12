@@ -26,7 +26,7 @@ const HOW_IT_WORKS = [
   {
     icon: Users,
     title: "Votre ami s'inscrit",
-    desc: "Votre filleul crée son compte sur Prof en Ligne grâce à votre lien.",
+    desc: "Votre filleul crée son compte sur Ton Prof en Ligne grâce à votre lien.",
     color: "text-purple-500",
     bg: "bg-purple-500/10",
   },
@@ -64,8 +64,8 @@ export default function Referral() {
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
-        title: "Prof en Ligne — Rejoins-moi !",
-        text: "Rejoins Prof en Ligne pour apprendre avec des professeurs particuliers. Utilise mon lien pour t'inscrire !",
+        title: "Ton Prof en Ligne — Rejoins-moi !",
+        text: "Rejoins Ton Prof en Ligne pour apprendre avec des professeurs particuliers. Utilise mon lien pour t'inscrire !",
         url: referralLink,
       })
     } else {

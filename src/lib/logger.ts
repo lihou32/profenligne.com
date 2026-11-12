@@ -1,5 +1,5 @@
 /**
- * Logger centralisé pour Prof en Ligne.
+ * Logger centralisé pour Ton Prof en Ligne.
  *
  * En développement : affiche tout dans la console.
  * En production   : supprime les logs, garde les erreurs

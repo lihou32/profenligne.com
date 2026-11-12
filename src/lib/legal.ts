@@ -5,8 +5,9 @@
  * Tant qu'un champ vaut `null`, la page affiche « en cours d'immatriculation » ou « à venir ».
  */
 export const LEGAL = {
-  brand: "Prof en Ligne",
-  siteUrl: "https://profenligne.com",
+  brand: "Ton Prof en Ligne",
+  /** TODO : passer à https://tonprofenligne.com une fois le domaine acheté. */
+  siteUrl: "https://profenligne-com.vercel.app",
   /** Date de dernière mise à jour des documents (CGU/CGV, confidentialité). */
   updatedAt: "12 novembre 2026",
 
@@ -16,7 +17,7 @@ export const LEGAL = {
     address: "10 rue d'Alsace, 92300 Levallois-Perret, France",
     /** TODO : numéro SIREN reçu après l'immatriculation (guichet unique INPI). */
     siren: null as string | null,
-    email: "support@profenligne.fr",
+    email: "support@tonprofenligne.com",
     /** TODO : téléphone de contact (obligatoire dans les mentions légales). */
     phone: null as string | null,
   },

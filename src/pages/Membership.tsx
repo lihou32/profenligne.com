@@ -166,7 +166,7 @@ export default function Membership() {
       <section className="glass reveal p-6 text-sm text-ink-2/80">
         <h2 className="text-lg text-ink-2">Questions fréquentes</h2>
         <dl className="mt-3 space-y-3">
-          <div><dt className="font-bold text-ink-2">Comment je paie ?</dt><dd>Avec ton solde Prof en Ligne. Recharge-le d'abord si besoin, puis clique sur « Payer ».</dd></div>
+          <div><dt className="font-bold text-ink-2">Comment je paie ?</dt><dd>Avec ton solde sur le site. Recharge-le d'abord si besoin, puis clique sur « Payer ».</dd></div>
           <div><dt className="font-bold text-ink-2">Ça se renouvelle tout seul ?</dt><dd>Non. Ton abonnement s'arrête au bout de {PERIOD_DAYS} jours. Tu peux le prolonger quand tu veux, jusqu'à 2 mois d'avance.</dd></div>
           <div><dt className="font-bold text-ink-2">Je peux passer de Plus à Bac ?</dt><dd>Oui : tu paies seulement la différence ({formatEur(UPGRADE_PRICE_EUR)}) et ta date de fin ne change pas.</dd></div>
           <div><dt className="font-bold text-ink-2">C'est quoi une question express ?</dt><dd>Pendant une semaine de révision, les membres Bac rejoignent un prof de permanence pendant {EXPRESS_MINUTES} min, gratuitement, une fois par jour, à n'importe quelle heure. Les cours normaux restent au prix habituel.</dd></div>

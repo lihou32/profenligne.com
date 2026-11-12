@@ -9,10 +9,10 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const SITE_NAME = "Prof en Ligne";
-const BASE_URL = "https://profenligne.com";
+const SITE_NAME = "Ton Prof en Ligne";
+const BASE_URL = "https://profenligne-com.vercel.app";
 const DEFAULT_DESC =
-  "Prof en Ligne : cours particuliers en visio avec des profs choisis un par un, au même prix selon la durée, dès 15 €.";
+  "Ton Prof en Ligne : cours particuliers en visio avec des profs choisis un par un, au même prix selon la durée, dès 15 €.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 export function SEO({
