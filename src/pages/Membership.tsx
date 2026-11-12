@@ -17,7 +17,7 @@ const dayLabel = (ymd: string) => parisDayLabel(ymd, { day: "numeric", month: "l
 export default function Membership() {
   useDocumentTitle("Abonnement")
   const navigate = useNavigate()
-  const { user, hasRole } = useAuth()
+  const { user, mode } = useAuth()
   const { data: m } = useMyMembership()
   const { data: credits } = useUserCredits()
   const { data: periods = [] } = useRevisionPeriods()
@@ -27,7 +27,7 @@ export default function Membership() {
   const balance = credits?.balanceEur ?? 0
   const current = m?.active ? m.plan : null
   const daysLeft = m?.active && m.ends_at ? Math.max(0, Math.ceil((new Date(m.ends_at).getTime() - Date.now()) / 86_400_000)) : 0
-  const tutorOnly = !!user && hasRole("tutor") && !hasRole("student")
+  const tutorOnly = !!user && mode === "tutor"
 
   const buy = async (plan: PlanId) => {
     if (!user) { navigate("/signup", { state: { from: "/abonnement" } }); return }
@@ -120,7 +120,7 @@ export default function Membership() {
           </article>
         ))}
       </div>
-      {tutorOnly && <p className="text-center text-sm text-muted-foreground">L'abonnement est réservé aux comptes élèves.</p>}
+      {tutorOnly && <p className="text-center text-sm text-muted-foreground">L'abonnement est réservé aux élèves. Si ton compte est aussi élève, passe dans l'espace élève (en bas du menu).</p>}
 
       <div className="grid gap-5 md:grid-cols-2 [&>*]:min-w-0">
         <section className="glass reveal p-6">

@@ -22,8 +22,8 @@ const statusColors: Record<string, string> = {
 export default function LiveConnect() {
   useDocumentTitle("Cours en direct");
   const { data: tutors } = useTutors();
-  const { hasRole } = useAuth();
-  const isTutor = hasRole("tutor");
+  const { mode } = useAuth();
+  const isTutor = mode === "tutor";
   const { data: studentLessons } = useLessons();
   const { data: tutorLessons } = useTutorLessons();
   const lessons = isTutor ? tutorLessons : studentLessons;

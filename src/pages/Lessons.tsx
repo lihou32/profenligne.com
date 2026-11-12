@@ -5,9 +5,9 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function Lessons() {
   useDocumentTitle("Mes Cours");
-  const { hasRole } = useAuth();
+  const { mode } = useAuth();
 
-  if (hasRole("tutor")) {
+  if (mode === "tutor") {
     return <TutorLessons />;
   }
 
