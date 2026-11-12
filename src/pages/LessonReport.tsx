@@ -166,14 +166,14 @@ export default function LessonReport() {
     : 0;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
+    <div className="mx-auto max-w-3xl space-y-6">
       <Button variant="ghost" onClick={() => navigate("/lessons")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Retour aux leçons
       </Button>
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight font-display">Rapport de cours</h1>
+        <h1 className="text-2xl tracking-tight font-display">Rapport de cours</h1>
         <p className="text-muted-foreground">
           {subject} — {topic} · Session #{id}
         </p>
@@ -344,7 +344,7 @@ export default function LessonReport() {
                 <Button
                   onClick={handleSubmitReview}
                   disabled={reviewRating === 0 || reviewSaving}
-                  className="gradient-primary text-primary-foreground"
+                 
                 >
                   {reviewSaving ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Envoi...</>

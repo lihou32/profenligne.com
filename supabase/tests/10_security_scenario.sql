@@ -11,7 +11,7 @@ SELECT 'T2 referral cree:', count(*) FROM referrals WHERE referred_user_id='4444
 
 -- Prof s'inscrit comme tuteur
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
-SELECT 'T3 tarif trop bas (attendu erreur)'; SELECT become_tutor(ARRAY['Mathématiques'], 2);
+SELECT 'T3 tarif ignore, prix unique:', become_tutor(ARRAY['Mathématiques'], 2) IS NOT NULL, (SELECT hourly_rate::int FROM tutors WHERE user_id=auth.uid());
 SELECT 'T4 become_tutor ok:', become_tutor(ARRAY['Mathématiques'], 40) IS NOT NULL;
 SELECT 'T5 prof modifie sa note (attendu erreur)'; UPDATE tutors SET rating=5 WHERE user_id=auth.uid();
 UPDATE tutors SET status='online' WHERE user_id=auth.uid();
@@ -21,29 +21,29 @@ RESET ROLE;
 
 -- Elève : réservation sans crédits
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222222',false);
-SELECT 'T8 cout 60min a 40€/h (attendu 8):', lesson_credit_cost('11111111-1111-1111-1111-111111111111', 60);
+SELECT 'T8 prix 1h (attendu 3500 ct):', lesson_price_cents(60);
 SELECT 'T9 sans credits (attendu erreur)'; SELECT book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Intégrales', now()+interval '2 days', 60);
 SELECT 'T10 insert direct lesson (attendu erreur)'; INSERT INTO lessons(student_id,tutor_id,subject,scheduled_at) VALUES (auth.uid(),'11111111-1111-1111-1111-111111111111','Maths',now()+interval '1 day');
-SELECT 'T11 add_credits depuis client (attendu erreur)'; SELECT add_credits(auth.uid(), 100, 'x', 'y');
+SELECT 'T11 add_credits depuis client (attendu erreur)'; SELECT add_credits(auth.uid(), 10000, 'x', 'y');
 SELECT 'T12 XP gratuite (attendu erreur)'; INSERT INTO user_xp(user_id,total_xp) VALUES (auth.uid(), 99999);
 RESET ROLE;
 
 -- Webhook Stripe (service_role) x2 pour idempotence
 SET ROLE service_role;
-SELECT 'T13 achat 10 credits:', add_credits('22222222-2222-2222-2222-222222222222', 10, 'Achat', 'cs_test_1', 45);
-SELECT 'T14 rejeu webhook (attendu 10):', add_credits('22222222-2222-2222-2222-222222222222', 10, 'Achat', 'cs_test_1');
+SELECT 'T13 recharge 50 € (attendu 5000):', add_credits('22222222-2222-2222-2222-222222222222', 5000, 'Recharge', 'cs_test_1', 45);
+SELECT 'T14 rejeu webhook (attendu 5000):', add_credits('22222222-2222-2222-2222-222222222222', 5000, 'Recharge', 'cs_test_1');
 RESET ROLE;
 
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222222',false);
-SELECT 'T15 reservation:', (book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Intégrales', now()+interval '2 days', 60)).credits_cost;
-SELECT 'T16 solde apres (attendu 2):', balance FROM user_credits WHERE user_id=auth.uid();
+SELECT 'T15 reservation:', (book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Intégrales', now()+interval '2 days', 60)).price_cents;
+SELECT 'T16 solde apres (attendu 1500):', balance FROM user_credits WHERE user_id=auth.uid();
 SELECT 'T17 double reservation meme creneau (attendu erreur: deja un cours)'; SELECT book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','x', (SELECT scheduled_at FROM lessons LIMIT 1)+interval '30 min', 30);
 SELECT 'T18 eleve se marque completed (attendu erreur)'; UPDATE lessons SET status='completed';
 SELECT 'T19 eleve modifie notes ok'; UPDATE lessons SET notes='ma note';
 SELECT 'T20 eleve annule pending → rembourse'; SELECT (cancel_lesson(id)).status FROM lessons WHERE status='pending';
-SELECT 'T21 solde (attendu 10):', balance FROM user_credits WHERE user_id=auth.uid();
+SELECT 'T21 solde (attendu 5000):', balance FROM user_credits WHERE user_id=auth.uid();
 -- Nouveau cours, qui commence dans 5 minutes
-SELECT 'T22 resa 2:', (book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Suites', now()+interval '5 minutes', 30)).credits_cost;
+SELECT 'T22 resa 2 en direct (attendu 2500 hors supplement de nuit | t):', (l).price_cents - (l).surcharge_cents, (l).is_instant FROM (SELECT book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','Suites', now()+interval '5 minutes', 30) AS l) s;
 SELECT 'T23 eleve demarre avant confirmation (attendu erreur)'; SELECT start_lesson(id) FROM lessons WHERE status='pending';
 RESET ROLE;
 
@@ -51,7 +51,7 @@ SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111
 SELECT 'T24 prof confirme:', (confirm_lesson(id)).status FROM lessons WHERE status='pending';
 SELECT 'T25 prof demarre:', (start_lesson(id)).status FROM lessons WHERE status='confirmed';
 SELECT 'T26 prof termine:', (complete_lesson(id)).status FROM lessons WHERE status='in_progress';
-SELECT 'T27 gain prof (4 credits*5*0.8=16):', amount FROM tutor_earnings;
+SELECT 'T27 gain prof = 80 % du prix payé (attendu t):', bool_and(e.amount = round(l.price_cents / 100.0 * 0.8, 2)) FROM tutor_earnings e JOIN lessons l ON l.id = e.lesson_id;
 SELECT 'T28 retrait trop gros (attendu erreur)'; SELECT request_withdrawal(500);
 SELECT 'T29 retrait sous minimum (attendu erreur)'; SELECT request_withdrawal(10);
 RESET ROLE;
@@ -71,7 +71,7 @@ SELECT 'T36 hacker devient admin (attendu erreur)'; INSERT INTO user_roles(user_
 RESET ROLE;
 
 -- Filleul : premier cours terminé → bonus des deux côtés
-SET ROLE service_role; SELECT add_credits('44444444-4444-4444-4444-444444444444', 10, 'Achat', 'cs_test_2'); RESET ROLE;
+SET ROLE service_role; SELECT add_credits('44444444-4444-4444-4444-444444444444', 5000, 'Recharge', 'cs_test_2'); RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','44444444-4444-4444-4444-444444444444',false);
 SELECT (book_lesson('11111111-1111-1111-1111-111111111111','Mathématiques','x', now()+interval '3 minutes', 30)).id IS NOT NULL;
 RESET ROLE;
@@ -79,7 +79,7 @@ SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111
 SELECT (confirm_lesson(id)).status, (start_lesson(id)).status, (complete_lesson(id)).status FROM lessons WHERE student_id='44444444-4444-4444-4444-444444444444';
 RESET ROLE;
 SELECT 'T37 parrainage:', status, credits_awarded FROM referrals;
-SELECT 'T38 solde parrain (attendu 10-4+2=8):', balance FROM user_credits WHERE user_id='22222222-2222-2222-2222-222222222222';
+SELECT 'T38 solde parrain = 5000 - prix du cours + 1000 (attendu t):', balance = 6000 - (SELECT price_cents FROM lessons WHERE student_id='22222222-2222-2222-2222-222222222222' AND status='completed') FROM user_credits WHERE user_id='22222222-2222-2222-2222-222222222222';
 SET ROLE anon; SELECT set_config('request.jwt.claim.sub','',false);
 SELECT 'T39 visiteur voit les profs (attendu 1):', count(*) FROM tutors;
 SELECT 'T40 visiteur voit profil prof (attendu 1):', count(*) FROM profiles;
@@ -114,7 +114,7 @@ SELECT 'T50 eleve lit solde d''un prof (attendu erreur)'; SELECT tutor_available
 SELECT 'T51 eleve renomme la matiere (attendu erreur)'; UPDATE lessons SET subject='Hack' WHERE student_id=auth.uid();
 RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
-SELECT 'T52 prof lit son propre solde (attendu 32 = 2 cours):', tutor_available_balance(auth.uid());
+SELECT 'T52 prof lit son propre solde = somme de ses gains (attendu t):', tutor_available_balance(auth.uid()) = (SELECT sum(amount) FROM tutor_earnings WHERE tutor_id=auth.uid());
 RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','55555555-5555-5555-5555-555555555555',false);
 SELECT 'T53 CA reel (45 paye, pas 50):', revenue_this_month FROM admin_stats();

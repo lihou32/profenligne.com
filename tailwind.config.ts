@@ -13,8 +13,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Figtree Variable"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Bricolage Grotesque Variable"', '"Figtree Variable"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -42,12 +42,28 @@ export default {
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
         warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
         info: { DEFAULT: "hsl(var(--info))", foreground: "hsl(var(--info-foreground))" },
-        gold: { DEFAULT: "hsl(var(--gold))", foreground: "hsl(var(--gold-foreground))" },
+        gold: { DEFAULT: "hsl(var(--gold))", foreground: "hsl(var(--gold-foreground))", soft: "hsl(var(--gold-soft))" },
+        ink: { DEFAULT: "hsl(var(--ink))", 2: "hsl(var(--ink-2))", 3: "hsl(var(--ink-3))" },
+        hl: { DEFAULT: "hsl(var(--hl))", soft: "hsl(var(--hl-soft))" },
+        peri: { DEFAULT: "hsl(var(--peri))", soft: "hsl(var(--peri-soft))" },
+        mint: { DEFAULT: "hsl(var(--mint))", soft: "hsl(var(--mint-soft))" },
+        rose: { DEFAULT: "hsl(var(--rose))", soft: "hsl(var(--rose-soft))" },
+        sky: { DEFAULT: "hsl(var(--sky))", soft: "hsl(var(--sky-soft))" },
+        sun: { DEFAULT: "hsl(var(--sun))", soft: "hsl(var(--sun-soft))" },
+        pink: { DEFAULT: "hsl(var(--pink))", soft: "hsl(var(--pink-soft))" },
       },
       borderRadius: {
+        "4xl": "2rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
+        hard: "3px 3px 0 0 hsl(var(--ink-2))",
+        "hard-lg": "6px 6px 0 0 hsl(var(--ink-2))",
+        card: "0 1px 2px hsl(245 30% 13% / 0.05)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

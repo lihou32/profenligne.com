@@ -1,66 +1,40 @@
-import { Video, Clock, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Link } from "react-router-dom"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
+import { Clock, Video } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface ActiveLessonBannerProps {
-  lesson: {
-    id: string;
-    subject: string;
-    topic?: string | null;
-    scheduled_at: string;
-    duration_minutes: number;
-  };
-  role?: "student" | "tutor";
+  lesson: { id: string; subject: string; topic?: string | null; scheduled_at: string; duration_minutes: number }
+  role?: "student" | "tutor"
 }
 
+/** Bandeau prioritaire quand un cours est en cours ou que la salle est ouverte. */
 export function ActiveLessonBanner({ lesson, role = "student" }: ActiveLessonBannerProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-primary/10 p-5 animate-fade-in">
-      {/* Pulsing background glow */}
-      <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-      <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-accent/15 blur-3xl" />
-
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="glass-ink reveal relative overflow-hidden rounded-3xl p-5 sm:p-6">
+      <span aria-hidden className="blob" style={{ width: 260, height: 260, top: -110, right: -60, background: "hsl(46 100% 62%)", opacity: 0.35 }} />
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          {/* Live indicator */}
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/20 border border-primary/30">
-            <Video className="h-7 w-7 text-primary" />
-            <span className="absolute flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary" />
+          <span className="relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10">
+            <Video className="h-6 w-6 text-hl" />
+            <span className="absolute right-2 top-2 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose" />
             </span>
-          </div>
+          </span>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-xs font-bold text-primary uppercase tracking-wide">
-                <Zap className="h-3 w-3" />
-                {role === "tutor" ? "Cours actif" : "Cours en cours"}
-              </span>
-            </div>
-            <h3 className="font-bold text-lg leading-tight">{lesson.subject}</h3>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
-              {lesson.topic && <span>{lesson.topic}</span>}
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {format(new Date(lesson.scheduled_at), "HH:mm", { locale: fr })} · {lesson.duration_minutes}min
-              </span>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-hl">{role === "tutor" ? "Ton cours commence" : "Ta salle est ouverte"}</p>
+            <h3 className="text-xl leading-tight">{lesson.subject}{lesson.topic ? ` · ${lesson.topic}` : ""}</h3>
+            <p className="mt-0.5 flex items-center gap-1.5 text-sm text-white/70">
+              <Clock className="h-3.5 w-3.5" />{format(new Date(lesson.scheduled_at), "HH'h'mm", { locale: fr })} · {lesson.duration_minutes} min
+            </p>
           </div>
         </div>
-
-        <Button
-          asChild
-          className="gradient-primary text-primary-foreground btn-glow font-bold px-6 shrink-0"
-          size="lg"
-        >
-          <Link to={`/room/${lesson.id}`}>
-            <Video className="mr-2 h-5 w-5" />
-            {role === "tutor" ? "Démarrer / Rejoindre" : "Rejoindre maintenant"}
-          </Link>
+        <Button asChild variant="highlight" size="lg" className="shrink-0">
+          <Link to={`/room/${lesson.id}`}><Video /> {role === "tutor" ? "Ouvrir la salle" : "Rejoindre"}</Link>
         </Button>
       </div>
     </div>
-  );
+  )
 }

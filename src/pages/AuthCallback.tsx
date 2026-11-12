@@ -56,7 +56,7 @@ export default function AuthCallback() {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center mesh-bg">
+    <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent mb-4" />
         <p className="text-muted-foreground">Connexion en cours...</p>

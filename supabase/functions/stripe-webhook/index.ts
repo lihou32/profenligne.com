@@ -2,8 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Doit rester aligné avec create-checkout-session et src/lib/credits.ts
-const CREDIT_PACKS: Record<number, number> = { 5: 2500, 10: 4500, 20: 8000 };
+// Doit rester aligné avec create-checkout-session, src/lib/credits.ts et public.topup_bonus_eur
+const TOPUP_BONUS_EUR: Record<number, number> = { 50: 5, 70: 7.5, 100: 15, 150: 25 };
 
 const ok = () =>
   new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
@@ -36,14 +36,14 @@ Deno.serve(async (req: Request) => {
   if (session.payment_status !== "paid") return ok();
 
   const userId = session.metadata?.userId ?? session.client_reference_id;
-  const credits = parseInt(session.metadata?.credits ?? "0", 10);
-  if (!userId || !CREDIT_PACKS[credits]) {
+  const amountEur = Number(session.metadata?.amount_eur ?? "0");
+  if (!userId || !(amountEur in TOPUP_BONUS_EUR)) {
     console.error("Invalid metadata on session", session.id);
     return new Response("Invalid metadata", { status: 400 });
   }
-  // Le montant réellement payé doit correspondre au pack
-  if (session.amount_total !== CREDIT_PACKS[credits]) {
-    console.error(`Amount mismatch on ${session.id}: ${session.amount_total} ≠ ${CREDIT_PACKS[credits]}`);
+  // Le montant réellement payé doit correspondre à la recharge
+  if (session.amount_total !== amountEur * 100) {
+    console.error(`Amount mismatch on ${session.id}: ${session.amount_total} ≠ ${amountEur * 100}`);
     return new Response("Amount mismatch", { status: 400 });
   }
 
@@ -53,11 +53,12 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false } },
   );
 
-  // add_credits est idempotent sur l'id de session Stripe (rejeux sans double crédit)
+  // add_credits (montant en centimes) est idempotent sur l'id de session Stripe
+  const cents = Math.round((amountEur + TOPUP_BONUS_EUR[amountEur]) * 100);
   const { error } = await supabase.rpc("add_credits", {
     p_user_id: userId,
-    p_credits: credits,
-    p_description: `Achat de ${credits} crédits`,
+    p_credits: cents,
+    p_description: `Recharge de ${amountEur} € + ${TOPUP_BONUS_EUR[amountEur]} € offerts (carte)`,
     p_stripe_session_id: session.id,
     p_amount_paid_eur: (session.amount_total ?? 0) / 100,
   });
@@ -66,6 +67,6 @@ Deno.serve(async (req: Request) => {
     return new Response("DB error", { status: 500 }); // Stripe réessaiera
   }
 
-  console.log(`Credited ${credits} to ${userId} (session ${session.id})`);
+  console.log(`Credited ${cents} cents to ${userId} (session ${session.id})`);
   return ok();
 });

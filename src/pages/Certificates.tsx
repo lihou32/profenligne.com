@@ -1,4 +1,5 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/useAuth"
@@ -131,7 +132,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Certificat de réussite</p>
-            <h3 className="font-bold text-lg leading-tight">{cert.subject}</h3>
+            <h3 className="text-lg leading-tight">{cert.subject}</h3>
           </div>
         </div>
         {cert.rating && (
@@ -232,19 +233,8 @@ export default function Certificates() {
   const ratedLessons = lessons.filter((l) => l.rating)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 animate-fade-in pb-16">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="rounded-2xl bg-primary/10 p-4">
-          <Award className="h-8 w-8 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Mes Certificats</h1>
-          <p className="text-muted-foreground mt-0.5">
-            {lessons.length} certificat{lessons.length !== 1 ? "s" : ""} obtenu{lessons.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6 pb-16">
+      <PageHeader eyebrow="Certificats" title="Tes certificats" subtitle={`${lessons.length} certificat${lessons.length !== 1 ? "s" : ""} obtenu${lessons.length !== 1 ? "s" : ""} — un par cours terminé, à télécharger en PDF.`} />
 
       {/* Stats bar */}
       {lessons.length > 0 && (
@@ -294,7 +284,7 @@ export default function Certificates() {
         <Card className="glass-card">
           <CardContent className="py-20 text-center">
             <Award className="mx-auto h-16 w-16 mb-4 text-muted-foreground/20" />
-            <h2 className="text-xl font-semibold mb-2">Aucun certificat pour l'instant</h2>
+            <h2 className="text-xl mb-2">Aucun certificat pour l'instant</h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               Terminez votre premier cours pour obtenir votre certificat de réussite !
             </p>

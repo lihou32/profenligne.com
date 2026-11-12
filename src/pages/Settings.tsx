@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Lock, Trash2, Loader2, AlertTriangle, Bell, Sun, Moon, Palette } from "lucide-react";
+import { Settings, Lock, Trash2, Loader2, AlertTriangle, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/credits";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -22,7 +22,6 @@ export default function SettingsPage() {
   useDocumentTitle("Paramètres");
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,7 +44,6 @@ export default function SettingsPage() {
     setNotifyLessonReminder(profile.notify_lesson_reminder ?? true);
     setNotifyNewMessage(profile.notify_new_message ?? true);
     setNotifyLessonCancelled(profile.notify_lesson_cancelled ?? true);
-    if (profile.theme && profile.theme !== theme) setTheme(profile.theme);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
@@ -68,14 +66,6 @@ export default function SettingsPage() {
     } finally {
       setIsSavingNotifs(false);
     }
-  };
-
-  const handleThemeChange = async (newTheme: string) => {
-    prefsApplied.current = true;
-    setTheme(newTheme);
-    if (!user) return;
-    const { error } = await supabase.from("profiles").update({ theme: newTheme }).eq("user_id", user.id);
-    if (error) toast.error("Thème appliqué, mais non sauvegardé sur votre compte");
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -124,14 +114,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold font-display gradient-text flex items-center gap-2">
-          <Settings className="h-6 w-6" />
-          Paramètres
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Gérez votre compte et vos préférences</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader eyebrow="Réglages" title="Ton compte" subtitle="Notifications, mot de passe et données." />
 
       {/* Account Info */}
       <Card className="glass-card">
@@ -141,42 +125,6 @@ export default function SettingsPage() {
             Votre adresse email : <span className="text-foreground font-medium">{user?.email}</span>
           </CardDescription>
         </CardHeader>
-      </Card>
-
-      {/* Theme */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" />
-            Apparence
-          </CardTitle>
-          <CardDescription>Choisissez votre thème préféré</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-3">
-            <Button
-              variant={theme === "dark" ? "default" : "outline"}
-              onClick={() => handleThemeChange("dark")}
-              className={`flex-1 h-12 rounded-xl font-semibold gap-2 ${
-                theme === "dark" ? "gradient-primary text-primary-foreground" : "bg-secondary/50 border-border/50"
-              }`}
-            >
-              <Moon className="h-4 w-4" aria-hidden="true" />
-              Sombre
-            </Button>
-            <Button
-              variant={theme === "light" ? "default" : "outline"}
-              onClick={() => handleThemeChange("light")}
-              aria-label="Theme clair"
-              className={`flex-1 h-12 rounded-xl font-semibold gap-2 ${
-                theme === "light" ? "gradient-primary text-primary-foreground" : "bg-secondary/50 border-border/50"
-              }`}
-            >
-              <Sun className="h-4 w-4" aria-hidden="true" />
-              Clair
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Notifications */}
@@ -213,7 +161,7 @@ export default function SettingsPage() {
           <Button
             onClick={handleSaveNotifs}
             disabled={isSavingNotifs}
-            className="w-full h-11 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+            className="w-full h-11"
           >
             {isSavingNotifs ? (
               <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sauvegarde...</span>
@@ -266,7 +214,7 @@ export default function SettingsPage() {
             <Button
               type="submit"
               disabled={isChangingPassword}
-              className="w-full h-11 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+              className="w-full h-11"
             >
               {isChangingPassword ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Modification...</span>
@@ -292,7 +240,7 @@ export default function SettingsPage() {
         <CardContent>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full h-11 rounded-xl font-semibold">
+              <Button variant="destructive" className="w-full h-11">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Supprimer mon compte
               </Button>

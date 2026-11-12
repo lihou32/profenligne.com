@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "./Landing";
+import { LogoMark } from "@/components/brand/Logo";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ const Index = () => {
   // While auth resolves, show a brief spinner
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center">
+        <LogoMark className="h-12 w-12 animate-pulse" />
       </div>
     );
   }

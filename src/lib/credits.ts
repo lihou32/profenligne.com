@@ -1,22 +1,20 @@
 /**
  * Règles économiques de Prof en Ligne — côté front.
  *
- * ⚠️ La source de vérité est la base (public.app_setting, book_lesson…).
- * Ces valeurs servent uniquement à l'affichage et doivent rester alignées avec :
- *   - supabase/migrations/20261111000000_security_credits_lifecycle.sql
- *   - supabase/functions/create-checkout-session (CREDIT_PACKS)
- *   - supabase/functions/stripe-webhook (CREDIT_PACKS)
+ * ⚠️ La source de vérité est la base (public.app_setting, lesson_price_cents,
+ * topup_bonus_eur, book_lesson…) : supabase/migrations/20261111000300_fixed_prices_euro_wallet.sql.
+ * Ces valeurs servent uniquement à l'affichage et doivent rester alignées.
+ *
+ * Modèle (Excel « prof en ligne ») : prix identique pour tous les profs selon la
+ * durée, solde en euros rechargeable avec bonus, commission 20 %, frais de retrait 2 %.
+ * En base, le solde et les mouvements sont stockés en centimes.
  */
 
-/** Valeur faciale d'un crédit, en euros. */
-export const CREDIT_VALUE_EUR = 5;
-
-/** Part reversée à la plateforme sur chaque cours. */
+/** Part gardée par la plateforme sur chaque cours. */
 export const PLATFORM_COMMISSION = 0.2;
 
-/** Bornes du tarif horaire d'un professeur. */
-export const MIN_HOURLY_RATE = 10;
-export const MAX_HOURLY_RATE = 150;
+/** Frais prélevés sur un retrait de prof. */
+export const WITHDRAWAL_FEE_RATE = 0.02;
 
 /** Annulation gratuite par l'élève jusqu'à N heures avant le cours. */
 export const FREE_CANCEL_HOURS = 24;
@@ -27,40 +25,93 @@ export const ROOM_OPEN_MINUTES_BEFORE = 15;
 /** Retrait minimum pour un professeur, en euros. */
 export const MIN_WITHDRAWAL_EUR = 20;
 
-/** Bonus de parrainage (crédits, pour chacun des deux). */
-export const REFERRAL_BONUS_CREDITS = 2;
+/** Bonus de parrainage, en euros, pour chacun des deux. */
+export const REFERRAL_BONUS_EUR = 10;
 
+/** Recharge libre : bornes en euros (sans bonus). */
+export const MIN_TOPUP_EUR = 15;
+export const MAX_TOPUP_EUR = 500;
+
+/** Grille de prix unique (en euros), la même pour tous les profs. */
 export const LESSON_DURATIONS = [
-  { value: 20, label: "20 min" },
-  { value: 30, label: "30 min" },
-  { value: 45, label: "45 min" },
-  { value: 60, label: "1 heure" },
-  { value: 90, label: "1h30" },
-  { value: 120, label: "2 heures" },
+  { value: 20, label: "20 min", priceEur: 15 },
+  { value: 30, label: "30 min", priceEur: 25 },
+  { value: 45, label: "45 min", priceEur: 30 },
+  { value: 60, label: "1 heure", priceEur: 35 },
+  { value: 90, label: "1h30", priceEur: 50 },
+  { value: 120, label: "2 heures", priceEur: 65 },
 ] as const;
 
-export interface CreditPack {
-  credits: number;
-  /** Prix en centimes (Stripe). */
-  priceCents: number;
-  description: string;
-  popular?: boolean;
+/** Prix le plus bas (pour « dès 15 € »). */
+export const MIN_LESSON_PRICE_EUR = LESSON_DURATIONS[0].priceEur;
+
+/** Cours en direct (sans réservation) : supplément le soir — même règle que public.late_surcharge_cents. */
+export const LATE_SURCHARGE_EUR = 5;
+export const LATE_START_HOUR = 21;
+export const LATE_END_HOUR = 6;
+/** Un cours « en direct » commence dans les N minutes. */
+export const INSTANT_WINDOW_MINUTES = 15;
+
+/** Heure de Paris (0–23) d'un instant donné. */
+export function parisHour(at: Date = new Date()): number {
+  return Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Paris" }).format(at));
 }
 
-export const CREDIT_PACKS: CreditPack[] = [
-  { credits: 5, priceCents: 2500, description: "Parfait pour essayer" },
-  { credits: 10, priceCents: 4500, description: "Le bon équilibre", popular: true },
-  { credits: 20, priceCents: 8000, description: "Meilleure valeur" },
+/** Supplément d'un cours en direct (5 € entre 21 h et 6 h, heure de Paris), 0 sinon. */
+export function lateSurchargeEur(instant: boolean, at: Date = new Date()): number {
+  if (!instant) return 0;
+  const h = parisHour(at);
+  return h >= LATE_START_HOUR || h < LATE_END_HOUR ? LATE_SURCHARGE_EUR : 0;
+}
+
+/** Prix d'un cours selon sa durée (0 si la durée n'existe pas). */
+export function lessonPriceEur(durationMinutes: number): number {
+  return LESSON_DURATIONS.find((d) => d.value === durationMinutes)?.priceEur ?? 0;
+}
+
+/** Ce que touche le prof sur un cours (avant frais de retrait). */
+export function tutorShareEur(durationMinutes: number): number {
+  return Math.round(lessonPriceEur(durationMinutes) * (1 - PLATFORM_COMMISSION) * 100) / 100;
+}
+
+/** Prix payé pour un cours déjà réservé (centimes en base ; anciens cours en crédits à 5 €). */
+export function lessonPaidEur(lesson: { price_cents?: number | null; credits_cost?: number | null; duration_minutes?: number }): number {
+  if (lesson.price_cents) return lesson.price_cents / 100;
+  if (lesson.credits_cost) return lesson.credits_cost * 5;
+  return lesson.duration_minutes ? lessonPriceEur(lesson.duration_minutes) : 0;
+}
+
+export interface TopupPack {
+  /** Montant payé, en euros. */
+  amountEur: number;
+  /** Montant offert en plus, en euros. */
+  bonusEur: number;
+  description: string;
+  recommended?: boolean;
+}
+
+/** Recharges avec bonus de fidélité — même grille que public.topup_bonus_eur. */
+export const TOPUP_PACKS: TopupPack[] = [
+  { amountEur: 50, bonusEur: 5, description: "Pour démarrer" },
+  { amountEur: 70, bonusEur: 7.5, description: "Deux heures et plus" },
+  { amountEur: 100, bonusEur: 15, description: "Le bon équilibre", recommended: true },
+  { amountEur: 150, bonusEur: 25, description: "Le plus avantageux" },
 ];
 
-/** Prix d'un cours en euros (avant conversion en crédits). */
-export function lessonPriceEur(hourlyRate: number | null | undefined, durationMinutes: number): number {
-  return Math.round((Number(hourlyRate) || 0) * durationMinutes / 60 * 100) / 100;
+/** Bonus offert pour une recharge (0 hors packs). */
+export function topupBonusEur(amountEur: number): number {
+  return TOPUP_PACKS.find((p) => p.amountEur === amountEur)?.bonusEur ?? 0;
 }
 
-/** Coût d'un cours en crédits — même formule que public.lesson_credit_cost. */
-export function lessonCreditCost(hourlyRate: number | null | undefined, durationMinutes: number): number {
-  return Math.max(1, Math.ceil(lessonPriceEur(hourlyRate, durationMinutes) / CREDIT_VALUE_EUR));
+/** Solde (centimes en base) → euros. */
+export function centsToEur(cents: number | null | undefined): number {
+  return (Number(cents) || 0) / 100;
+}
+
+/** Frais et montant net d'un retrait. */
+export function withdrawalBreakdown(amountEur: number): { feeEur: number; netEur: number } {
+  const feeEur = Math.round(amountEur * WITHDRAWAL_FEE_RATE * 100) / 100;
+  return { feeEur, netEur: Math.round((amountEur - feeEur) * 100) / 100 };
 }
 
 /** Code de parrainage — même formule que public.referral_code_for. */
@@ -69,9 +120,9 @@ export function referralCodeFor(userId: string): string {
 }
 
 /** Le cours peut-il encore être annulé avec remboursement par l'élève ? */
-export function isFreeCancellation(status: string, scheduledAt: string, now = Date.now()): boolean {
+export function isFreeCancellation(status: string, scheduledAt: string, now = Date.now(), cancelHours = FREE_CANCEL_HOURS): boolean {
   if (status === "pending") return true;
-  return new Date(scheduledAt).getTime() - now > FREE_CANCEL_HOURS * 3600 * 1000;
+  return new Date(scheduledAt).getTime() - now > cancelHours * 3600 * 1000;
 }
 
 /** La salle est-elle ouverte (on peut démarrer le cours) ? */

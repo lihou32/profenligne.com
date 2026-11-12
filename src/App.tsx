@@ -26,18 +26,21 @@ const Lessons = lazy(() => import("./pages/Lessons"));
 const LiveConnect = lazy(() => import("./pages/LiveConnect"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Help = lazy(() => import("./pages/Help"));
-// Pricing (abonnements) removed — modèle basé sur crédits uniquement
+// Paiement : solde en euros rechargé manuellement (voir /credits)
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const LessonRoom = lazy(() => import("./pages/LessonRoom"));
 const LessonReport = lazy(() => import("./pages/LessonReport"));
 const TutorReviews = lazy(() => import("./pages/TutorReviews"));
 const TutorEarnings = lazy(() => import("./pages/TutorEarnings"));
+const TutorAvailability = lazy(() => import("./pages/TutorAvailability"));
+const Membership = lazy(() => import("./pages/Membership"));
 const BuyCredits = lazy(() => import("./pages/BuyCredits"));
 // AI Tutor removed — feature supprimée du produit
 const Profile = lazy(() => import("./pages/Profile"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const TutorProfile = lazy(() => import("./pages/TutorProfile"));
 const Tutors = lazy(() => import("./pages/Tutors"));
+const JoinLesson = lazy(() => import("./pages/JoinLesson"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Certificates = lazy(() => import("./pages/Certificates"));
@@ -107,6 +110,8 @@ function AppRoutes() {
       {/* ── Public discovery routes (no auth required) ── */}
       <Route element={<PublicLayout />}>
         <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
+        <Route path="/rejoindre" element={<Suspense fallback={<PageLoader />}><JoinLesson /></Suspense>} />
+        <Route path="/abonnement" element={<Suspense fallback={<PageLoader />}><Membership /></Suspense>} />
         <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
       </Route>
 
@@ -120,6 +125,7 @@ function AppRoutes() {
         <Route path="/pricing" element={<Navigate to="/credits" replace />} />
         <Route path="/buy-credits" element={<Navigate to="/credits" replace />} />
         <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
+        <Route path="/disponibilites" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorAvailability /></Suspense></ProtectedRoute>} />
         <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
         <Route path="/credits" element={<Suspense fallback={<PageLoader />}><BuyCredits /></Suspense>} />
         {/* AI Tutor route removed */}

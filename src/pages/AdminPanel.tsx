@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,8 @@ import { useAdminStats } from "@/hooks/useAdminStats";
 import { AdminCharts } from "@/components/admin/AdminCharts";
 import { AdminTutorsTab } from "@/components/admin/AdminTutorsTab";
 import { AdminLessonsTab } from "@/components/admin/AdminLessonsTab";
+import { AdminMembershipTab } from "@/components/admin/AdminMembershipTab";
+import { AdminPaymentsTab } from "@/components/admin/AdminPaymentsTab";
 
 interface Preregistration {
   id: string;
@@ -127,11 +130,8 @@ export default function AdminPanel() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Panel Admin</h1>
-        <p className="text-muted-foreground">Gérez votre plateforme</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader eyebrow="Administration" title="Pilotage" subtitle="Paiements à valider, profs, cours et inscrits." />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (
@@ -141,11 +141,13 @@ export default function AdminPanel() {
 
       <AdminCharts />
 
-      <Tabs defaultValue="preregistrations">
+      <Tabs defaultValue="payments">
         <TabsList>
+          <TabsTrigger value="payments">Paiements</TabsTrigger>
           <TabsTrigger value="preregistrations">Préinscrits</TabsTrigger>
           <TabsTrigger value="tutors">Tuteurs</TabsTrigger>
           <TabsTrigger value="lessons">Cours</TabsTrigger>
+          <TabsTrigger value="membership">Abonnements</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preregistrations" className="mt-4">
@@ -211,12 +213,20 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="payments" className="mt-4">
+          <AdminPaymentsTab />
+        </TabsContent>
+
         <TabsContent value="tutors" className="mt-4">
           <AdminTutorsTab />
         </TabsContent>
 
         <TabsContent value="lessons" className="mt-4">
           <AdminLessonsTab />
+        </TabsContent>
+
+        <TabsContent value="membership" className="mt-4">
+          <AdminMembershipTab />
         </TabsContent>
       </Tabs>
     </div>

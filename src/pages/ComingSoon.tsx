@@ -75,18 +75,18 @@ const ComingSoon = () => {
   ];
 
   return (
-    <div className="min-h-screen mesh-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-[120px] float" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-accent/10 blur-[120px] float" style={{ animationDelay: "3s" }} />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-[120px]" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-accent/10 blur-[120px]" style={{ animationDelay: "3s" }} />
 
       <div className="relative z-10 w-full max-w-lg flex flex-col items-center gap-8">
         {/* Logo / Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center glow">
+          <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
             <Rocket className="w-6 h-6 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl tracking-tight">
             <span className="gradient-text">Prof en Ligne</span>
           </h1>
         </div>
@@ -114,7 +114,7 @@ const ComingSoon = () => {
           {registered ? (
             <div className="flex flex-col items-center gap-4 py-4">
               <CheckCircle className="w-12 h-12 text-success" />
-              <h2 className="text-xl font-semibold text-foreground">Merci pour votre préinscription !</h2>
+              <h2 className="text-xl text-foreground">Merci pour votre préinscription !</h2>
               <p className="text-muted-foreground text-center text-sm">
                 Vous recevrez un email dès le lancement de la plateforme.
               </p>
@@ -122,7 +122,7 @@ const ComingSoon = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="text-center space-y-1">
-                <h2 className="text-xl font-semibold text-foreground">Préinscrivez-vous</h2>
+                <h2 className="text-xl text-foreground">Préinscrivez-vous</h2>
                 <p className="text-sm text-muted-foreground">
                   Soyez parmi les premiers à rejoindre la plateforme
                 </p>
@@ -173,7 +173,7 @@ const ComingSoon = () => {
                 </RadioGroup>
               </div>
 
-              <Button type="submit" className="w-full gradient-primary btn-glow" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Inscription…" : "Je me préinscris"}
               </Button>
             </form>

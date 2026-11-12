@@ -1,15 +1,17 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Video, Search } from "lucide-react";
+import { Video, Search, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useTutors, useLessons, useTutorLessons } from "@/hooks/useData";
 import { useAuth } from "@/hooks/useAuth";
-import { isRoomOpen } from "@/lib/credits";
+import { LATE_START_HOUR, LATE_SURCHARGE_EUR, isRoomOpen } from "@/lib/credits";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BookLessonDialog } from "@/components/lessons/BookLessonDialog";
+import { isTutorLive } from "@/lib/agenda";
 
 const statusColors: Record<string, string> = {
   online: "bg-success",
@@ -17,14 +19,8 @@ const statusColors: Record<string, string> = {
   offline: "bg-muted-foreground",
 };
 
-const statusLabels: Record<string, string> = {
-  online: "En ligne",
-  busy: "Occupé",
-  offline: "Hors ligne",
-};
-
 export default function LiveConnect() {
-  useDocumentTitle("LiveConnect");
+  useDocumentTitle("Cours en direct");
   const { data: tutors } = useTutors();
   const { hasRole } = useAuth();
   const isTutor = hasRole("tutor");
@@ -33,13 +29,17 @@ export default function LiveConnect() {
   const lessons = isTutor ? tutorLessons : studentLessons;
   const [search, setSearch] = useState("");
   const [bookingTutorId, setBookingTutorId] = useState<string | null>(null);
+  const [bookingInstant, setBookingInstant] = useState(false);
 
   // Cours en cours, ou confirmés dont la salle est ouverte
   const activeLessons = (lessons || []).filter(
     (l) => l.status === "in_progress" || (l.status === "confirmed" && isRoomOpen(l.scheduled_at, l.duration_minutes)),
   );
 
-  const filteredTutors = (tutors || []).filter((t) => {
+  // Statut réel : « en ligne » seulement si l'appli du prof donne signe de vie
+  const filteredTutors = (tutors || []).map((t) => ({
+    ...t, status: isTutorLive(t) ? "online" : t.status === "busy" ? "busy" : "offline",
+  })).filter((t) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const name = `${t.profiles?.first_name || ""} ${t.profiles?.last_name || ""}`.toLowerCase();
@@ -54,15 +54,9 @@ export default function LiveConnect() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display"><span className="gradient-text">LiveConnect</span></h1>
-          <p className="text-muted-foreground">Rejoignez un cours en direct ou réservez avec un tuteur</p>
-        </div>
-        <BookLessonDialog />
-      </div>
+      <PageHeader eyebrow="Salle de cours" title="En direct" subtitle={<>Prends un cours tout de suite avec un prof en ligne (⚡ En direct), ou réserve un créneau. Après {LATE_START_HOUR} h, un cours en direct coûte {LATE_SURCHARGE_EUR} € de plus.</>} actions={<Button asChild variant="outline"><Link to="/tutors"><CalendarDays /> Réserver un créneau</Link></Button>} />
 
       {/* Sessions en cours */}
       <Card className="glass-card">
@@ -92,7 +86,7 @@ export default function LiveConnect() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-semibold">{lesson.subject} — {lesson.topic || "Cours"}</h3>
+                  <h3 className="">{lesson.subject} — {lesson.topic || "Cours"}</h3>
                   <p className="text-xs text-muted-foreground">En cours</p>
                 </div>
               </div>
@@ -152,14 +146,15 @@ export default function LiveConnect() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={tutor.status === "online" ? "default" : "secondary"}
-                  disabled={tutor.status === "offline"}
-                  onClick={() => tutor.status !== "offline" && setBookingTutorId(tutor.user_id)}
-                >
-                  {statusLabels[tutor.status] === "En ligne" ? "Réserver" : statusLabels[tutor.status] || "Hors ligne"}
-                </Button>
+                {tutor.status === "online" ? (
+                  <Button size="sm" onClick={() => { setBookingInstant(true); setBookingTutorId(tutor.user_id) }}>
+                    ⚡ En direct
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/tutors/${tutor.user_id}#agenda`}>Voir l'agenda</Link>
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -171,6 +166,7 @@ export default function LiveConnect() {
         <BookLessonDialog
           defaultTutorId={bookingTutorId}
           defaultOpen={true}
+          instant={bookingInstant}
           onClose={() => setBookingTutorId(null)}
         />
       )}

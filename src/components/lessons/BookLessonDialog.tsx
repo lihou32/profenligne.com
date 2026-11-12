@@ -1,18 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Coins, Plus, AlertTriangle } from "lucide-react";
+import { Coins, Plus, AlertTriangle, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateLesson, useTutors } from "@/hooks/useData";
 import { useUserCredits } from "@/hooks/useCredits";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
 import {
-  LESSON_DURATIONS, FREE_CANCEL_HOURS, lessonCreditCost, lessonPriceEur, friendlyError,
+  LESSON_DURATIONS, FREE_CANCEL_HOURS, LATE_START_HOUR, LATE_SURCHARGE_EUR, lateSurchargeEur, lessonPriceEur, formatEur, friendlyError,
 } from "@/lib/credits";
 
 interface BookLessonDialogProps {
@@ -20,6 +20,8 @@ interface BookLessonDialogProps {
   defaultOpen?: boolean;
   onClose?: () => void;
   trigger?: React.ReactNode;
+  /** Cours en direct : il commence maintenant (prof en ligne), sans choisir de date. */
+  instant?: boolean;
 }
 
 const todayLocal = () => {
@@ -28,7 +30,7 @@ const todayLocal = () => {
   return d.toISOString().split("T")[0];
 };
 
-export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose, trigger }: BookLessonDialogProps = {}) {
+export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose, trigger, instant = false }: BookLessonDialogProps = {}) {
   const [open, setOpen] = useState(defaultOpen);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
@@ -38,6 +40,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
   const [tutorId, setTutorId] = useState(defaultTutorId || "");
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const createLesson = useCreateLesson();
   const { data: tutors } = useTutors();
   const { data: credits } = useUserCredits();
@@ -66,10 +69,10 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
   }, [selectedTutor, subject]);
 
   const durationMin = parseInt(duration, 10);
-  const cost = selectedTutor ? lessonCreditCost(selectedTutor.hourly_rate, durationMin) : null;
-  const price = selectedTutor ? lessonPriceEur(selectedTutor.hourly_rate, durationMin) : null;
-  const balance = credits?.balance ?? 0;
-  const missing = cost !== null ? Math.max(0, cost - balance) : 0;
+  const surcharge = lateSurchargeEur(instant);
+  const price = lessonPriceEur(durationMin) + surcharge;
+  const balance = credits?.balanceEur ?? 0;
+  const missing = Math.max(0, Math.round((price - balance) * 100) / 100);
 
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
@@ -91,31 +94,32 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
       toast.error("Connectez-vous pour réserver un cours");
       return;
     }
-    if (!subject || !date || !time || !tutorId) {
+    if (!subject || (!instant && (!date || !time)) || !tutorId) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-    const scheduledAt = new Date(`${date}T${time}`);
+    const scheduledAt = instant ? new Date(Date.now() + 60_000) : new Date(`${date}T${time}`);
     if (Number.isNaN(scheduledAt.getTime()) || scheduledAt <= new Date()) {
       toast.error("La date et l'heure doivent être dans le futur");
       return;
     }
     if (missing > 0) {
-      toast.error(`Il vous manque ${missing} crédit${missing > 1 ? "s" : ""} pour ce cours`);
+      toast.error(`Il te manque ${formatEur(missing)} pour ce cours`);
       return;
     }
     try {
-      await createLesson.mutateAsync({
+      const lesson = await createLesson.mutateAsync({
         tutor_id: tutorId,
         subject,
         topic: topic.trim() || null,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: durationMin,
       });
-      toast.success("Demande envoyée ! Le professeur doit maintenant la confirmer.");
+      toast.success(instant ? "C'est parti ! Ton prof te rejoint dans la salle." : "Demande envoyée ! Si le prof ne la confirme pas avant l'heure, tu es remboursé.");
       setOpen(false);
       onClose?.();
       resetForm();
+      if (instant && lesson?.id) navigate(`/room/${lesson.id}`);
     } catch (error: unknown) {
       toast.error(friendlyError(error, "Erreur lors de la réservation"));
     }
@@ -127,7 +131,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       ) : !defaultTutorId ? (
         <DialogTrigger asChild>
-          <Button className="gradient-primary text-primary-foreground">
+          <Button>
             <Plus className="mr-2 h-4 w-4" />
             Réserver un cours
           </Button>
@@ -136,13 +140,14 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Réserver un cours</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{instant ? <><Zap className="h-5 w-5" /> Cours en direct</> : defaultTutorId ? "Proposer une date" : "Réserver un cours"}</DialogTitle>
           <DialogDescription>
-            Les crédits sont débités à la réservation et remboursés si le professeur refuse,
-            ou si vous annulez plus de {FREE_CANCEL_HOURS} h avant.
+            Le prix est débité de ton solde et remboursé si le prof refuse ou ne confirme pas à temps,
+            ou si tu annules plus de {FREE_CANCEL_HOURS} h avant.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!defaultTutorId && (
           <div className="space-y-2">
             <Label htmlFor="book-tutor">Professeur *</Label>
             <Select value={tutorId} onValueChange={setTutorId}>
@@ -153,7 +158,6 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
                     {t.profiles?.first_name
                       ? `${t.profiles.first_name} ${t.profiles.last_name || ""}`.trim()
                       : "Professeur"}
-                    {" — "}{Number(t.hourly_rate) || 0} €/h
                   </SelectItem>
                 ))}
                 {bookableTutors.length === 0 && (
@@ -162,6 +166,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
               </SelectContent>
             </Select>
           </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="book-subject">Matière *</Label>
@@ -180,6 +185,12 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
             <Input id="book-topic" value={topic} maxLength={200} onChange={(e) => setTopic(e.target.value)} placeholder="Ex : Intégrales, chapitre 5…" />
           </div>
 
+          {instant ? (
+            <p className="rounded-xl border-2 border-ink-2 bg-sun-soft p-3 text-sm font-semibold">
+              ⚡ Le cours commence maintenant : tu arrives dans la salle et ton prof te rejoint.
+              {surcharge > 0 ? ` Après ${LATE_START_HOUR} h, un cours en direct coûte ${LATE_SURCHARGE_EUR} € de plus.` : ""}
+            </p>
+          ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="book-date">Date *</Label>
@@ -190,6 +201,7 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
               <Input id="book-time" type="time" step={900} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
           </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="book-duration">Durée</Label>
@@ -197,30 +209,28 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
               <SelectTrigger id="book-duration"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {LESSON_DURATIONS.map((d) => (
-                  <SelectItem key={d.value} value={String(d.value)}>{d.label}</SelectItem>
+                  <SelectItem key={d.value} value={String(d.value)}>{d.label} · {d.priceEur} €</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {cost !== null && (
+          {price > 0 && (
             <div className={`rounded-xl border p-3 text-sm ${missing > 0 ? "border-destructive/40 bg-destructive/5" : "border-border/50 bg-muted/30"}`}>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 font-medium">
                   <Coins className="h-4 w-4 text-gold" />
-                  Coût : {cost} crédit{cost > 1 ? "s" : ""}
+                  Prix du cours : {formatEur(price)}
                 </span>
-                <span className="text-muted-foreground">
-                  ≈ {price?.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
-                </span>
+                {surcharge > 0 && <span className="text-xs font-semibold text-muted-foreground">dont {formatEur(surcharge)} après {LATE_START_HOUR} h</span>}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Votre solde : {balance} crédit{balance > 1 ? "s" : ""}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Ton solde : {formatEur(balance)}</p>
               {missing > 0 && (
                 <p className="mt-2 text-xs text-destructive">
                   <AlertTriangle className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
-                  Il vous manque {missing} crédit{missing > 1 ? "s" : ""}.{" "}
+                  Il te manque {formatEur(missing)}.{" "}
                   <Link to="/credits" className="font-semibold underline" onClick={() => handleOpenChange(false)}>
-                    Acheter des crédits
+                    Recharger mon solde
                   </Link>
                 </p>
               )}
@@ -229,10 +239,10 @@ export function BookLessonDialog({ defaultTutorId, defaultOpen = false, onClose,
 
           <Button
             type="submit"
-            className="w-full gradient-primary text-primary-foreground"
+            className="w-full"
             disabled={createLesson.isPending || missing > 0}
           >
-            {createLesson.isPending ? "Réservation…" : cost !== null ? `Réserver pour ${cost} crédit${cost > 1 ? "s" : ""}` : "Confirmer la réservation"}
+            {createLesson.isPending ? "Réservation…" : `Réserver pour ${formatEur(price)}`}
           </Button>
         </form>
       </DialogContent>

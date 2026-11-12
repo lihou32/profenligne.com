@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-// Typed via Database - no cast needed
+/**
+ * Solde de l'élève. En base, user_credits.balance et credit_transactions.amount
+ * sont en centimes d'euro ; ce hook expose aussi balanceEur.
+ */
 
 export function useUserCredits() {
   const { user } = useAuth();
@@ -16,7 +19,7 @@ export function useUserCredits() {
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return { ...data, balanceEur: (data?.balance ?? 0) / 100 };
     },
   });
 }
@@ -38,5 +41,5 @@ export function useCreditTransactions() {
   });
 }
 
-// Credits are managed server-side only (via Stripe webhooks or admin RPC).
+// Le solde n'est crédité que côté serveur (validation admin d'un paiement, parrainage, remboursement).
 // No client-side credit manipulation is allowed.

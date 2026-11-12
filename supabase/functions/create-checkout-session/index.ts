@@ -8,8 +8,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Doit rester aligné avec src/lib/credits.ts (CREDIT_PACKS)
-const CREDIT_PACKS: Record<number, number> = { 5: 2500, 10: 4500, 20: 8000 };
+// Recharges du solde par carte (pas encore activé : paiement manuel pour l'instant).
+// Doit rester aligné avec src/lib/credits.ts (TOPUP_PACKS) et public.topup_bonus_eur.
+const TOPUP_BONUS_EUR: Record<number, number> = { 50: 5, 70: 7.5, 100: 15, 150: 25 };
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -37,9 +38,9 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) return json({ error: "Non authentifié" }, 401);
 
-    const { credits } = await req.json().catch(() => ({}));
-    const amount = CREDIT_PACKS[Number(credits)];
-    if (!amount) return json({ error: "Pack invalide" }, 400);
+    const { amount: amountEur } = await req.json().catch(() => ({}));
+    if (!(Number(amountEur) in TOPUP_BONUS_EUR)) return json({ error: "Recharge invalide" }, 400);
+    const amount = Number(amountEur) * 100;
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const appUrl = (Deno.env.get("APP_URL") ?? "https://profenligne.com").replace(/\/$/, "");
@@ -53,16 +54,16 @@ Deno.serve(async (req: Request) => {
         price_data: {
           currency: "eur",
           product_data: {
-            name: `${credits} crédits Prof en Ligne`,
-            description: `Pack de ${credits} crédits — 1 crédit = 5 € de cours`,
+            name: `Recharge Prof en Ligne de ${amountEur} €`,
+            description: `+${TOPUP_BONUS_EUR[Number(amountEur)]} € offerts sur ton solde`,
           },
           unit_amount: amount,
         },
         quantity: 1,
       }],
-      success_url: `${appUrl}/payment/success?credits=${credits}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl}/payment/success?amount=${amountEur}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/payment/cancel`,
-      metadata: { userId: user.id, credits: String(credits) },
+      metadata: { userId: user.id, amount_eur: String(amountEur) },
     });
 
     return json({ url: session.url, sessionId: session.id });

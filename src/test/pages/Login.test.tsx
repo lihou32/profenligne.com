@@ -37,7 +37,7 @@ function renderLogin() {
 describe("Login page — rendu", () => {
   it("affiche le titre de connexion", () => {
     renderLogin()
-    expect(screen.getByText(/connexion/i)).toBeDefined()
+    expect(screen.getByRole("heading", { name: /content de te revoir/i })).toBeDefined()
   })
 
   it("affiche un champ email", () => {
@@ -95,7 +95,7 @@ describe("Login page — soumission", () => {
     mockSignIn.mockResolvedValue(undefined)
     renderLogin()
 
-    fireEvent.change(screen.getByPlaceholderText("votre@email.com"), {
+    fireEvent.change(screen.getByPlaceholderText("toi@email.com"), {
       target: { value: "test@example.com" },
     })
     fireEvent.change(screen.getByPlaceholderText(/••••/), {

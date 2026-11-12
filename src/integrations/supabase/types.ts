@@ -81,6 +81,69 @@ export type Database = {
           },
         ]
       }
+      credit_purchase_requests: {
+        Row: {
+          admin_note: string | null
+          amount_eur: number
+          amount_received_eur: number | null
+          bonus_eur: number
+          created_at: string
+          credits: number | null
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_eur: number
+          amount_received_eur?: number | null
+          bonus_eur?: number
+          created_at?: string
+          credits?: number | null
+          id?: string
+          method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_eur?: number
+          amount_received_eur?: number | null
+          bonus_eur?: number
+          created_at?: string
+          credits?: number | null
+          id?: string
+          method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_purchase_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_purchase_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -133,7 +196,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -141,8 +207,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         Insert: {
@@ -152,7 +220,10 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_express?: boolean
+          is_instant?: boolean
           notes?: string | null
+          price_cents?: number
           rating?: number | null
           room_id?: string | null
           scheduled_at: string
@@ -160,8 +231,10 @@ export type Database = {
           status?: string
           student_id: string
           subject: string
+          surcharge_cents?: number
           topic?: string | null
           tutor_id: string
+          tutor_payout_cents?: number | null
           updated_at?: string
         }
         Update: {
@@ -171,7 +244,10 @@ export type Database = {
           credits_cost?: number
           duration_minutes?: number
           id?: string
+          is_express?: boolean
+          is_instant?: boolean
           notes?: string | null
+          price_cents?: number
           rating?: number | null
           room_id?: string | null
           scheduled_at?: string
@@ -179,8 +255,10 @@ export type Database = {
           status?: string
           student_id?: string
           subject?: string
+          surcharge_cents?: number
           topic?: string | null
           tutor_id?: string
+          tutor_payout_cents?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -199,6 +277,106 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_requests: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          is_express: boolean
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          priority: number
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          is_express?: boolean
+          lesson_id?: string | null
+          matched_at?: string | null
+          note?: string | null
+          priority?: number
+          status?: string
+          student_id: string
+          subject: string
+          topic?: string | null
+          tutor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          is_express?: boolean
+          lesson_id?: string | null
+          matched_at?: string | null
+          note?: string | null
+          priority?: number
+          status?: string
+          student_id?: string
+          subject?: string
+          topic?: string | null
+          tutor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_requests_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_requests_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_offers: {
+        Row: {
+          body: string | null
+          code: string | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          plans: string[]
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          code?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plans?: string[]
+          title: string
+        }
+        Update: {
+          body?: string | null
+          code?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plans?: string[]
+          title?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -240,6 +418,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          account_holder: string | null
+          bic: string | null
+          iban: string | null
+          id: number
+          instructions: string | null
+          revolut_tag: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          account_holder?: string | null
+          bic?: string | null
+          iban?: string | null
+          id?: number
+          instructions?: string | null
+          revolut_tag?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          account_holder?: string | null
+          bic?: string | null
+          iban?: string | null
+          id?: number
+          instructions?: string | null
+          revolut_tag?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
       }
       preregistrations: {
         Row: {
@@ -411,21 +622,31 @@ export type Database = {
             referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reviews_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
+      }
+      revision_periods: {
+        Row: {
+          created_at: string
+          ends_on: string
+          id: string
+          label: string
+          starts_on: string
+        }
+        Insert: {
+          created_at?: string
+          ends_on: string
+          id?: string
+          label: string
+          starts_on: string
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string
+          id?: string
+          label?: string
+          starts_on?: string
+        }
+        Relationships: []
       }
       room_messages: {
         Row: {
@@ -453,6 +674,79 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          plan: string
+          starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          plan: string
+          starts_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          plan?: string
+          starts_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutor_availability: {
+        Row: {
+          created_at: string
+          end_minute: number
+          id: string
+          start_minute: number
+          tutor_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_minute: number
+          id?: string
+          start_minute: number
+          tutor_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_minute?: number
+          id?: string
+          start_minute?: number
+          tutor_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_availability_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tutor_earnings: {
         Row: {
@@ -527,9 +821,12 @@ export type Database = {
       tutors: {
         Row: {
           created_at: string
+          headline: string | null
           hourly_rate: number | null
           id: string
           is_suspended: boolean
+          last_seen_at: string | null
+          levels: string[]
           rating: number | null
           status: string
           subjects: string[]
@@ -539,9 +836,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          headline?: string | null
           hourly_rate?: number | null
           id?: string
           is_suspended?: boolean
+          last_seen_at?: string | null
+          levels?: string[]
           rating?: number | null
           status?: string
           subjects?: string[]
@@ -551,9 +851,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          headline?: string | null
           hourly_rate?: number | null
           id?: string
           is_suspended?: boolean
+          last_seen_at?: string | null
+          levels?: string[]
           rating?: number | null
           status?: string
           subjects?: string[]
@@ -676,7 +979,9 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          fee_eur: number
           id: string
+          net_amount_eur: number | null
           status: string
           stripe_transfer_id: string | null
           tutor_id: string
@@ -685,7 +990,9 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          fee_eur?: number
           id?: string
+          net_amount_eur?: number | null
           status?: string
           stripe_transfer_id?: string | null
           tutor_id: string
@@ -694,7 +1001,9 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          fee_eur?: number
           id?: string
+          net_amount_eur?: number | null
           status?: string
           stripe_transfer_id?: string | null
           tutor_id?: string
@@ -742,6 +1051,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_confirm_credit_purchase: {
+        Args: {
+          p_request_id: string
+          p_amount_received_eur?: number
+        }
+        Returns: number
+      }
+      admin_list_credit_purchases: {
+        Args: {
+          p_status?: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          amount_eur: number
+          bonus_eur: number
+          method: string
+          reference: string
+          status: string
+          amount_received_eur: number
+          admin_note: string
+          created_at: string
+          processed_at: string
+        }[]
+      }
       admin_list_lessons: {
         Args: {
           p_status?: string
@@ -777,6 +1114,24 @@ export type Database = {
           created_at: string
         }[]
       }
+      admin_membership_stats: {
+        Args: never
+        Returns: {
+          plus_active: number
+          bac_active: number
+          ending_7d: number
+          express_this_month: number
+          express_cost_eur: number
+          revenue_30d_eur: number
+        }[]
+      }
+      admin_reject_credit_purchase: {
+        Args: {
+          p_request_id: string
+          p_note?: string
+        }
+        Returns: undefined
+      }
       admin_set_tutor_suspended: {
         Args: {
           p_user_id: string
@@ -797,7 +1152,51 @@ export type Database = {
           preregistrations: number
         }[]
       }
+      admin_update_payment_settings: {
+        Args: {
+          p_whatsapp_number: string
+          p_account_holder: string
+          p_iban: string
+          p_bic: string
+          p_revolut_tag: string
+          p_instructions: string
+        }
+        Returns: {
+          account_holder: string | null
+          bic: string | null
+          iban: string | null
+          id: number
+          instructions: string | null
+          revolut_tag: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       app_setting: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
+      app_setting_agenda: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
+      app_setting_live: {
+        Args: {
+          _key: string
+        }
+        Returns: number
+      }
+      app_setting_member: {
         Args: {
           _key: string
         }
@@ -806,7 +1205,7 @@ export type Database = {
       become_tutor: {
         Args: {
           p_subjects: string[]
-          p_hourly_rate: number
+          p_hourly_rate?: number
         }
         Returns: string
       }
@@ -825,7 +1224,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -833,8 +1235,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -843,6 +1247,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      cancel_credit_purchase: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: undefined
       }
       cancel_lesson: {
         Args: {
@@ -855,7 +1265,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -863,8 +1276,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -873,6 +1288,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      cancel_live_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: undefined
       }
       complete_lesson: {
         Args: {
@@ -885,7 +1306,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -893,8 +1317,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -915,7 +1341,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -923,8 +1352,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -941,9 +1372,70 @@ export type Database = {
         }
         Returns: boolean
       }
-      lesson_credit_cost: {
+      join_express_queue: {
         Args: {
-          _tutor_id: string
+          p_subject: string
+          p_topic: string
+        }
+        Returns: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          is_express: boolean
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          priority: number
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      join_live_queue: {
+        Args: {
+          p_subject: string
+          p_topic: string
+          p_duration_minutes: number
+        }
+        Returns: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          is_express: boolean
+          lesson_id: string | null
+          matched_at: string | null
+          note: string | null
+          priority: number
+          status: string
+          student_id: string
+          subject: string
+          topic: string | null
+          tutor_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      late_surcharge_cents: {
+        Args: {
+          _starts_at: string
+          _instant: boolean
+        }
+        Returns: number
+      }
+      lesson_price_cents: {
+        Args: {
           _duration: number
         }
         Returns: number
@@ -955,11 +1447,81 @@ export type Database = {
         }
         Returns: number
       }
+      live_stats: {
+        Args: never
+        Returns: {
+          tutors_online: number
+          students_waiting: number
+        }[]
+      }
+      my_live_request: {
+        Args: never
+        Returns: {
+          id: string
+          status: string
+          subject: string
+          duration_minutes: number
+          lesson_id: string
+          note: string
+          created_at: string
+          queue_position: number
+          tutors_online: number
+          priority: unknown
+          is_express: boolean
+        }[]
+      }
+      my_membership: {
+        Args: never
+        Returns: {
+          plan: string
+          ends_at: string
+          active: boolean
+          revision_label: string
+          revision_ends_on: unknown
+          express_left_today: number
+          cancel_hours: number
+        }[]
+      }
+      my_plan: {
+        Args: never
+        Returns: string
+      }
       referral_code_for: {
         Args: {
           _user_id: string
         }
         Returns: string
+      }
+      refresh_lessons: {
+        Args: never
+        Returns: number
+      }
+      request_topup: {
+        Args: {
+          p_amount_eur: number
+          p_method: string
+        }
+        Returns: {
+          admin_note: string | null
+          amount_eur: number
+          amount_received_eur: number | null
+          bonus_eur: number
+          created_at: string
+          credits: number | null
+          id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reference: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_purchase_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       request_withdrawal: {
         Args: {
@@ -968,7 +1530,9 @@ export type Database = {
         Returns: {
           amount: number
           created_at: string
+          fee_eur: number
           id: string
+          net_amount_eur: number | null
           status: string
           stripe_transfer_id: string | null
           tutor_id: string
@@ -981,6 +1545,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_my_availability: {
+        Args: {
+          p_ranges: Json
+        }
+        Returns: number
+      }
       start_lesson: {
         Args: {
           p_lesson_id: string
@@ -992,7 +1562,10 @@ export type Database = {
           credits_cost: number
           duration_minutes: number
           id: string
+          is_express: boolean
+          is_instant: boolean
           notes: string | null
+          price_cents: number
           rating: number | null
           room_id: string | null
           scheduled_at: string
@@ -1000,8 +1573,10 @@ export type Database = {
           status: string
           student_id: string
           subject: string
+          surcharge_cents: number
           topic: string | null
           tutor_id: string
+          tutor_payout_cents: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1034,11 +1609,111 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      subscribe: {
+        Args: {
+          p_plan: string
+        }
+        Returns: {
+          created_at: string
+          ends_at: string
+          id: string
+          plan: string
+          starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      topup_bonus_eur: {
+        Args: {
+          _amount: number
+        }
+        Returns: number
+      }
+      tutor_accept_live_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: {
+          cancelled_by: string | null
+          completed_at: string | null
+          created_at: string
+          credits_cost: number
+          duration_minutes: number
+          id: string
+          is_express: boolean
+          is_instant: boolean
+          notes: string | null
+          price_cents: number
+          rating: number | null
+          room_id: string | null
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          student_id: string
+          subject: string
+          surcharge_cents: number
+          topic: string | null
+          tutor_id: string
+          tutor_payout_cents: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lessons"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       tutor_available_balance: {
         Args: {
           _tutor_id: string
         }
         Returns: number
+      }
+      tutor_heartbeat: {
+        Args: never
+        Returns: string
+      }
+      tutor_live_queue: {
+        Args: never
+        Returns: {
+          id: string
+          subject: string
+          topic: string
+          duration_minutes: number
+          student_first_name: string
+          created_at: string
+          price_eur: number
+          mine: boolean
+          is_express: boolean
+          payout_eur: number
+        }[]
+      }
+      tutor_open_slots: {
+        Args: {
+          p_tutor: string
+          p_from: unknown
+          p_days: number
+          p_duration: number
+        }
+        Returns: {
+          starts_at: string
+        }[]
+      }
+      tutors_next_slot: {
+        Args: {
+          p_duration?: number
+        }
+        Returns: {
+          tutor_id: string
+          next_slot: string
+        }[]
       }
     }
     Enums: {

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, Mail, MessageCircle } from "lucide-react";
@@ -8,21 +9,18 @@ import { Button } from "@/components/ui/button";
 const faqs = [
   { q: "Comment réserver un cours ?", a: "Rendez-vous dans la section 'Mes Cours' et cliquez sur 'Réserver un cours'. Sélectionnez le tuteur, la matière et le créneau qui vous convient." },
   { q: "Comment fonctionne le LiveConnect ?", a: "LiveConnect vous permet de rejoindre des cours en visioconférence. Vous pouvez voir les sessions en cours ou en démarrer une nouvelle." },
-  { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Tant que le professeur n'a pas confirmé, ou jusqu'à 24 h avant le cours, vos crédits sont intégralement remboursés. Si le professeur refuse ou annule, vous êtes toujours remboursé." },
-  { q: "Comment fonctionne le système de crédits ?", a: "Les crédits permettent de réserver des cours. 1 crédit vaut 5 € de cours : un cours d'1 h avec un professeur à 35 €/h coûte donc 7 crédits. Les crédits sont débités à la réservation, remboursés si le professeur refuse ou si vous annulez plus de 24 h avant, et n'expirent jamais." },
+  { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Tant que le professeur n'a pas confirmé, ou jusqu'à 24 h avant le cours, le prix du cours est intégralement remis sur votre solde. Si le professeur refuse ou annule, vous êtes toujours remboursé." },
+  { q: "Combien coûte un cours ?", a: "Le prix est le même chez tous les professeurs et dépend seulement de la durée : 20 min 15 €, 30 min 25 €, 45 min 30 €, 1 h 35 €, 1 h 30 50 €, 2 h 65 €. Il est débité de votre solde à la réservation, remboursé si le professeur refuse ou si vous annulez plus de 24 h avant. Votre solde n'expire jamais." },
   { q: "Comment gagner des points XP ?", a: "Chaque cours terminé rapporte 100 XP aux élèves et 50 XP aux professeurs. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
-  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent avec votre lien et terminent leur premier cours, vous recevez chacun 2 crédits offerts." },
-  { q: "Quels sont les moyens de paiement acceptés ?", a: "Nous acceptons les cartes bancaires (Visa, Mastercard) via notre partenaire de paiement sécurisé Stripe." },
+  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent avec votre lien et terminent leur premier cours, vous recevez chacun 10 € sur votre solde." },
+  { q: "Quels sont les moyens de paiement acceptés ?", a: "Vous pouvez payer par WhatsApp, par virement bancaire ou par Revolut. Choisissez une recharge (50 € → +5 € offerts, 70 € → +7,50 €, 100 € → +15 €, 150 € → +25 €) ou un montant libre, puis suivez les instructions avec votre référence : votre solde est crédité dès réception du paiement, en général sous 24 h." },
 ];
 
 export default function Help() {
   useDocumentTitle("Centre d'aide");
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Centre d'aide</h1>
-        <p className="mt-2 text-muted-foreground">Trouvez des réponses à vos questions</p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader eyebrow="Aide" title="Comment on peut t'aider ?" subtitle="Les réponses aux questions les plus fréquentes." />
 
       <Card className="glass-card">
         <CardHeader>
@@ -47,7 +45,7 @@ export default function Help() {
 
       <Card className="glass-card">
         <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
-          <h3 className="font-semibold">Besoin d'aide supplémentaire ?</h3>
+          <h3 className="">Besoin d'aide supplémentaire ?</h3>
           <p className="text-sm text-muted-foreground">Notre équipe est disponible pour vous aider</p>
           <div className="flex gap-3">
             <Button variant="outline" asChild>
@@ -56,7 +54,7 @@ export default function Help() {
                 Email
               </a>
             </Button>
-            <Button className="gradient-primary text-primary-foreground" asChild>
+            <Button asChild>
               <a href="mailto:support@profenligne.fr?subject=Aide - Prof en Ligne">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Nous contacter

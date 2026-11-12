@@ -152,7 +152,7 @@ export default function LessonRoom() {
   if (authorized === false) return null;
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-8rem)] gap-4 animate-fade-in">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-8rem)] gap-4">
       {/* Zone vidéo principale */}
       <div className="flex flex-1 flex-col gap-4">
 
@@ -198,7 +198,7 @@ export default function LessonRoom() {
                   : "Cliquez sur « Démarrer le cours » pour lancer la visio. L'autre participant recevra une notification."}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <Button onClick={handleStartCall} className="gradient-primary text-primary-foreground" size="lg" disabled={startLesson.isPending}>
+                <Button onClick={handleStartCall} size="lg" disabled={startLesson.isPending}>
                   {startLesson.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
                   {lessonInfo?.status === "in_progress" ? "Rejoindre le cours" : "Démarrer le cours"}
                 </Button>
@@ -288,7 +288,7 @@ export default function LessonRoom() {
       {whiteboardOpen && (
         <Card className="glass-card flex flex-col w-full lg:w-[min(520px,40vw)] h-[60vh] min-h-[320px] lg:h-auto shrink-0">
           <div className="border-b p-3">
-            <h3 className="text-sm font-semibold">Tableau blanc collaboratif</h3>
+            <h3 className="text-sm">Tableau blanc collaboratif</h3>
           </div>
           <div className="flex-1 p-3 min-h-0">
             <Whiteboard roomId={roomId} />

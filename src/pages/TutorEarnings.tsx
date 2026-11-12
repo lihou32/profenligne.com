@@ -1,4 +1,5 @@
-import { MIN_WITHDRAWAL_EUR, formatEur, friendlyError } from "@/lib/credits";
+import { MIN_WITHDRAWAL_EUR, WITHDRAWAL_FEE_RATE, formatEur, friendlyError, withdrawalBreakdown } from "@/lib/credits";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,16 +22,17 @@ export default function TutorEarnings() {
       toast.error(`Retrait possible à partir de ${formatEur(MIN_WITHDRAWAL_EUR)} disponibles`);
       return;
     }
+    const { feeEur, netEur } = withdrawalBreakdown(balance.available);
     requestWithdrawal.mutate(balance.available, {
-      onSuccess: () => toast.success("Demande de retrait envoyée !"),
+      onSuccess: () => toast.success(`Demande envoyée : ${formatEur(netEur)} te seront versés (frais ${formatEur(feeEur)}).`),
       onError: (e) => toast.error(friendlyError(e, "Erreur lors de la demande")),
     });
   };
 
   const statCards = [
-    { label: "Disponible au retrait", value: formatEur(balance?.available), icon: Wallet, color: "from-success to-info" },
-    { label: "Total gagné", value: formatEur(balance?.total), icon: TrendingUp, color: "from-primary to-accent" },
-    { label: "Déjà versé", value: formatEur(balance?.paid), icon: DollarSign, color: "from-gold to-warning" },
+    { label: "Disponible au retrait", value: formatEur(balance?.available), icon: Wallet, color: "bg-mint-soft text-mint" },
+    { label: "Total gagné", value: formatEur(balance?.total), icon: TrendingUp, color: "bg-peri-soft text-peri" },
+    { label: "Déjà versé", value: formatEur(balance?.paid), icon: DollarSign, color: "bg-hl-soft text-hl" },
   ];
 
   const statusColors: Record<string, string> = {
@@ -41,16 +43,11 @@ export default function TutorEarnings() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" /> Mes Revenus
-          </h1>
-          <p className="text-muted-foreground">Suivez vos gains et demandez un retrait</p>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader eyebrow="Revenus" title="Ce que tu as gagné" subtitle={`Tu touches 80 % du prix de chaque cours. Retrait dès ${formatEur(MIN_WITHDRAWAL_EUR)}, avec ${Math.round(WITHDRAWAL_FEE_RATE * 100)} % de frais de retrait.`} />
         <Button
-          className="rounded-xl gradient-primary text-primary-foreground btn-glow"
+         
           onClick={handleWithdraw}
           disabled={requestWithdrawal.isPending || !balance || balance.available < MIN_WITHDRAWAL_EUR}
         >
@@ -65,12 +62,12 @@ export default function TutorEarnings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold font-display mt-1">
+                  <p className="text-3xl font-medium font-display mt-1">
                     {isLoading ? <span className="shimmer inline-block h-8 w-16 rounded" /> : stat.value}
                   </p>
                 </div>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
-                  <stat.icon className="h-6 w-6 text-primary-foreground" />
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${stat.color}`}>
+                  <stat.icon className="h-6 w-6 " />
                 </div>
               </div>
             </CardContent>
@@ -120,6 +117,7 @@ export default function TutorEarnings() {
                 <div key={w.id} className="flex items-center justify-between rounded-xl border border-border/30 p-3">
                   <div>
                     <p className="text-sm font-semibold">{formatEur(w.amount)}</p>
+                    {Number(w.fee_eur) > 0 && <p className="text-xs text-muted-foreground">Versé : {formatEur(w.net_amount_eur)} · frais {formatEur(w.fee_eur)}</p>}
                     <p className="text-xs text-muted-foreground">{format(new Date(w.created_at), "dd MMM yyyy", { locale: fr })}</p>
                   </div>
                   <Badge variant="outline" className={`rounded-full ${statusColors[w.status] || ""}`}>{w.status}</Badge>

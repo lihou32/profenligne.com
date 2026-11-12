@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/brand/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import type { ComponentType } from "react";
 import { Bell, BookOpen, Video, Bot, CheckCircle, CreditCard, Star, Gift } from "lucide-react";
@@ -29,19 +30,11 @@ export default function Notifications() {
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display flex items-center gap-2">
-            <Bell className="h-7 w-7 text-primary" />
-            <span className="gradient-text">Notifications</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {unreadCount > 0 ? `${unreadCount} non lue(s)` : "Aucune nouvelle notification"}
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader eyebrow="Notifications" title="Quoi de neuf ?" subtitle={unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Tu es à jour."} />
         {unreadCount > 0 && (
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => markRead.mutate()} disabled={markRead.isPending}>
+          <Button variant="outline" size="sm" onClick={() => markRead.mutate()} disabled={markRead.isPending}>
             Tout marquer comme lu
           </Button>
         )}

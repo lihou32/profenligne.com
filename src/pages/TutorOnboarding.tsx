@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Backdrop } from "@/components/brand/Backdrop";
+import { Logo } from "@/components/brand/Logo";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import {
   GraduationCap, BookOpen, Euro, Sparkles, Loader2,
   ChevronRight, ChevronLeft, CheckCircle,
@@ -15,13 +16,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SUBJECTS } from "@/lib/constants";
-import { CREDIT_VALUE_EUR, MAX_HOURLY_RATE, MIN_HOURLY_RATE, PLATFORM_COMMISSION, formatEur, friendlyError, lessonCreditCost } from "@/lib/credits";
+import { LEVELS } from "@/lib/agenda";
+import { LESSON_DURATIONS, MIN_WITHDRAWAL_EUR, PLATFORM_COMMISSION, WITHDRAWAL_FEE_RATE, formatEur, friendlyError, tutorShareEur } from "@/lib/credits";
 
 const MAX_SUBJECTS = 6;
 
 const STEPS = [
   { title: "Matières", icon: BookOpen },
-  { title: "Tarifs", icon: Euro },
+  { title: "Revenus", icon: Euro },
   { title: "Profil", icon: GraduationCap },
 ];
 
@@ -38,13 +40,13 @@ export default function TutorOnboarding() {
       .filter((x) => (SUBJECTS as readonly string[]).includes(x))
       .slice(0, MAX_SUBJECTS),
   );
-  const [hourlyRate, setHourlyRate] = useState(25);
   const [bio, setBio] = useState(profile?.bio || "");
+  const [levels, setLevels] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canNext = () => {
-    if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS;
-    if (step === 1) return hourlyRate >= MIN_HOURLY_RATE && hourlyRate <= MAX_HOURLY_RATE;
+    if (step === 0) return selectedSubjects.length > 0 && selectedSubjects.length <= MAX_SUBJECTS && levels.length > 0;
+    if (step === 1) return true;
     if (step === 2) return bio.trim().length >= 20;
     return false;
   };
@@ -65,15 +67,15 @@ export default function TutorOnboarding() {
       // Call the become_tutor RPC
       const { error } = await supabase.rpc("become_tutor", {
         p_subjects: selectedSubjects,
-        p_hourly_rate: hourlyRate,
       });
 
       if (error) throw error;
+      await supabase.from("tutors").update({ levels }).eq("user_id", user.id);
 
-      toast.success("Bienvenue parmi les professeurs ! 🎉");
+      toast.success("Bienvenue parmi les professeurs ! Dernière étape : ouvre tes créneaux.");
 
-      // Force a page reload to refresh auth context (roles)
-      window.location.href = "/dashboard";
+      // Recharge la page pour rafraîchir les rôles, puis ouvre l'agenda
+      window.location.href = "/disponibilites";
     } catch (err: unknown) {
       toast.error(friendlyError(err, "Erreur lors de la création du profil professeur"));
     } finally {
@@ -82,20 +84,14 @@ export default function TutorOnboarding() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden mesh-bg">
-      <div className="absolute top-[-10%] left-[-10%] h-[450px] w-[450px] rounded-full bg-gradient-to-br from-accent/15 to-primary/10 blur-[90px] float" />
-      <div className="absolute bottom-[-10%] right-[-10%] h-[400px] w-[400px] rounded-full bg-gradient-to-tr from-info/15 to-primary/10 blur-[80px] float" style={{ animationDelay: "3s" }} />
-
-      <div className="relative w-full max-w-lg animate-scale-in">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <Backdrop variant="landing" />
+      <div className="relative w-full max-w-lg animate-[fadeup_.6s_cubic-bezier(.2,.7,.2,1)]">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 gradient-primary inline-flex h-16 w-16 items-center justify-center rounded-2xl glow">
-            <GraduationCap className="h-9 w-9 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold font-display gradient-text">Devenir Professeur</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Complétez votre profil pour apparaître dans la marketplace
-          </p>
+          <div className="mb-6 flex justify-center"><Logo /></div>
+          <h1 className="text-[2rem] leading-tight">Ton profil de <span className="hl-mark">prof</span></h1>
+          <p className="mt-1 text-muted-foreground">Trois étapes, et tu apparais dans la liste des profs.</p>
         </div>
 
         {/* Stepper */}
@@ -105,10 +101,10 @@ export default function TutorOnboarding() {
               <div
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   i === step
-                    ? "gradient-primary text-primary-foreground shadow-lg"
+                    ? "bg-primary text-white shadow-hard"
                     : i < step
-                    ? "bg-success/20 text-success"
-                    : "bg-secondary/50 text-muted-foreground"
+                    ? "bg-mint-soft text-success"
+                    : "bg-white/60 text-muted-foreground"
                 }`}
               >
                 {i < step ? (
@@ -125,15 +121,15 @@ export default function TutorOnboarding() {
           ))}
         </div>
 
-        <Card className="glass-card">
+        <Card className="glass-strong">
           <CardContent className="p-6 md:p-8">
             {/* Step 0: Subjects */}
             {step === 0 && (
-              <div className="space-y-5 animate-fade-in">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Quelles matières enseignez-vous ?</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Sélectionnez au moins une matière
+                    Au moins une matière et un niveau
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -167,69 +163,58 @@ export default function TutorOnboarding() {
                     {selectedSubjects.length} matière{selectedSubjects.length > 1 ? "s" : ""} sélectionnée{selectedSubjects.length > 1 ? "s" : ""}
                   </p>
                 )}
+                <div className="space-y-2 pt-2">
+                  <p className="text-center text-sm font-semibold text-ink-2">Et pour quels niveaux ?</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {LEVELS.map((lv) => {
+                      const on = levels.includes(lv);
+                      return (
+                        <button key={lv} type="button" aria-pressed={on}
+                          onClick={() => setLevels((prev) => on ? prev.filter((x) => x !== lv) : [...prev, lv])}
+                          className={`rounded-full border-2 border-ink-2 px-3.5 py-1.5 text-sm font-bold transition ${on ? "bg-sun" : "bg-white hover:bg-peri-soft"}`}>
+                          {lv}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Step 1: Hourly Rate */}
             {step === 1 && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
-                  <CardTitle className="text-xl">Quel est votre tarif horaire ?</CardTitle>
+                  <CardTitle className="text-xl">Un prix unique, la même grille pour tous</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Vous pourrez le modifier à tout moment
+                    Pas de tarif à fixer : l'élève paie selon la durée, et vous touchez {Math.round((1 - PLATFORM_COMMISSION) * 100)} %.
                   </p>
                 </div>
-
-                <div className="flex flex-col items-center gap-6 py-4">
-                  <div className="text-center">
-                    <span className="text-5xl font-bold gradient-text tabular-nums">{hourlyRate}</span>
-                    <span className="text-2xl text-muted-foreground ml-1">€/h</span>
-                  </div>
-
-                  <div className="w-full max-w-xs space-y-2">
-                    <Slider
-                      value={[hourlyRate]}
-                      onValueChange={([v]) => setHourlyRate(v)}
-                      min={MIN_HOURLY_RATE}
-                      max={80}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{MIN_HOURLY_RATE}€</span>
-                      <span>80€ (jusqu'à {MAX_HOURLY_RATE}€ en saisie)</span>
-                    </div>
-                  </div>
-
-                  <div className="text-center space-y-1">
-                    <Label className="text-xs text-muted-foreground">Ou saisissez manuellement</Label>
-                    <Input
-                      type="number"
-                      min={MIN_HOURLY_RATE}
-                      max={MAX_HOURLY_RATE}
-                      value={hourlyRate}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        if (v >= 0 && v <= MAX_HOURLY_RATE) setHourlyRate(v);
-                      }}
-                      className="w-24 h-10 text-center rounded-xl bg-secondary/50 border-border/50 mx-auto"
-                    />
-                  </div>
+                <div className="overflow-hidden rounded-xl border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary text-left text-xs text-muted-foreground">
+                      <tr><th className="px-3 py-2 font-medium">Durée</th><th className="px-3 py-2 font-medium">L'élève paie</th><th className="px-3 py-2 font-medium">Vous touchez</th></tr>
+                    </thead>
+                    <tbody>
+                      {LESSON_DURATIONS.map((d) => (
+                        <tr key={d.value} className="border-t">
+                          <td className="px-3 py-2">{d.label}</td>
+                          <td className="px-3 py-2">{formatEur(d.priceEur)}</td>
+                          <td className="px-3 py-2 font-semibold text-ink-2">{formatEur(tutorShareEur(d.value))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-
-                <div className="glass-card p-3 rounded-xl">
-                  <p className="text-xs text-muted-foreground text-center">
-                    Pour 1 h de cours, l'élève paie <strong className="text-foreground">{lessonCreditCost(hourlyRate, 60)} crédits</strong>{" "}
-                    et vous touchez <strong className="text-foreground">{formatEur(lessonCreditCost(hourlyRate, 60) * CREDIT_VALUE_EUR * (1 - PLATFORM_COMMISSION))}</strong>{" "}
-                    (commission plateforme {Math.round(PLATFORM_COMMISSION * 100)} %).
-                  </p>
-                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Retrait dès {MIN_WITHDRAWAL_EUR} € depuis votre espace, avec {Math.round(WITHDRAWAL_FEE_RATE * 100)} % de frais de retrait.
+                </p>
               </div>
             )}
 
             {/* Step 2: Bio */}
             {step === 2 && (
-              <div className="space-y-5 animate-fade-in">
+              <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <CardTitle className="text-xl">Présentez-vous aux élèves</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -262,7 +247,7 @@ export default function TutorOnboarding() {
                     ))}
                   </div>
                   <p className="text-sm text-foreground">
-                    Tarif : <strong>{hourlyRate}€/h</strong>
+                    Prix : <strong>grille unique, dès {formatEur(LESSON_DURATIONS[0].priceEur)} le cours</strong>
                   </p>
                 </div>
               </div>
@@ -285,7 +270,7 @@ export default function TutorOnboarding() {
                 <Button
                   onClick={() => setStep(step + 1)}
                   disabled={!canNext()}
-                  className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+                  className="flex-1" size="lg"
                 >
                   Suivant
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -294,7 +279,7 @@ export default function TutorOnboarding() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!canNext() || isSubmitting}
-                  className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground font-semibold btn-glow"
+                  className="flex-1 h-12"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">

@@ -28,7 +28,7 @@ export function useAdminChartData(months = 6) {
           .neq("status", "cancelled")
           .gte("scheduled_at", rangeStart)
           .lte("scheduled_at", rangeEnd),
-        // Chiffre d'affaires = montants réellement payés via Stripe
+        // Chiffre d'affaires = montants réellement encaissés (paiements validés)
         supabase
           .from("credit_transactions")
           .select("amount_paid_eur, created_at")

@@ -56,21 +56,20 @@ describe("Signup page", () => {
 
     renderSignup();
 
-    expect(screen.getByText("Inscription")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Jean")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Dupont")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("votre@email.com")).toBeInTheDocument();
-    expect(screen.getByText("Créer mon compte")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Crée ton compte" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Prénom")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nom")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("toi@email.com")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Créer mon compte" })).toBeInTheDocument();
   });
 
-  it("shows Google and Apple login buttons", async () => {
+  it("shows the Google sign-up button", async () => {
     const mod = await import("@/pages/Signup");
     Signup = mod.default;
 
     renderSignup();
 
     expect(screen.getByText("Continuer avec Google")).toBeInTheDocument();
-    expect(screen.getByText("Continuer avec Apple")).toBeInTheDocument();
   });
 
   it("has a link to the login page", async () => {
@@ -79,7 +78,7 @@ describe("Signup page", () => {
 
     renderSignup();
 
-    const loginLink = screen.getByText("Se connecter");
+    const loginLink = screen.getByRole("link", { name: "Se connecter" });
     expect(loginLink).toBeInTheDocument();
     expect(loginLink.closest("a")).toHaveAttribute("href", "/login");
   });
@@ -91,8 +90,7 @@ describe("Signup page", () => {
     // Render with ?ref= parameter
     renderSignup("/signup?ref=ABC12345");
 
-    // The ref param should be captured internally (no visible UI change)
-    // We verify the component renders without error with the ref param
-    expect(screen.getByText("Inscription")).toBeInTheDocument();
+    // Le code de parrainage est capté et signalé à l'élève
+    expect(await screen.findByText(/Invitation de parrainage appliquée/)).toBeInTheDocument();
   });
 });

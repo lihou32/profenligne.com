@@ -12,6 +12,39 @@ const MAX_MESSAGE_LENGTH = 4000;
 const MAX_SUBJECT_LENGTH = 100;
 const MAX_TOPIC_LENGTH = 200;
 
+// ─── Fournisseur IA (clés gratuites acceptées) ──────────────
+// Ordre de priorité : GEMINI_API_KEY (Google AI Studio, gratuit),
+// GROQ_API_KEY (gratuit), puis LOVABLE_API_KEY (ancien fournisseur).
+// Tous exposent une API compatible OpenAI /chat/completions.
+function aiProvider(): { url: string; key: string; model: string } | null {
+  const override = Deno.env.get("AI_MODEL") || undefined;
+  const gemini = Deno.env.get("GEMINI_API_KEY");
+  if (gemini) {
+    return {
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      key: gemini,
+      model: override ?? "gemini-2.5-flash",
+    };
+  }
+  const groq = Deno.env.get("GROQ_API_KEY");
+  if (groq) {
+    return {
+      url: "https://api.groq.com/openai/v1/chat/completions",
+      key: groq,
+      model: override ?? "openai/gpt-oss-120b",
+    };
+  }
+  const lovable = Deno.env.get("LOVABLE_API_KEY");
+  if (lovable) {
+    return {
+      url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      key: lovable,
+      model: override ?? "google/gemini-2.5-flash",
+    };
+  }
+  return null;
+}
+
 function validateString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -52,8 +85,14 @@ serve(async (req) => {
 
     // ─── Parse body ──────────────────────────────────────
     const body = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ai = aiProvider();
+    if (!ai) {
+      console.error("ai-chat: aucune clé IA configurée (GEMINI_API_KEY / GROQ_API_KEY)");
+      return new Response(JSON.stringify({ error: "IA non configurée" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { mode } = body;
 
@@ -68,14 +107,14 @@ serve(async (req) => {
         });
       }
 
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const res = await fetch(ai.url, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${ai.key}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: ai.model,
           messages: [
             {
               role: "system",
@@ -123,14 +162,14 @@ serve(async (req) => {
         });
       }
 
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const res = await fetch(ai.url, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${ai.key}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: ai.model,
           messages: [
             {
               role: "system",

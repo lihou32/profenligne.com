@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { REFERRAL_BONUS_CREDITS, referralCodeFor } from "@/lib/credits"
+import { REFERRAL_BONUS_EUR, centsToEur, formatEur, referralCodeFor } from "@/lib/credits"
 import {
   Gift, Users, Copy, Check, Share2, ArrowRight, Trophy, Zap,
 } from "lucide-react"
@@ -32,7 +33,7 @@ const HOW_IT_WORKS = [
   {
     icon: Gift,
     title: "Vous gagnez tous les deux",
-    desc: `Dès que votre filleul termine son premier cours, vous recevez chacun ${REFERRAL_BONUS_CREDITS} crédits offerts !`,
+    desc: `Dès que votre filleul termine son premier cours, vous recevez chacun ${REFERRAL_BONUS_EUR} € sur votre solde !`,
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
@@ -96,19 +97,9 @@ export default function Referral() {
   const referrals = stats?.referrals ?? []
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-fade-in pb-16">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="flex justify-center mb-4">
-          <div className="rounded-2xl bg-primary/10 p-5">
-            <Gift className="h-10 w-10 text-primary" />
-          </div>
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight font-display gradient-text">Parrainez vos amis</h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Invitez vos amis sur Prof en Ligne et gagnez <strong className="text-foreground">{REFERRAL_BONUS_CREDITS} crédits</strong> chacun dès qu'ils terminent leur premier cours !
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6 pb-16">
+      <PageHeader eyebrow="Parrainage" title={<>Invite tes amis, <span className="hl-mark">gagnez {REFERRAL_BONUS_EUR} €</span>.</>}
+        subtitle={<>{REFERRAL_BONUS_EUR} € chacun sur votre solde dès que ton ami termine son premier cours.</>} />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -131,8 +122,8 @@ export default function Referral() {
         <Card className="glass-card text-center">
           <CardContent className="pt-5 pb-4">
             <Zap className="mx-auto h-6 w-6 text-green-500 mb-2" />
-            <p className="text-3xl font-bold">{creditsEarned}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Crédits gagnés</p>
+            <p className="text-3xl font-bold">{formatEur(centsToEur(creditsEarned))}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Gagnés</p>
           </CardContent>
         </Card>
       </div>
@@ -183,7 +174,7 @@ export default function Referral() {
                 <step.icon className={`h-5 w-5 ${step.color}`} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-sm">{step.title}</h3>
+                <h3 className="text-sm">{step.title}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
               </div>
               {i < HOW_IT_WORKS.length - 1 && (
@@ -226,7 +217,7 @@ export default function Referral() {
                     : ""}
                 >
                   {r.status === "completed"
-                    ? `+${r.credits_awarded} crédits`
+                    ? `+${formatEur(centsToEur(r.credits_awarded))}`
                     : "En attente"}
                 </Badge>
               </div>
@@ -237,7 +228,7 @@ export default function Referral() {
 
       {/* Terms */}
       <p className="text-xs text-center text-muted-foreground">
-        Les crédits de parrainage sont crédités automatiquement après le premier cours de votre filleul.
+        Le bonus de parrainage est ajouté automatiquement à votre solde après le premier cours de votre filleul.
         Offre valable pour les nouveaux inscrits uniquement. Pas de limite de parrainages.
       </p>
     </div>

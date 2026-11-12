@@ -1,48 +1,28 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
-import { logger } from "@/lib/logger";
+import { Link, useLocation } from "react-router-dom"
+import { ArrowLeft, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Backdrop } from "@/components/brand/Backdrop"
+import { Logo } from "@/components/brand/Logo"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
-const NotFound = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    logger.warn("404 — Route inexistante", { path: location.pathname });
-  }, [location.pathname]);
-
+export default function NotFound() {
+  useDocumentTitle("Page introuvable")
+  const { pathname } = useLocation()
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center animate-fade-in">
-      {/* Large gradient number */}
-      <div className="mb-4 text-[8rem] font-extrabold leading-none gradient-text select-none">
-        404
-      </div>
-
-      <h1 className="mb-2 text-2xl font-bold">Page introuvable</h1>
-      <p className="mb-8 max-w-sm text-muted-foreground">
-        La page que vous cherchez n'existe pas ou a été déplacée.
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <Backdrop variant="landing" />
+      <Logo className="mb-10" />
+      <p className="display select-none text-[clamp(6rem,18vw,10rem)] leading-none text-ink-2">
+        4<span className="hl-mark">0</span>4
       </p>
-
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="gap-2 rounded-xl"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </Button>
-        <Button
-          onClick={() => navigate("/dashboard")}
-          className="gap-2 rounded-xl gradient-primary text-primary-foreground btn-glow"
-        >
-          <Home className="h-4 w-4" />
-          Tableau de bord
-        </Button>
+      <h1 className="mt-4 text-2xl">Cette page n'existe pas.</h1>
+      <p className="mt-2 max-w-sm text-muted-foreground">
+        L'adresse <code className="rounded-md bg-white/70 px-1.5 py-0.5 text-sm text-ink-2">{pathname}</code> ne mène nulle part. Pas de panique, on te ramène.
+      </p>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <Button asChild><Link to="/"><ArrowLeft /> Accueil</Link></Button>
+        <Button asChild variant="outline"><Link to="/tutors"><Search /> Trouver un prof</Link></Button>
       </div>
     </div>
-  );
-};
-
-export default NotFound;
+  )
+}

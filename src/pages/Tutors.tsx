@@ -1,435 +1,218 @@
-import { useState, useMemo, useDeferredValue } from "react";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { SEO } from "@/components/SEO";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Search, Star, Euro, BookOpen, Trophy, Filter, ChevronRight,
-  Wifi, Users, } from "lucide-react";
-import { XPBadge } from "@/components/gamification/XPBadge";
-import { useTutors, type TutorWithProfile } from "@/hooks/useData";
+import { useDeferredValue, useMemo, useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { CalendarDays, Heart, Search, Star, Users, X, Zap } from "lucide-react"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { SEO } from "@/components/SEO"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTutors, type TutorWithProfile } from "@/hooks/useData"
+import { useNextSlots } from "@/hooks/useAgenda"
+import { SUBJECTS } from "@/lib/constants"
+import { MIN_LESSON_PRICE_EUR } from "@/lib/credits"
+import { LEVELS, addDays, friendlySlot, isTutorLive, parisDate } from "@/lib/agenda"
+import { EmptyState } from "@/components/brand/PageHeader"
+import { cn } from "@/lib/utils"
 
-const ALL_SUBJECTS = [
-  "Mathématiques", "Physique", "Chimie", "Anglais", "Français",
-  "Histoire", "Géographie", "SVT", "Informatique", "Philosophie",
-];
+type SortKey = "reco" | "soon" | "rating" | "reviews"
+const SORTS: { value: SortKey; label: string }[] = [
+  { value: "reco", label: "Recommandés" },
+  { value: "soon", label: "Disponibles au plus tôt" },
+  { value: "rating", label: "Mieux notés" },
+  { value: "reviews", label: "Plus d'avis" },
+]
+type When = "all" | "now" | "week"
 
-const statusConfig: Record<string, { dot: string; label: string }> = {
-  online:    { dot: "bg-[hsl(var(--success))]",   label: "Disponible" },
-  busy:      { dot: "bg-[hsl(var(--warning))]",   label: "Occupé" },
-  offline:   { dot: "bg-muted-foreground/40",      label: "Hors ligne" },
-  suspended: { dot: "bg-destructive",              label: "Suspendu" },
-};
-
-// ─── Tutor card ───────────────────────────────────────────────────────────────
-
-function TutorCard({ tutor, xp }: { tutor: TutorWithProfile; xp: number }) {
-  const navigate = useNavigate();
-  const profile = tutor.profiles;
-  const fullName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-    : "Professeur";
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "P";
-  const status = statusConfig[tutor.status] ?? statusConfig.offline;
-
-
-  const avgRating = Number(tutor.rating) || 0;
-
-  return (
-    <Card
-      className="glass-card group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_32px_hsl(var(--primary)/0.2)] hover:border-primary/30"
-      onClick={() => navigate(`/tutors/${tutor.user_id}`)}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <Avatar className="h-14 w-14 ring-2 ring-border group-hover:ring-primary/50 transition-all">
-              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={fullName} />}
-              <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-lg">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <span
-              className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card ${status.dot}`}
-              title={status.label}
-            />
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold truncate">{fullName || "Professeur"}</h3>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-            </div>
-
-            {/* Stars */}
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className={`h-3 w-3 ${i <= Math.round(avgRating) ? "fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" : "text-muted-foreground/20"}`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {avgRating.toFixed(1)} · {tutor.total_reviews ?? 0} avis
-              </span>
-            </div>
-
-            {/* XP Badge */}
-            <div className="mt-1.5">
-              <XPBadge xp={xp} size="sm" showLabel />
-            </div>
-
-            {/* Subjects */}
-            <div className="mt-2 flex flex-wrap gap-1">
-              {(tutor.subjects || []).slice(0, 3).map((s: string) => (
-                <Badge key={s} variant="secondary" className="rounded-full text-[10px] px-2 py-0">
-                  {s}
-                </Badge>
-              ))}
-              {(tutor.subjects || []).length > 3 && (
-                <Badge variant="outline" className="rounded-full text-[10px] px-2 py-0 text-muted-foreground">
-                  +{(tutor.subjects || []).length - 3}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
-          <span className="flex items-center gap-1 text-sm font-semibold">
-            <Euro className="h-3.5 w-3.5 text-primary" />
-            {tutor.hourly_rate ? `${tutor.hourly_rate}€/h` : "Tarif à définir"}
-          </span>
-          <span className={`text-xs font-medium flex items-center gap-1`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-            {status.label}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Leaderboard row ──────────────────────────────────────────────────────────
-
-function LeaderboardRow({ tutor, rank, xp }: { tutor: TutorWithProfile; rank: number; xp: number }) {
-  const navigate = useNavigate();
-  const profile = tutor.profiles;
-  const fullName = profile
-    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-    : "Professeur";
-  const initials = profile
-    ? `${(profile.first_name?.[0] || "P").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
-    : "P";
-
-  const rankIcon = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
-
-  return (
-    <div
-      className="flex items-center gap-4 rounded-xl p-3 cursor-pointer hover:bg-muted/30 transition-colors"
-      onClick={() => navigate(`/tutors/${tutor.user_id}`)}
-    >
-      <div className="w-8 text-center text-sm font-bold text-muted-foreground">
-        {rankIcon ?? `#${rank}`}
-      </div>
-      <Avatar className="h-10 w-10">
-        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={fullName} />}
-        <AvatarFallback className="gradient-primary text-primary-foreground text-sm font-bold">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground">{(tutor.subjects || []).slice(0, 2).join(", ")}</p>
-      </div>
-      <div className="flex flex-col items-end gap-1">
-        <XPBadge xp={xp} size="sm" showLabel={false} />
-        <div className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Star key={i} className={`h-2.5 w-2.5 ${i <= Math.round(Number(tutor.rating) || 0) ? "fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" : "text-muted-foreground/20"}`} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
-
-type SortKey = "rating" | "price_asc" | "price_desc" | "xp";
-const SORT_KEYS: SortKey[] = ["rating", "price_asc", "price_desc", "xp"];
+const TILE_TONES = ["bg-peri-soft", "bg-hl-soft", "bg-mint-soft", "bg-sun-soft", "bg-sky-soft", "bg-pink-soft"]
+const FAV_KEY = "pel:favs"
+const readFavs = (): string[] => { try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]") } catch { return [] } }
 
 export default function Tutors() {
-  useDocumentTitle("Trouver un Professeur");
-  const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
-  const [subject, setSubject] = useState("all");
-  const [maxPrice, setMaxPrice] = useState(200);
-  const [minRating, setMinRating] = useState(0);
-  const [sortBy, setSortBy] = useState<SortKey>("rating");
-  const [onlineOnly, setOnlineOnly] = useState(false);
+  useDocumentTitle("Trouver un prof")
+  const [params, setParams] = useSearchParams()
+  const [search, setSearch] = useState("")
+  const deferred = useDeferredValue(search)
+  const subject = params.get("subject") ?? "all"
+  const level = params.get("level") ?? "all"
+  const [when, setWhen] = useState<When>("all")
+  const [sortBy, setSortBy] = useState<SortKey>("reco")
+  const [favs, setFavs] = useState<string[]>(readFavs)
+  const [favOnly, setFavOnly] = useState(false)
+  const { data: tutors = [], isLoading } = useTutors()
+  const { data: nextSlots } = useNextSlots(60)
 
-  // Fetch tutors with profiles
-  const { data: tutors = [], isLoading } = useTutors();
+  const setParam = (k: string, v: string) => {
+    const p = new URLSearchParams(params)
+    if (v === "all") p.delete(k); else p.set(k, v)
+    setParams(p, { replace: true })
+  }
+  const toggleFav = (id: string) => {
+    const next = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id]
+    setFavs(next)
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(next)) } catch { /* navigation privée */ }
+  }
 
-  // Fetch XP only for tutor user_ids (avoid loading ALL users)
-  const tutorUserIds = useMemo(() => tutors.map((t) => t.user_id), [tutors]);
-  const { data: xpData = [] } = useQuery({
-    queryKey: ["tutor-xp", tutorUserIds],
-    enabled: tutorUserIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_xp")
-        .select("user_id, total_xp")
-        .in("user_id", tutorUserIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const xpMap = useMemo(() => {
-    const m = new Map<string, number>();
-    xpData.forEach((x) => m.set(x.user_id, x.total_xp));
-    return m;
-  }, [xpData]);
-
-  // Filter + sort
+  const weekEnd = useMemo(() => new Date(`${addDays(parisDate(), 7)}T00:00:00`), [])
   const filtered = useMemo(() => {
-    let result = tutors.filter((t) => {
-      const profile = t.profiles;
-      const name = `${profile?.first_name || ""} ${profile?.last_name || ""}`.toLowerCase();
-      if (deferredSearch && !name.includes(deferredSearch.toLowerCase())) return false;
-      if (subject !== "all" && !(t.subjects || []).includes(subject)) return false;
-      if (t.hourly_rate && Number(t.hourly_rate) > maxPrice) return false;
-      if (minRating > 0 && (Number(t.rating) || 0) < minRating) return false;
-      if (onlineOnly && t.status !== "online") return false;
-      return true;
-    });
+    const q = deferred.trim().toLowerCase()
+    const next = (t: TutorWithProfile) => nextSlots?.get(t.user_id)
+    const list = tutors.filter((t) => {
+      const text = `${t.profiles?.first_name ?? ""} ${t.profiles?.last_name ?? ""} ${t.headline ?? ""} ${(t.subjects ?? []).join(" ")}`.toLowerCase()
+      if (q && !text.includes(q)) return false
+      if (subject !== "all" && !(t.subjects ?? []).includes(subject)) return false
+      if (level !== "all" && !(t.levels ?? []).includes(level)) return false
+      if (when === "now" && !isTutorLive(t)) return false
+      if (when === "week" && !(isTutorLive(t) || (next(t) && next(t)! < weekEnd))) return false
+      if (favOnly && !favs.includes(t.user_id)) return false
+      return true
+    })
+    const r = (t: TutorWithProfile) => Number(t.rating) || 0
+    const n = (t: TutorWithProfile) => next(t)?.getTime() ?? Infinity
+    const score = (t: TutorWithProfile) => (isTutorLive(t) ? 2 : 0) + (next(t) ? 1 : 0)
+    return list.sort((a, b) => {
+      if (sortBy === "rating") return r(b) - r(a) || (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
+      if (sortBy === "reviews") return (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
+      if (sortBy === "soon") return Number(isTutorLive(b)) - Number(isTutorLive(a)) || n(a) - n(b)
+      return score(b) - score(a) || r(b) - r(a) || n(a) - n(b)
+    })
+  }, [tutors, nextSlots, deferred, subject, level, when, sortBy, favOnly, favs, weekEnd])
 
-    if (sortBy === "rating") result = result.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-    else if (sortBy === "price_asc") result = result.sort((a, b) => (Number(a.hourly_rate) || 999) - (Number(b.hourly_rate) || 999));
-    else if (sortBy === "price_desc") result = result.sort((a, b) => (Number(b.hourly_rate) || 0) - (Number(a.hourly_rate) || 0));
-    else if (sortBy === "xp") result = result.sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0));
+  const subjectChips = useMemo(() => {
+    const found = [...new Set(tutors.flatMap((t) => t.subjects ?? []))]
+    const order = (x: string) => { const i = SUBJECTS.indexOf(x); return i === -1 ? 99 : i }
+    return found.length ? found.sort((x, y) => order(x) - order(y) || x.localeCompare(y, "fr")) : SUBJECTS
+  }, [tutors])
+  const liveCount = tutors.filter((t) => isTutorLive(t)).length
 
-    return result;
-  }, [tutors, deferredSearch, subject, maxPrice, minRating, sortBy, xpMap, onlineOnly]);
-
-  // Leaderboard: top tutors by XP
-  const leaderboard = useMemo(() => {
-    return [...tutors]
-      .filter((t) => t.status !== "suspended")
-      .sort((a, b) => (xpMap.get(b.user_id) || 0) - (xpMap.get(a.user_id) || 0))
-      .slice(0, 10);
-  }, [tutors, xpMap]);
+  const reset = () => { setSearch(""); setWhen("all"); setFavOnly(false); setParams(new URLSearchParams(), { replace: true }) }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 animate-fade-in pb-16">
-      <SEO
-        title="Trouver un Professeur"
-        description="Parcourez nos professeurs certifiés en mathématiques, français, physique, anglais et plus. Réservez un cours particulier en ligne en quelques clics."
-        path="/tutors"
-      />
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" />
-          Trouver un Professeur
+    <div className="space-y-5">
+      <SEO title="Trouver un prof" description="Cours particuliers en visio : choisis ton prof par matière et par niveau, regarde ses créneaux libres et réserve en deux clics." path="/tutors" />
+
+      <header className="reveal pt-4">
+        <h1 className="text-[clamp(1.9rem,4vw,2.8rem)] leading-[1.05]">
+          {subject !== "all" ? <>Profs de <span className="hl-mark">{subject}</span></> : <>Trouve <span className="hl-mark">ton</span> prof</>}
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          {filtered.length > 0 || onlineOnly ? `${filtered.length} résultat${filtered.length !== 1 ? "s" : ""}` : `${tutors.length} professeur${tutors.length !== 1 ? "s" : ""} disponible${tutors.length !== 1 ? "s" : ""}`}
-        </p>
+        <p className="mt-2 text-muted-foreground">Même prix chez tous les profs, dès {MIN_LESSON_PRICE_EUR} € le cours. Regarde leurs créneaux libres et réserve en deux clics.</p>
+      </header>
+
+      {/* Barre de recherche + filtres principaux (comme Preply) */}
+      <div className="reveal glass-strong grid gap-2 rounded-[1.5rem] p-2 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <label className="flex items-center gap-2 rounded-2xl bg-white px-4">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Prénom, matière…" aria-label="Rechercher un prof"
+            className="h-12 min-w-0 flex-1 bg-transparent text-ink-2 outline-none placeholder:text-muted-foreground" />
+          {search && <button onClick={() => setSearch("")} aria-label="Effacer"><X className="h-4 w-4 text-muted-foreground" /></button>}
+        </label>
+        <Select value={subject} onValueChange={(v) => setParam("subject", v)}>
+          <SelectTrigger className="h-12 rounded-2xl" aria-label="Matière"><span className="mr-1 text-xs font-semibold text-muted-foreground">Matière</span><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes</SelectItem>
+            {subjectChips.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={level} onValueChange={(v) => setParam("level", v)}>
+          <SelectTrigger className="h-12 rounded-2xl" aria-label="Niveau"><span className="mr-1 text-xs font-semibold text-muted-foreground">Niveau</span><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous</SelectItem>
+            {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+          <SelectTrigger className="h-12 rounded-2xl" aria-label="Trier"><span className="mr-1 text-xs font-semibold text-muted-foreground">Trier</span><SelectValue /></SelectTrigger>
+          <SelectContent>{SORTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+        </Select>
       </div>
 
-      <Tabs defaultValue="search">
-        <TabsList className="mb-4">
-          <TabsTrigger value="search" className="gap-2">
-            <Search className="h-4 w-4" /> Recherche
-          </TabsTrigger>
-          <TabsTrigger value="leaderboard" className="gap-2">
-            <Trophy className="h-4 w-4" /> Classement XP
-          </TabsTrigger>
-        </TabsList>
+      <div className="reveal no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {([["all", "Tous les profs"], ["now", `⚡ En ligne maintenant${liveCount ? ` (${liveCount})` : ""}`], ["week", "Dispo cette semaine"]] as [When, string][]).map(([v, label]) => (
+          <button key={v} onClick={() => setWhen(v)} aria-pressed={when === v}
+            className={cn("shrink-0 rounded-full border-2 border-ink-2 px-4 py-2 text-sm font-bold transition", when === v ? "bg-sun shadow-[2px_2px_0_0_hsl(var(--ink-2))]" : "bg-white hover:bg-peri-soft")}>
+            {label}
+          </button>
+        ))}
+        <button onClick={() => setFavOnly((v) => !v)} aria-pressed={favOnly}
+          className={cn("flex shrink-0 items-center gap-1.5 rounded-full border-2 border-ink-2 px-4 py-2 text-sm font-bold transition", favOnly ? "bg-pink-soft shadow-[2px_2px_0_0_hsl(var(--ink-2))]" : "bg-white hover:bg-peri-soft")}>
+          <Heart className={cn("h-4 w-4", favOnly && "fill-hl text-hl")} /> Mes favoris{favs.length ? ` (${favs.length})` : ""}
+        </button>
+      </div>
 
-        {/* ── Search tab ──────────────────────────────────────────────────── */}
-        <TabsContent value="search" className="space-y-4">
-          {/* Filter bar */}
-          <Card className="glass-card">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                {/* Search */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Search className="h-3 w-3" /> Nom
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Rechercher..."
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
+      <p className="text-sm font-semibold text-muted-foreground">
+        {isLoading ? "Chargement…" : `${filtered.length} prof${filtered.length > 1 ? "s" : ""}`}
+        {subject !== "all" && <> en <span className="text-ink-2">{subject}</span></>}
+        {level !== "all" && <> · niveau <span className="text-ink-2">{level}</span></>}
+      </p>
 
-                {/* Subject filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <BookOpen className="h-3 w-3" /> Matière
-                  </Label>
-                  <Select value={subject} onValueChange={setSubject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les matières</SelectItem>
-                      {ALL_SUBJECTS.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Price filter */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground flex items-center justify-between">
-                    <span className="flex items-center gap-1"><Euro className="h-3 w-3" /> Tarif max</span>
-                    <span className="font-medium text-foreground">{maxPrice}€/h</span>
-                  </Label>
-                  <Slider
-                    value={[maxPrice]}
-                    onValueChange={([v]) => setMaxPrice(v)}
-                    min={5} max={200} step={5}
-                  />
-                </div>
-
-                {/* Rating + sort */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Filter className="h-3 w-3" /> Trier par
-                  </Label>
-                  <Select value={sortBy} onValueChange={(v) => SORT_KEYS.includes(v as SortKey) && setSortBy(v as SortKey)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rating">⭐ Meilleures notes</SelectItem>
-                      <SelectItem value="xp">🏆 Plus d'XP</SelectItem>
-                      <SelectItem value="price_asc">💶 Prix croissant</SelectItem>
-                      <SelectItem value="price_desc">💶 Prix décroissant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Min rating filter */}
-              <div className="mt-4 flex flex-wrap gap-2 items-center">
-                <Label className="text-xs text-muted-foreground">Note minimum :</Label>
-                {[0, 3, 4, 4.5].map((r) => (
-                  <Button
-                    key={r}
-                    variant={minRating === r ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs rounded-full px-3"
-                    onClick={() => setMinRating(r)}
-                  >
-                    {r === 0 ? "Tous" : `${r}+ ★`}
-                  </Button>
-                ))}
-                <div className="ml-auto flex items-center gap-2">
-                  <Button
-                    variant={onlineOnly ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs rounded-full px-3 gap-1.5"
-                    onClick={() => setOnlineOnly(!onlineOnly)}
-                  >
-                    <Wifi className="h-3 w-3" />
-                    Disponible maintenant
-                    {onlineOnly && (
-                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Results */}
-          {isLoading ? (
-            <div className="flex justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <Users className="mx-auto h-12 w-12 mb-3 opacity-20" />
-              <p className="text-lg font-medium">Aucun professeur trouvé</p>
-              <p className="text-sm mb-4">Essayez de modifier vos critères de recherche</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={() => { setSearch(""); setSubject("all"); setMaxPrice(200); setMinRating(0); setOnlineOnly(false); }}
-              >
-                Réinitialiser les filtres
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((tutor) => (
-                <TutorCard key={tutor.id} tutor={tutor} xp={xpMap.get(tutor.user_id) || 0} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ── Leaderboard tab ──────────────────────────────────────────────── */}
-        <TabsContent value="leaderboard">
-          <Card className="glass-card">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="h-5 w-5 text-[hsl(var(--gold))]" />
-                <h2 className="font-semibold">Classement des meilleurs professeurs</h2>
-              </div>
-
-              {leaderboard.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Aucun classement disponible pour le moment.
-                </p>
-              ) : (
-                leaderboard.map((tutor, i) => (
-                  <LeaderboardRow
-                    key={tutor.id}
-                    tutor={tutor}
-                    rank={i + 1}
-                    xp={xpMap.get(tutor.user_id) || 0}
-                  />
-                ))
-              )}
-
-              <p className="text-xs text-muted-foreground text-center pt-4 border-t border-border/30">
-                Le classement est basé sur les points XP accumulés au fil des cours
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {isLoading ? (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+          {Array.from({ length: 6 }, (_, i) => <div key={i} className="glass h-[380px] animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={Users} title="Aucun prof ne correspond"
+          text={when === "now" ? "Aucun prof de cette matière n'est en ligne. Rejoins la file : le premier qui se connecte te prend." : "Élargis un peu ta recherche : une autre matière, un autre niveau ou toutes les disponibilités."}
+          action={when === "now"
+            ? <Button asChild variant="highlight"><Link to={`/rejoindre${subject !== "all" ? `?subject=${encodeURIComponent(subject)}` : ""}`}><Zap /> Rejoindre la file</Link></Button>
+            : <Button variant="outline" onClick={reset}>Réinitialiser les filtres</Button>} />
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+          {filtered.map((t, i) => (
+            <TutorCard key={t.id} tutor={t} tone={TILE_TONES[i % TILE_TONES.length]} highlight={subject !== "all" ? subject : undefined}
+              next={nextSlots?.get(t.user_id)} fav={favs.includes(t.user_id)} onFav={() => toggleFav(t.user_id)} />
+          ))}
+        </div>
+      )}
     </div>
-  );
+  )
+}
+
+function TutorCard({ tutor, tone, highlight, next, fav, onFav }: {
+  tutor: TutorWithProfile; tone: string; highlight?: string; next?: Date; fav: boolean; onFav: () => void
+}) {
+  const p = tutor.profiles
+  const name = p?.first_name ?? "Prof"
+  const initials = `${p?.first_name?.[0] ?? "P"}${p?.last_name?.[0] ?? ""}`.toUpperCase()
+  const live = isTutorLive(tutor)
+  const reviews = tutor.total_reviews ?? 0
+  const subjects = [...(tutor.subjects ?? [])].sort((a, b) => (a === highlight ? -1 : b === highlight ? 1 : 0))
+  const pitch = tutor.headline || p?.bio
+  const href = `/tutors/${tutor.user_id}${highlight ? `?subject=${encodeURIComponent(highlight)}` : ""}`
+
+  return (
+    <article className="reveal group relative flex flex-col">
+      <Link to={href} className="relative block overflow-hidden rounded-[1.5rem] border-2 border-ink-2 transition group-hover:-translate-y-0.5 group-hover:shadow-hard">
+        <div className={cn("aspect-[4/3] w-full", tone)}>
+          {p?.avatar_url
+            ? <img src={p.avatar_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+            : <span className="grid h-full w-full place-items-center font-display text-6xl font-extrabold text-ink-2/80">{initials}</span>}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-2/85 via-ink-2/40 to-transparent px-4 pb-3 pt-10 text-white">
+          <p className="font-display text-2xl font-extrabold leading-none">{name}</p>
+          <p className="mt-1 text-sm font-semibold text-white/85">{subjects.slice(0, 2).join(" · ") || "Soutien scolaire"} · en visio</p>
+        </div>
+        {live && <span className="absolute left-3 top-3 rounded-full border-2 border-ink-2 bg-mint px-2.5 py-0.5 text-xs font-extrabold text-ink-2">● En ligne</span>}
+      </Link>
+      <button type="button" onClick={onFav} aria-pressed={fav} aria-label={fav ? `Retirer ${name} des favoris` : `Ajouter ${name} aux favoris`}
+        className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-ink-2 bg-white transition hover:scale-105">
+        <Heart className={cn("h-4 w-4", fav ? "fill-hl text-hl" : "text-ink-2")} />
+      </button>
+
+      <Link to={href} className="flex flex-1 flex-col px-1 pt-3">
+        <div className="flex items-center justify-between gap-2 text-sm">
+          {reviews > 0
+            ? <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-gold text-gold" /><b className="text-ink-2">{Number(tutor.rating).toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">({reviews} avis)</span></span>
+            : <span className="rounded-full bg-peri-soft px-2 py-0.5 text-xs font-bold text-ink">Nouveau</span>}
+          {(tutor.levels ?? []).length > 0 && <span className="truncate text-xs font-semibold text-muted-foreground">{(tutor.levels ?? []).join(" · ")}</span>}
+        </div>
+        {pitch && <p className="mt-1.5 line-clamp-2 text-sm text-ink-2/75">{pitch}</p>}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3 text-sm">
+          <span className="font-bold text-ink-2">dès {MIN_LESSON_PRICE_EUR} €<span className="font-semibold text-muted-foreground"> · 20 min</span></span>
+          {live
+            ? <span className="flex items-center gap-1 font-bold text-success"><Zap className="h-4 w-4" />Dispo maintenant</span>
+            : next
+              ? <span className="flex items-center gap-1 font-semibold text-ink-2"><CalendarDays className="h-4 w-4 text-peri" />{friendlySlot(next)}</span>
+              : <span className="text-xs font-semibold text-muted-foreground">Sur demande</span>}
+        </div>
+      </Link>
+    </article>
+  )
 }
