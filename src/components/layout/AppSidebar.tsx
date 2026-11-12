@@ -58,8 +58,8 @@ const GENERAL: Item[] = [
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { signOut, profile, hasRole, user } = useAuth()
-  const isTutor = hasRole("tutor")
+  const { signOut, profile, hasRole, user, mode, canSwitchMode, setMode } = useAuth()
+  const isTutor = mode === "tutor"
   const queryClient = useQueryClient()
   const { isMobile, setOpenMobile } = useSidebar()
   const close = () => { if (isMobile) setOpenMobile(false) }
@@ -136,6 +136,30 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3">
+        {canSwitchMode && (
+          <div className="mb-2 grid grid-cols-2 gap-1 rounded-2xl border-2 border-ink-2 bg-white p-1" role="group" aria-label="Espace">
+            {(["student", "tutor"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={mode === m}
+                onClick={() => {
+                  if (mode === m) return
+                  setMode(m)
+                  close()
+                  navigate("/dashboard")
+                  toast.success(m === "tutor" ? "Espace prof" : "Espace élève")
+                }}
+                className={cn(
+                  "rounded-xl px-2 py-1.5 text-xs font-bold transition",
+                  mode === m ? "bg-ink-2 text-white" : "text-ink-2/70 hover:bg-peri-soft",
+                )}
+              >
+                {m === "tutor" ? "Espace prof" : "Espace élève"}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-3 rounded-2xl border-2 border-ink-2 bg-peri-soft p-2.5">
           <Link to="/profile" onClick={close} className="flex min-w-0 flex-1 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border-2 border-ink-2 bg-white text-sm font-bold text-ink-2">

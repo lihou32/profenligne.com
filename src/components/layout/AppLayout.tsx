@@ -24,7 +24,7 @@ function TutorPresence() {
  * Espace connecté : barre latérale crème, contenu aéré sur fond crème.
  */
 export function AppLayout() {
-  const { user, loading, hasRole, profile } = useAuth()
+  const { user, loading, mode, profile } = useAuth()
   const location = useLocation()
   useReveal()
 
@@ -45,9 +45,9 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      {hasRole("tutor") && <TutorPresence />}
+      {mode === "tutor" && <TutorPresence />}
       <SidebarInset className="relative min-w-0 bg-background">
-        <TopBar isTutor={hasRole("tutor")} userId={user.id} initials={initials} avatar={profile?.avatar_url ?? null} name={profile?.first_name ?? ""} />
+        <TopBar isTutor={mode === "tutor"} userId={user.id} initials={initials} avatar={profile?.avatar_url ?? null} name={profile?.first_name ?? ""} />
         <main className="relative flex-1 px-4 pb-20 pt-2 md:px-10">
           <div className="mx-auto w-full max-w-6xl">
             <Outlet />

@@ -7,8 +7,8 @@ import { Navigate } from "react-router-dom";
 
 export default function Dashboard() {
   useDocumentTitle("Tableau de bord");
-  const { hasRole } = useAuth();
-  const isTutor = hasRole("tutor");
+  const { mode } = useAuth();
+  const isTutor = mode === "tutor";
   const { data: tutorProfile, isLoading: tutorLoading } = useTutorProfile();
 
   // Tutor with role but no tutor profile row → onboarding

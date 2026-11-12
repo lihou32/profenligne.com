@@ -20,9 +20,9 @@ import { LEVELS } from "@/lib/agenda";
 
 export default function Profile() {
   useDocumentTitle("Mon Profil");
-  const { user, profile, hasRole } = useAuth();
-  const isStudent = hasRole("student");
-  const isTutor = hasRole("tutor");
+  const { user, profile, mode } = useAuth();
+  const isStudent = mode === "student";
+  const isTutor = mode === "tutor";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [firstName, setFirstName] = useState("");
@@ -185,7 +185,7 @@ export default function Profile() {
           </div>
           <div>
             <p className="font-semibold text-lg">{firstName} {lastName}</p>
-            <p className="text-sm text-muted-foreground">{isStudent ? "Étudiant" : isTutor ? "Professeur" : "Utilisateur"}</p>
+            <p className="text-sm text-muted-foreground">{isTutor ? "Professeur" : "Élève"}</p>
             <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
           </div>
         </CardContent>

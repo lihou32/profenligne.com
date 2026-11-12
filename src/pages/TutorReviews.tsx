@@ -128,8 +128,8 @@ function PendingReview({ lessonId, title, subtitle }: { lessonId: string; title:
 }
 
 export default function TutorReviews() {
-  const { hasRole } = useAuth();
-  const isTutor = hasRole("tutor");
+  const { mode } = useAuth();
+  const isTutor = mode === "tutor";
   useDocumentTitle(isTutor ? "Mes avis" : "Mes avis sur les profs");
 
   const received = useMyReviews("tutor_id");
