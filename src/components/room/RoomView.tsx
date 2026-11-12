@@ -6,7 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { RoomTransport } from "@/lib/room/transport";
 import { cn } from "@/lib/utils";
 import { CallControls } from "./CallControls";
-import { LessonChat, useLessonChat } from "./LessonChat";
+import { LessonChat } from "./LessonChat";
+import { useLessonChat } from "@/hooks/useLessonChat";
 import { PreJoin } from "./PreJoin";
 import { VideoStage } from "./VideoStage";
 

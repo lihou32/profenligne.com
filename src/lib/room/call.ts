@@ -410,11 +410,13 @@ export async function getLocalMedia(): Promise<{ stream: MediaStream | null; pro
     return { stream: await navigator.mediaDevices.getUserMedia({ audio, video }), problem: null };
   } catch (e) {
     const name = (e as DOMException)?.name;
-    if (name === "NotAllowedError" || name === "SecurityError") return { stream: null, problem: "permission" };
+    const denied = name === "NotAllowedError" || name === "SecurityError";
+    const problem: MediaProblem = denied ? "permission" : name === "NotReadableError" ? "in-use" : "no-device";
+    // Caméra refusée ou absente : on tente le micro seul (on garde le message pour la caméra)
     try {
-      return { stream: await navigator.mediaDevices.getUserMedia({ audio }), problem: name === "NotReadableError" ? "in-use" : "no-device" };
+      return { stream: await navigator.mediaDevices.getUserMedia({ audio }), problem };
     } catch {
-      return { stream: null, problem: name === "NotReadableError" ? "in-use" : "no-device" };
+      return { stream: null, problem };
     }
   }
 }

@@ -5,7 +5,7 @@ import { VideoTile } from "./VideoTile";
 
 const PROBLEM_TEXT: Record<MediaProblem, string> = {
   permission:
-    "Votre navigateur bloque la caméra et le micro. Cliquez sur le cadenas à gauche de l'adresse, autorisez-les, puis « Réessayer ».",
+    "Votre navigateur bloque la caméra (ou le micro). Cliquez sur le cadenas à gauche de l'adresse, autorisez-les, puis « Réessayer ».",
   "no-device": "Aucune caméra trouvée : vous entrerez avec le micro seulement (ou sans rien si aucun micro).",
   "in-use": "La caméra est déjà utilisée par une autre application (Zoom, Teams…). Fermez-la puis « Réessayer ».",
   insecure: "La visio a besoin d'une connexion sécurisée (https).",

@@ -224,7 +224,26 @@ export default function LessonBoard({ lessonId, transport, selfName, readOnly, o
         if (collaborators.current.delete(m.from as SocketId)) api.updateScene({ collaborators: new Map(collaborators.current) });
       }),
     ];
-    transport.send({ type: "board-hello" });
+    // À l'arrivée, puis à chaque réouverture du canal après une coupure (les messages
+    // envoyés pendant la coupure sont perdus) : on redemande le tableau de l'autre
+    // et on lui renvoie le nôtre.
+    const resync = () => {
+      transport.send({ type: "board-hello" });
+      const elements = api.getSceneElementsIncludingDeleted();
+      if (elements.length && !readOnly) transport.send({ type: "board", elements });
+    };
+    let opened = false;
+    offs.push(
+      transport.onStatus((s) => {
+        if (s !== "open") return;
+        if (opened) resync();
+        opened = true;
+      }),
+    );
+    void transport.ready.then(() => {
+      opened = true;
+    });
+    resync();
     return () => offs.forEach((off) => off());
   }, [transport, api, lessonId, offline, readOnly, scheduleSave]);
 
