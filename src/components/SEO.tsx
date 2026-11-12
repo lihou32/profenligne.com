@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = "Ton Prof en Ligne";
-const BASE_URL = "https://tonprofenligne.com";
+const BASE_URL = "https://profenligne-com.vercel.app";
 const DEFAULT_DESC =
   "Ton Prof en Ligne : réservez des cours particuliers avec les meilleurs tuteurs, utilisez l'IA pour vos devoirs et progressez chaque jour.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;

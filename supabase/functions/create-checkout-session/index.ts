@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
     const amount = Number(amountEur) * 100;
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const appUrl = (Deno.env.get("APP_URL") ?? "https://tonprofenligne.com").replace(/\/$/, "");
+    const appUrl = (Deno.env.get("APP_URL") ?? "https://profenligne-com.vercel.app").replace(/\/$/, "");
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
