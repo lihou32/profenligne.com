@@ -77,7 +77,7 @@ export default function Membership() {
               <p className="text-sm text-ink-2/75">Jusqu'au {m.ends_at && parisDayLabel(new Date(m.ends_at), { day: "numeric", month: "long", year: "numeric" })} · encore {daysLeft} jour{daysLeft > 1 ? "s" : ""}. Annulation gratuite jusqu'à {m.cancel_hours} h avant tes cours.</p>
             </div>
           </div>
-          {daysLeft <= 5 && <Button size="sm" onClick={() => buy(current)} disabled={subscribe.isPending}>Prolonger</Button>}
+          {daysLeft <= 5 && !tutorOnly && <Button size="sm" onClick={() => buy(current)} disabled={subscribe.isPending}>Prolonger</Button>}
         </section>
       )}
 
