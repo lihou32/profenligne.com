@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
                 <p style="margin: 0; font-size: 14px; color: #4b5563;">⏱ ${lesson.duration_minutes} minutes</p>
               </div>
               <p style="font-size: 14px; color: #6b7280;">Connectez-vous à la plateforme quelques minutes avant l'heure pour rejoindre la salle de cours.</p>
-              <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">À bientôt,<br/>L'équipe Prof en Ligne</p>
+              <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">À bientôt,<br/>L'équipe Ton Prof en Ligne</p>
             </div>
           </div>
         `
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
                 Nous sommes désolés, <strong>${tutorName}</strong> n'est pas disponible pour votre cours de <strong>${lesson.subject}</strong> prévu le <strong>${dateStr} à ${timeStr}</strong>.
               </p>
               <p style="font-size: 14px; color: #6b7280;">Vous pouvez réserver un nouveau cours avec un autre tuteur depuis votre espace.</p>
-              <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Cordialement,<br/>L'équipe Prof en Ligne</p>
+              <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Cordialement,<br/>L'équipe Ton Prof en Ligne</p>
             </div>
           </div>
         `;
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "Prof en Ligne <onboarding@resend.dev>",
+          from: "Ton Prof en Ligne <onboarding@resend.dev>",
           to: [studentUser.email],
           subject: emailSubject,
           html: emailHtml,

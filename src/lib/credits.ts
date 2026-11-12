@@ -1,5 +1,5 @@
 /**
- * Règles économiques de Prof en Ligne — côté front.
+ * Règles économiques de Ton Prof en Ligne — côté front.
  *
  * ⚠️ La source de vérité est la base (public.app_setting, lesson_price_cents,
  * topup_bonus_eur, book_lesson…) : supabase/migrations/20261111000300_fixed_prices_euro_wallet.sql.

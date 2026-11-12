@@ -76,7 +76,7 @@ export default function Signup() {
         navigate("/login", from ? { state: { from } } : undefined)
         return
       }
-      toast.success("Bienvenue sur Prof en Ligne !")
+      toast.success("Bienvenue sur Ton Prof en Ligne !")
       // Un prof doit compléter son profil (matières, tarif) pour apparaître dans la liste
       navigate(role === "tutor" ? "/become-tutor" : from ?? "/dashboard")
     } catch (error: unknown) {

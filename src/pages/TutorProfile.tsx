@@ -145,7 +145,7 @@ export default function TutorProfile() {
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               {reviews.length > 0
                 ? <span className="flex items-center gap-2"><Stars value={avg} /><b className="text-ink-2">{avg.toFixed(1).replace(".", ",")}</b><span className="text-muted-foreground">({reviews.length} avis)</span></span>
-                : <span className="rounded-full bg-peri-soft px-2.5 py-1 text-xs font-bold text-ink">Nouveau sur Prof en Ligne</span>}
+                : <span className="rounded-full bg-peri-soft px-2.5 py-1 text-xs font-bold text-ink">Nouveau sur Ton Prof en Ligne</span>}
               {levels.length > 0 && <span className="flex items-center gap-1.5 text-ink-2"><GraduationCap className="h-4 w-4 text-peri" />{levels.join(" · ")}</span>}
               <span className="flex items-center gap-1.5 text-ink-2"><Video className="h-4 w-4 text-peri" />En visio</span>
             </div>

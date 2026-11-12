@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
           <p style="font-size: 14px; color: #4b5563;">
             Connectez-vous à votre tableau de bord pour <strong>accepter ou refuser</strong> cette demande.
           </p>
-          <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">À bientôt,<br/>L'équipe Prof en Ligne</p>
+          <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">À bientôt,<br/>L'équipe Ton Prof en Ligne</p>
         </div>
       </div>
     `;
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Prof en Ligne <onboarding@resend.dev>",
+        from: "Ton Prof en Ligne <onboarding@resend.dev>",
         to: [tutorUser.email],
         subject: `📚 Nouvelle demande de cours — ${lesson.subject} le ${dateStr}`,
         html: emailHtml,

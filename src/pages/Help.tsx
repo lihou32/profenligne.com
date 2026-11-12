@@ -49,13 +49,13 @@ export default function Help() {
           <p className="text-sm text-muted-foreground">Notre équipe est disponible pour vous aider</p>
           <div className="flex gap-3">
             <Button variant="outline" asChild>
-              <a href="mailto:support@profenligne.fr">
+              <a href="mailto:support@tonprofenligne.com">
                 <Mail className="mr-2 h-4 w-4" />
                 Email
               </a>
             </Button>
             <Button asChild>
-              <a href="mailto:support@profenligne.fr?subject=Aide - Prof en Ligne">
+              <a href="mailto:support@tonprofenligne.com?subject=Aide - Ton Prof en Ligne">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Nous contacter
               </a>

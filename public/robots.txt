@@ -18,4 +18,4 @@ Disallow: /settings
 Disallow: /lesson-room
 Disallow: /api/
 
-Sitemap: https://profenligne.com/sitemap.xml
+Sitemap: https://tonprofenligne.com/sitemap.xml
