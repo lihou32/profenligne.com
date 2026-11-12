@@ -52,6 +52,7 @@ const MentionsLegales = lazy(() => import("./pages/legal/MentionsLegales"));
 const Conditions = lazy(() => import("./pages/legal/Conditions"));
 const Confidentialite = lazy(() => import("./pages/legal/Confidentialite"));
 const Fonctionnement = lazy(() => import("./pages/legal/Fonctionnement"));
+const RoomTest = import.meta.env.DEV ? lazy(() => import("./pages/dev/RoomTest")) : null;
 
 
 // Shared page-level loading fallback
@@ -156,6 +157,7 @@ function AppRoutes() {
         <Route path="/referral" element={<Suspense fallback={<PageLoader />}><Referral /></Suspense>} />
       </Route>
 
+      {RoomTest && <Route path="/dev/salle" element={<Suspense fallback={<PageLoader />}><RoomTest /></Suspense>} />}
       <Route path="/become-tutor" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><TutorOnboarding /></Suspense></ProtectedRoute>} />
       <Route path="/payment/success" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense></ProtectedRoute>} />
       <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><PaymentCancel /></Suspense>} />

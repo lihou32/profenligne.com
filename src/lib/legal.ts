@@ -42,11 +42,11 @@ export const LEGAL = {
 
 /** Sous-traitants qui traitent des données pour le site (politique de confidentialité). */
 export const PROCESSORS = [
-  { name: "Supabase", purpose: "Comptes, base de données, fichiers, envoi des e-mails de connexion" },
+  { name: "Supabase", purpose: "Comptes, base de données (dont le tableau et le chat des cours), fichiers, envoi des e-mails de connexion" },
   { name: "Vercel", purpose: "Hébergement et diffusion du site" },
   { name: "Sentry", purpose: "Détection des erreurs ; enregistrement de sessions seulement si tu l'acceptes" },
   { name: "Resend", purpose: "E-mails de service (réservations, rappels de cours)" },
-  { name: "Jitsi (8x8)", purpose: "Visioconférence pendant les cours" },
+  { name: "Cloudflare et Google", purpose: "Mise en relation des appareils pour la visio (adresse IP) ; relais chiffré si un réseau bloque la connexion directe" },
   { name: "Google (Gemini) ou Groq", purpose: "Quiz et cartes mentales après un cours (seuls la matière et le thème sont envoyés)" },
 ] as const
 

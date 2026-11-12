@@ -17,6 +17,9 @@ verify_jwt = true
 [functions.create-checkout-session]
 verify_jwt = true
 
+[functions.lesson-ice]
+verify_jwt = true
+
 # ─── Fonctions appelées par un tiers ────────────────────────────────────────
 # Stripe n'envoie pas de JWT : l'authenticité est vérifiée par la signature.
 [functions.stripe-webhook]
