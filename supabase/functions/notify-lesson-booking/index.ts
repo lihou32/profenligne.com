@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/html.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,15 +139,15 @@ Deno.serve(async (req) => {
           <h1 style="color: white; margin: 0; font-size: 24px;">📚 Nouvelle demande de cours</h1>
         </div>
         <div style="background: #f9fafb; padding: 32px; border-radius: 0 0 16px 16px; border: 1px solid #e5e7eb; border-top: none;">
-          <p style="font-size: 16px;">Bonjour <strong>${tutorFirstName}</strong>,</p>
+          <p style="font-size: 16px;">Bonjour <strong>${escapeHtml(tutorFirstName)}</strong>,</p>
           <p style="font-size: 15px; color: #4b5563;">
-            <strong>${studentName}</strong> souhaite réserver un cours avec vous.
+            <strong>${escapeHtml(studentName)}</strong> souhaite réserver un cours avec vous.
           </p>
           <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 20px 0;">
             <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">Détails de la demande</p>
-            <p style="margin: 0 0 6px; font-size: 16px; font-weight: bold;">📖 ${lesson.subject}${lesson.topic ? ` — ${lesson.topic}` : ""}</p>
+            <p style="margin: 0 0 6px; font-size: 16px; font-weight: bold;">📖 ${escapeHtml(lesson.subject)}${lesson.topic ? ` — ${escapeHtml(lesson.topic)}` : ""}</p>
             <p style="margin: 0 0 6px; font-size: 14px; color: #4b5563;">📅 ${dateStr} à ${timeStr}</p>
-            <p style="margin: 0; font-size: 14px; color: #4b5563;">⏱ ${lesson.duration_minutes} minutes</p>
+            <p style="margin: 0; font-size: 14px; color: #4b5563;">⏱ ${escapeHtml(lesson.duration_minutes)} minutes</p>
           </div>
           <p style="font-size: 14px; color: #4b5563;">
             Connectez-vous à votre tableau de bord pour <strong>accepter ou refuser</strong> cette demande.

@@ -1,4 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/html.ts";
+
+// Neutralise les formules (=, +, -, @) quand le CSV est ouvert dans Excel.
+const csvCell = (v: unknown) => {
+  const t = String(v ?? "");
+  const safe = /^[=+\-@\t\r]/.test(t) ? `'${t}` : t;
+  return `"${safe.replace(/"/g, '""')}"`;
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,7 +68,7 @@ Deno.serve(async (req) => {
         hour: "2-digit",
         minute: "2-digit",
       });
-      return `${p.email},${role},${date}`;
+      return [p.email, role, date].map(csvCell).join(",");
     });
     const csvContent = [csvHeader, ...csvRows].join("\n");
     const csvBase64 = btoa(unescape(encodeURIComponent("\uFEFF" + csvContent)));
@@ -70,7 +78,7 @@ Deno.serve(async (req) => {
       .map(
         (p) => `
         <tr>
-          <td style="padding:8px;border-bottom:1px solid #eee">${p.email}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(p.email)}</td>
           <td style="padding:8px;border-bottom:1px solid #eee">${p.role === "student" ? "Élève" : "Tuteur"}</td>
           <td style="padding:8px;border-bottom:1px solid #eee">${new Date(p.created_at).toLocaleDateString("fr-FR")}</td>
         </tr>`
