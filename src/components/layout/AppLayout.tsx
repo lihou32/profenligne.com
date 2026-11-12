@@ -1,8 +1,11 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { Outlet, Navigate, useLocation, Link } from "react-router-dom"
-import { Bell, Coins, Search } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
+import { Bell, ChevronDown, Coins, LogOut, Search, Settings, UserRound } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserCredits } from "@/hooks/useCredits"
 import { useReveal } from "@/hooks/useReveal"
@@ -90,12 +93,37 @@ function TopBar({ isTutor, userId, initials, avatar, name }: { isTutor: boolean;
             <Bell className="h-[18px] w-[18px]" />
             {unread > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-hl px-1 text-[10px] font-bold text-white">{unread > 9 ? "9+" : unread}</span>}
           </Link>
-          <Link to="/profile" className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-2 text-ink-2 transition hover:bg-secondary" aria-label="Mon profil">
-            {avatar ? <img src={avatar} alt="" className="h-9 w-9 rounded-lg object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-lg border-2 border-ink-2 bg-peri-soft text-xs font-bold text-ink-2">{initials}</span>}
-            <span className="hidden text-sm font-semibold lg:inline">{name}</span>
-          </Link>
+          <AccountMenu initials={initials} avatar={avatar} name={name} />
         </div>
       </div>
     </header>
+  )
+}
+
+/** Menu du compte (en haut à droite) : profil, réglages, déconnexion. */
+function AccountMenu({ initials, avatar, name }: { initials: string; avatar: string | null; name: string }) {
+  const { signOut } = useAuth()
+  const queryClient = useQueryClient()
+  const logout = async () => {
+    await signOut().catch(() => undefined)
+    queryClient.clear()
+    window.location.assign("/login")
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-2 text-ink-2 transition hover:bg-secondary" aria-label="Mon compte">
+        {avatar ? <img src={avatar} alt="" className="h-9 w-9 rounded-lg object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-lg border-2 border-ink-2 bg-peri-soft text-xs font-bold text-ink-2">{initials}</span>}
+        <span className="hidden text-sm font-semibold lg:inline">{name}</span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48 rounded-xl border-2 border-ink-2">
+        <DropdownMenuItem asChild><Link to="/profile"><UserRound className="mr-2 h-4 w-4" />Mon profil</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/settings"><Settings className="mr-2 h-4 w-4" />Réglages</Link></DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => void logout()} className="text-destructive focus:text-destructive">
+          <LogOut className="mr-2 h-4 w-4" />Se déconnecter
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

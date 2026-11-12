@@ -120,7 +120,7 @@ export default function Membership() {
           </article>
         ))}
       </div>
-      {tutorOnly && <p className="text-center text-sm text-muted-foreground">L'abonnement est réservé aux élèves. Si ton compte est aussi élève, passe dans l'espace élève (en bas du menu).</p>}
+      {tutorOnly && <p className="text-center text-sm text-muted-foreground">L'abonnement est réservé aux comptes élèves.</p>}
 
       <div className="grid gap-5 md:grid-cols-2 [&>*]:min-w-0">
         <section className="glass reveal p-6">

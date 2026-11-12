@@ -9,7 +9,7 @@ import {
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { MODE_KEY, resolveMode, type AppMode } from "@/lib/mode";
+import { resolveMode, type AppMode } from "@/lib/mode";
 
 type AppRole = "admin" | "student" | "tutor";
 export type { AppMode } from "@/lib/mode";
@@ -30,11 +30,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
-  /** Espace en cours (élève ou prof) : c'est lui qui décide des pages et menus. */
+  /** Espace du compte (élève ou prof) : c'est lui qui décide des pages et menus. */
   mode: AppMode;
-  /** Le compte a les deux rôles : il peut changer d'espace. */
-  canSwitchMode: boolean;
-  setMode: (mode: AppMode) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [storedMode, setStoredMode] = useState<string | null>(null);
 
   // ── FIX: AbortController pour éviter les race conditions ──
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -202,36 +198,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Nettoyer l'état local avant le signOut pour éviter flash
     setProfile(null);
     setRoles([]);
+    // Déconnexion côté serveur ; si elle échoue (réseau, session déjà expirée),
+    // on efface quand même la session de cet appareil : on ne reste jamais connecté.
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {
+      /* navigation privée */
+    }
+    setSession(null);
+    setUser(null);
   };
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
-  // Espace choisi, mémorisé par compte sur cet appareil
-  useEffect(() => {
-    if (!user) {
-      setStoredMode(null);
-      return;
-    }
-    try {
-      setStoredMode(localStorage.getItem(MODE_KEY(user.id)));
-    } catch {
-      setStoredMode(null);
-    }
-  }, [user]);
-
-  const mode = resolveMode(roles, storedMode);
-  const canSwitchMode = roles.includes("tutor") && roles.includes("student");
-  const setMode = (next: AppMode) => {
-    if (!user) return;
-    try {
-      localStorage.setItem(MODE_KEY(user.id), next);
-    } catch {
-      /* navigation privée : le choix ne sera pas gardé */
-    }
-    setStoredMode(next);
-  };
+  const mode = resolveMode(roles);
 
   return (
     <AuthContext.Provider
@@ -246,8 +230,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         hasRole,
         mode,
-        canSwitchMode,
-        setMode,
       }}
     >
       {children}
