@@ -79,6 +79,8 @@ SELECT 'M25 le prof voit l express en premier, paye 5 € (attendu t|5.00|0):', 
 UPDATE tutors SET status='online' WHERE user_id=auth.uid();
 SELECT 'M26 cours express cree (attendu Xia express gratuit: t|0|10):', is_express || '|' || price_cents || '|' || duration_minutes FROM lessons WHERE tutor_id=auth.uid();
 SELECT start_lesson(id) IS NULL FROM lessons WHERE tutor_id=auth.uid();
+RESET ROLE; UPDATE lessons SET started_at = now() - interval '3 hours', scheduled_at = LEAST(scheduled_at, now() - interval '3 hours') WHERE status = 'in_progress'; -- cours fait (migration 1100 : pas de fin avant la moitié du cours)
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','f1111111-1111-1111-1111-111111111111',false);
 SELECT complete_lesson(id) IS NULL FROM lessons WHERE tutor_id=auth.uid();
 SELECT 'M27 prof paye 5 € (attendu 5.00):', amount FROM tutor_earnings WHERE tutor_id=auth.uid();
 SELECT 'M27b prof modifie le paiement (attendu erreur)'; UPDATE lessons SET tutor_payout_cents = 9999 WHERE tutor_id=auth.uid();

@@ -1,23 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/brand/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useAuth } from "@/hooks/useAuth";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
-const faqs = [
-  { q: "Comment réserver un cours ?", a: "Rendez-vous dans la section 'Mes Cours' et cliquez sur 'Réserver un cours'. Sélectionnez le tuteur, la matière et le créneau qui vous convient." },
-  { q: "Comment fonctionne le LiveConnect ?", a: "LiveConnect vous permet de rejoindre des cours en visioconférence. Vous pouvez voir les sessions en cours ou en démarrer une nouvelle." },
-  { q: "Comment annuler un cours ?", a: "Allez dans 'Mes Cours', sélectionnez le cours à annuler et cliquez sur 'Annuler'. Tant que le professeur n'a pas confirmé, ou jusqu'à 24 h avant le cours, le prix du cours est intégralement remis sur votre solde. Si le professeur refuse ou annule, vous êtes toujours remboursé." },
-  { q: "Combien coûte un cours ?", a: "Le prix est le même chez tous les professeurs et dépend seulement de la durée : 20 min 15 €, 30 min 25 €, 45 min 30 €, 1 h 35 €, 1 h 30 50 €, 2 h 65 €. Il est débité de votre solde à la réservation, remboursé si le professeur refuse ou si vous annulez plus de 24 h avant. Votre solde n'expire jamais." },
-  { q: "Comment gagner des points XP ?", a: "Chaque cours terminé rapporte 100 XP aux élèves et 50 XP aux professeurs. Plus vous accumulez d'XP, plus vous montez de niveau et débloquez des badges." },
-  { q: "Comment fonctionne le parrainage ?", a: "Partagez votre lien de parrainage unique avec vos amis. Quand ils s'inscrivent avec votre lien et terminent leur premier cours, vous recevez chacun 10 € sur votre solde." },
-  { q: "Quels sont les moyens de paiement acceptés ?", a: "Vous pouvez payer par WhatsApp, par virement bancaire ou par Revolut. Choisissez une recharge (50 € → +5 € offerts, 70 € → +7,50 €, 100 € → +15 €, 150 € → +25 €) ou un montant libre, puis suivez les instructions avec votre référence : votre solde est crédité dès réception du paiement, en général sous 24 h." },
+const STUDENT_FAQS = [
+  { q: "Comment réserver un cours ?", a: "Va dans « Trouver un prof », ouvre la fiche d'un prof et choisis un créneau libre dans son agenda : le cours est confirmé tout de suite. Le prix est débité de ton solde à la réservation." },
+  { q: "Comment avoir un prof tout de suite ?", a: "Va dans « Rejoindre un cours », choisis ta matière et la durée, puis clique sur « Rejoindre » : le premier prof libre te rejoint en visio. Si personne n'est libre, tu passes en file d'attente. Le prix n'est débité que quand un prof te rejoint." },
+  { q: "Comment se passe le cours ?", a: "La salle de cours s'ouvre 15 minutes avant l'heure, depuis « Salle de cours » ou « Mes cours ». Tu y retrouves la visio, un tableau partagé (enregistré pour plus tard) et un chat avec ton prof. Autorise la caméra et le micro quand ton navigateur te le demande." },
+  { q: "Comment annuler un cours ?", a: "Dans « Mes cours », ouvre le cours et clique sur « Annuler ». Jusqu'à 24 h avant (2 h avec un abonnement), le prix est remis sur ton solde. Si le prof refuse ou annule, tu es toujours remboursé." },
+  { q: "Combien coûte un cours ?", a: "Le même prix chez tous les profs, selon la durée : 20 min 15 €, 30 min 25 €, 45 min 30 €, 1 h 35 €, 1 h 30 50 €, 2 h 65 €. Après 21 h, un cours en direct coûte 5 € de plus. Ton solde n'expire jamais." },
+  { q: "Comment recharger mon solde ?", a: "Va dans « Mon solde », choisis une recharge (50 € → +5 € offerts, 70 € → +7,50 €, 100 € → +15 €, 150 € → +25 €) ou un montant libre, puis paie par WhatsApp, virement ou Revolut avec ta référence. Ton solde est crédité dès réception, en général sous 24 h." },
+  { q: "Comment fonctionne le parrainage ?", a: "Partage ton lien de parrainage. Quand un ami s'inscrit avec ton lien et termine son premier cours, vous recevez chacun 10 € sur votre solde." },
+];
+
+const TUTOR_FAQS = [
+  { q: "Comment les élèves me trouvent-ils ?", a: "Ta fiche publique (menu « Ma fiche publique ») apparaît dans la liste des profs. Ajoute une phrase d'accroche, tes matières et tes niveaux dans ton profil, et ouvre des créneaux dans « Mes disponibilités » : les élèves réservent directement, le cours est confirmé tout de suite." },
+  { q: "Comment recevoir des élèves en direct ?", a: "Sur ton accueil, active « En ligne » et garde la page ouverte : le prochain élève de ta matière t'est envoyé automatiquement et vous entrez en salle tous les deux." },
+  { q: "Comment se passe le cours ?", a: "La salle de cours s'ouvre 15 minutes avant l'heure, depuis « Salle de cours » ou « Mes cours ». Tu y as la visio, un tableau partagé (enregistré pour plus tard), le partage d'écran et un chat. À la fin, clique sur « Terminer le cours » pour être payé." },
+  { q: "Et si un élève demande un horaire hors de mon agenda ?", a: "Tu reçois une demande dans « Mes cours » : accepte-la ou refuse-la. Si tu refuses, l'élève est remboursé automatiquement." },
+  { q: "Combien je gagne et quand je suis payé ?", a: "Tu touches 80 % du prix de chaque cours terminé. Tes gains s'affichent dans « Mes revenus » ; tu peux demander un retrait dès 20 € (2 % de frais de retrait)." },
+  { q: "Et si je dois annuler ?", a: "Préviens le plus tôt possible : annule depuis « Mes cours ». L'élève est toujours remboursé intégralement." },
 ];
 
 export default function Help() {
   useDocumentTitle("Centre d'aide");
+  const { user, mode } = useAuth();
+  const faqs = user && mode === "tutor" ? TUTOR_FAQS : STUDENT_FAQS;
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader eyebrow="Aide" title="Comment on peut t'aider ?" subtitle="Les réponses aux questions les plus fréquentes." />

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, BookOpen, Video, HelpCircle, LogOut, Shield, Star,
-  Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap, CalendarClock, Crown,
+  Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap, CalendarClock, Crown, Eye,
 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -42,9 +42,8 @@ const TUTOR: { label: string; items: Item[] }[] = [
     { title: "Mes revenus", icon: Wallet, path: "/earnings" },
   ] },
   { label: "Ma vitrine", items: [
+    { title: "Ma fiche publique", icon: Eye, path: "/ma-fiche" },
     { title: "Mes avis", icon: Star, path: "/reviews" },
-    { title: "Les profs", icon: Search, path: "/tutors" },
-    { title: "Parrainage", icon: Gift, path: "/referral" },
   ] },
 ]
 

@@ -78,9 +78,11 @@ function TopBar({ isTutor, userId, initials, avatar, name }: { isTutor: boolean;
     <header className="sticky top-0 z-20 border-b-2 border-ink-2 bg-background px-4 md:px-10">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3">
         <SidebarTrigger className="h-10 w-10 rounded-xl border-2 border-ink-2 bg-white text-ink-2 md:hidden" />
-        <Link to="/tutors" className="hidden h-11 w-full max-w-sm items-center gap-2 rounded-xl border-2 border-ink-2 bg-white px-4 text-sm text-muted-foreground transition hover:border-ink-2/25 hover:text-ink-2 sm:flex">
-          <Search className="h-4 w-4" /> Rechercher un prof, une matière…
-        </Link>
+        {!isTutor && (
+          <Link to="/tutors" className="hidden h-11 w-full max-w-sm items-center gap-2 rounded-xl border-2 border-ink-2 bg-white px-4 text-sm text-muted-foreground transition hover:border-ink-2/25 hover:text-ink-2 sm:flex">
+            <Search className="h-4 w-4" /> Rechercher un prof, une matière…
+          </Link>
+        )}
         <div className="ml-auto flex items-center gap-2">
           {!isTutor && (
             <Link to="/credits" aria-label={`Solde : ${formatEur(credits?.balanceEur ?? 0)} — recharger`}

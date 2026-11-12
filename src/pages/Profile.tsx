@@ -152,7 +152,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <PageHeader eyebrow="Profil" title="Ton profil" subtitle="Ce que les profs et les élèves voient de toi." />
+      <PageHeader eyebrow="Profil" title="Ton profil" subtitle={isTutor ? "Ce que les élèves voient de toi sur ta fiche publique." : "Ce que tes profs voient de toi, pour préparer tes cours."} />
 
       {/* Avatar Section */}
       <Card className="glass-card">

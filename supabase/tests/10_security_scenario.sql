@@ -50,6 +50,8 @@ RESET ROLE;
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
 SELECT 'T24 prof confirme:', (confirm_lesson(id)).status FROM lessons WHERE status='pending';
 SELECT 'T25 prof demarre:', (start_lesson(id)).status FROM lessons WHERE status='confirmed';
+RESET ROLE; UPDATE lessons SET started_at = now() - interval '3 hours', scheduled_at = LEAST(scheduled_at, now() - interval '3 hours') WHERE status = 'in_progress'; -- cours fait (migration 1100 : pas de fin avant la moitié du cours)
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
 SELECT 'T26 prof termine:', (complete_lesson(id)).status FROM lessons WHERE status='in_progress';
 SELECT 'T27 gain prof = 80 % du prix payé (attendu t):', bool_and(e.amount = round(l.price_cents / 100.0 * 0.8, 2)) FROM tutor_earnings e JOIN lessons l ON l.id = e.lesson_id;
 SELECT 'T28 retrait trop gros (attendu erreur)'; SELECT request_withdrawal(500);

@@ -9,6 +9,8 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { DiscoveryLayout } from "@/components/layout/DiscoveryLayout";
+import { StudentOnly } from "@/components/auth/StudentOnly";
 import { CookieBanner } from "@/components/legal/CookieBanner";
 
 // Eagerly loaded — needed immediately on first paint
@@ -52,6 +54,11 @@ const MentionsLegales = lazy(() => import("./pages/legal/MentionsLegales"));
 const Conditions = lazy(() => import("./pages/legal/Conditions"));
 const Confidentialite = lazy(() => import("./pages/legal/Confidentialite"));
 const Fonctionnement = lazy(() => import("./pages/legal/Fonctionnement"));
+/** Raccourci « Ma fiche publique » d'un prof : sa page telle que la voient les élèves. */
+function MyPublicProfile() {
+  const { user } = useAuth();
+  return user ? <Navigate to={`/tutors/${user.id}`} replace /> : <Navigate to="/login" replace />;
+}
 const RoomTest = import.meta.env.DEV ? lazy(() => import("./pages/dev/RoomTest")) : null;
 
 
@@ -125,11 +132,11 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* ── Public discovery routes (no auth required) ── */}
-      <Route element={<PublicLayout />}>
-        <Route path="/tutors" element={<Suspense fallback={<PageLoader />}><Tutors /></Suspense>} />
-        <Route path="/rejoindre" element={<Suspense fallback={<PageLoader />}><JoinLesson /></Suspense>} />
-        <Route path="/abonnement" element={<Suspense fallback={<PageLoader />}><Membership /></Suspense>} />
+      {/* ── Pages ouvertes à tous (dans l'espace connecté si on est connecté) ── */}
+      <Route element={<DiscoveryLayout />}>
+        <Route path="/tutors" element={<StudentOnly tutorRedirect="/ma-fiche"><Suspense fallback={<PageLoader />}><Tutors /></Suspense></StudentOnly>} />
+        <Route path="/rejoindre" element={<StudentOnly><Suspense fallback={<PageLoader />}><JoinLesson /></Suspense></StudentOnly>} />
+        <Route path="/abonnement" element={<StudentOnly><Suspense fallback={<PageLoader />}><Membership /></Suspense></StudentOnly>} />
         <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
       </Route>
       {legalRoutes}
@@ -146,15 +153,16 @@ function AppRoutes() {
         <Route path="/reviews" element={<Suspense fallback={<PageLoader />}><TutorReviews /></Suspense>} />
         <Route path="/disponibilites" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorAvailability /></Suspense></ProtectedRoute>} />
         <Route path="/earnings" element={<ProtectedRoute requiredRole="tutor"><Suspense fallback={<PageLoader />}><TutorEarnings /></Suspense></ProtectedRoute>} />
-        <Route path="/credits" element={<Suspense fallback={<PageLoader />}><BuyCredits /></Suspense>} />
+        <Route path="/credits" element={<StudentOnly tutorRedirect="/earnings"><Suspense fallback={<PageLoader />}><BuyCredits /></Suspense></StudentOnly>} />
+        <Route path="/ma-fiche" element={<ProtectedRoute requiredRole="tutor"><MyPublicProfile /></ProtectedRoute>} />
         {/* AI Tutor route removed */}
         <Route path="/profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
         <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
         <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ProtectedRoute>} />
         <Route path="/room/:id" element={<Suspense fallback={<PageLoader />}><LessonRoom /></Suspense>} />
         <Route path="/report/:id" element={<Suspense fallback={<PageLoader />}><LessonReport /></Suspense>} />
-        <Route path="/certificates" element={<Suspense fallback={<PageLoader />}><Certificates /></Suspense>} />
-        <Route path="/referral" element={<Suspense fallback={<PageLoader />}><Referral /></Suspense>} />
+        <Route path="/certificates" element={<StudentOnly><Suspense fallback={<PageLoader />}><Certificates /></Suspense></StudentOnly>} />
+        <Route path="/referral" element={<StudentOnly><Suspense fallback={<PageLoader />}><Referral /></Suspense></StudentOnly>} />
       </Route>
 
       {RoomTest && <Route path="/dev/salle" element={<Suspense fallback={<PageLoader />}><RoomTest /></Suspense>} />}
