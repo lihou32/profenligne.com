@@ -5,6 +5,9 @@ import { useAuth } from "@/hooks/useAuth"
 import { useReveal } from "@/hooks/useReveal"
 import { Backdrop } from "@/components/brand/Backdrop"
 import { Logo } from "@/components/brand/Logo"
+import { LEGAL_LINKS } from "@/lib/legal"
+import { reopenCookieChoice } from "@/lib/consent"
+import { cn } from "@/lib/utils"
 
 /** Pages publiques (liste et profils des profs) : barre pilule flottante + fond animé. */
 export function PublicLayout() {
@@ -55,11 +58,24 @@ export function SiteFooter() {
     <footer className="mx-auto flex max-w-6xl flex-col gap-4 border-t-2 border-ink-2 px-6 pb-10 pt-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
       <Logo />
       <span className="sm:ml-4">Cours particuliers en visio, avec des profs choisis un par un.</span>
-      <nav className="flex gap-4 sm:ml-auto">
-        <Link to="/tutors" className="font-semibold hover:text-ink-2">Les profs</Link>
-        <Link to="/help" className="font-semibold hover:text-ink-2">Aide</Link>
-        <Link to="/signup?role=tutor" className="font-semibold hover:text-ink-2">Devenir prof</Link>
-      </nav>
+      <div className="flex flex-col gap-2 sm:ml-auto sm:items-end">
+        <nav className="flex gap-4">
+          <Link to="/tutors" className="font-semibold hover:text-ink-2">Les profs</Link>
+          <Link to="/help" className="font-semibold hover:text-ink-2">Aide</Link>
+          <Link to="/signup?role=tutor" className="font-semibold hover:text-ink-2">Devenir prof</Link>
+        </nav>
+        <LegalLinks />
+      </div>
     </footer>
+  )
+}
+
+/** Liens légaux discrets, présents sur toutes les pages. */
+export function LegalLinks({ className }: { className?: string }) {
+  return (
+    <nav aria-label="Informations légales" className={cn("flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground/80", className)}>
+      {LEGAL_LINKS.map((l) => <Link key={l.to} to={l.to} className="hover:text-ink-2">{l.label}</Link>)}
+      <button type="button" onClick={reopenCookieChoice} className="hover:text-ink-2">Cookies</button>
+    </nav>
   )
 }

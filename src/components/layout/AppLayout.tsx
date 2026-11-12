@@ -11,6 +11,7 @@ import { LogoMark } from "@/components/brand/Logo"
 import { formatEur } from "@/lib/credits"
 import { useTutorProfile } from "@/hooks/useTutors"
 import { useTutorHeartbeat } from "@/hooks/useAgenda"
+import { LegalLinks } from "@/components/layout/PublicLayout"
 
 /** Tant que l'appli d'un prof en ligne est ouverte, la base sait qu'il est là. */
 function TutorPresence() {
@@ -52,6 +53,9 @@ export function AppLayout() {
             <Outlet />
           </div>
         </main>
+        <footer className="px-4 pb-6 md:px-10">
+          <LegalLinks className="mx-auto w-full max-w-6xl" />
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   )

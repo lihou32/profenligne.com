@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { CookieBanner } from "@/components/legal/CookieBanner";
 
 // Eagerly loaded — needed immediately on first paint
 import Index from "./pages/Index";
@@ -46,12 +47,27 @@ const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const Referral = lazy(() => import("./pages/Referral"));
 const TutorOnboarding = lazy(() => import("./pages/TutorOnboarding"));
+// Pages légales (accessibles même en mode « Bientôt disponible »)
+const MentionsLegales = lazy(() => import("./pages/legal/MentionsLegales"));
+const Conditions = lazy(() => import("./pages/legal/Conditions"));
+const Confidentialite = lazy(() => import("./pages/legal/Confidentialite"));
+const Fonctionnement = lazy(() => import("./pages/legal/Fonctionnement"));
+
 
 // Shared page-level loading fallback
 const PageLoader = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
   </div>
+);
+
+const legalRoutes = (
+  <Route element={<PublicLayout />}>
+    <Route path="/mentions-legales" element={<Suspense fallback={<PageLoader />}><MentionsLegales /></Suspense>} />
+    <Route path="/conditions" element={<Suspense fallback={<PageLoader />}><Conditions /></Suspense>} />
+    <Route path="/confidentialite" element={<Suspense fallback={<PageLoader />}><Confidentialite /></Suspense>} />
+    <Route path="/fonctionnement" element={<Suspense fallback={<PageLoader />}><Fonctionnement /></Suspense>} />
+  </Route>
 );
 
 const queryClient = new QueryClient({
@@ -93,6 +109,7 @@ function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        {legalRoutes}
         <Route path="*" element={<Suspense fallback={<PageLoader />}><ComingSoon /></Suspense>} />
       </Routes>
     );
@@ -114,6 +131,7 @@ function AppRoutes() {
         <Route path="/abonnement" element={<Suspense fallback={<PageLoader />}><Membership /></Suspense>} />
         <Route path="/tutors/:id" element={<Suspense fallback={<PageLoader />}><TutorProfile /></Suspense>} />
       </Route>
+      {legalRoutes}
 
       {/* ── Authenticated app routes ── */}
       <Route element={<AppLayout />}>
@@ -156,6 +174,7 @@ const App = () => {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <AppRoutes />
+              <CookieBanner />
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
