@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Rocket, GraduationCap, BookOpen, CheckCircle, Mail } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { Link } from "react-router-dom";
+import { LegalLinks } from "@/components/layout/PublicLayout";
 
 // Date dynamique : utilisée uniquement si COMING_SOON_MODE=true (mode maintenance)
 const LAUNCH_DATE = new Date("2026-06-01T00:00:00");
@@ -176,6 +178,10 @@ const ComingSoon = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Inscription…" : "Je me préinscris"}
               </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Ton e-mail sert uniquement à te prévenir du lancement. Tu peux demander à être retiré à tout moment.{" "}
+                <Link to="/confidentialite" className="underline">Confidentialité</Link>
+              </p>
             </form>
           )}
         </div>
@@ -183,6 +189,7 @@ const ComingSoon = () => {
         <p className="text-xs text-muted-foreground text-center">
           Nous travaillons sur des améliorations · Aucun spam, promis
         </p>
+        <LegalLinks className="justify-center" />
       </div>
     </div>
   );

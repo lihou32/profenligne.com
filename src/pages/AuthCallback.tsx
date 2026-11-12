@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { applyPendingTerms } from "@/lib/terms";
 
 /**
  * Dedicated OAuth callback page.
@@ -19,6 +20,7 @@ export default function AuthCallback() {
         (event, session) => {
           if (event === "SIGNED_IN" && session) {
             subscription.unsubscribe();
+            void applyPendingTerms(session);
             navigate("/dashboard", { replace: true });
           }
         }
@@ -35,6 +37,7 @@ export default function AuthCallback() {
 
       if (data.session) {
         subscription.unsubscribe();
+        void applyPendingTerms(data.session);
         navigate("/dashboard", { replace: true });
         return;
       }

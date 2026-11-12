@@ -9,6 +9,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { TAX_LINKS } from "@/lib/legal";
 
 export default function TutorEarnings() {
   useDocumentTitle("Mes revenus");
@@ -54,6 +55,14 @@ export default function TutorEarnings() {
           <ArrowDownToLine className="mr-2 h-4 w-4" /> Demander un retrait
         </Button>
       </div>
+
+      <p className="rounded-2xl bg-sun-soft px-4 py-3 text-sm text-ink-2/85">
+        Ce que tu gagnes ici est un revenu à déclarer aux impôts et, si tu es auto-entrepreneur, à l'Urssaf. On t'envoie
+        chaque année avant le 31 janvier le récapitulatif de tes gains.{" "}
+        {TAX_LINKS.map((l, i) => (
+          <span key={l.href}>{i > 0 && " · "}<a href={l.href} target="_blank" rel="noreferrer" className="font-semibold underline">{l.label}</a></span>
+        ))}
+      </p>
 
       <div className="grid gap-4 md:grid-cols-3">
         {statCards.map((stat, i) => (

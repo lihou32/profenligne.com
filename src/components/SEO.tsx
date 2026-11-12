@@ -12,7 +12,7 @@ interface SEOProps {
 const SITE_NAME = "Ton Prof en Ligne";
 const BASE_URL = "https://www.tonprofenligne.com";
 const DEFAULT_DESC =
-  "Ton Prof en Ligne : réservez des cours particuliers avec les meilleurs tuteurs, utilisez l'IA pour vos devoirs et progressez chaque jour.";
+  "Ton Prof en Ligne : cours particuliers en visio avec des profs choisis un par un, au même prix selon la durée, dès 15 €.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 export function SEO({

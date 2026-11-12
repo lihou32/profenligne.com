@@ -58,7 +58,7 @@ export default function TutorProfile() {
     queryKey: ["tutor-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("reviews").select("id, rating, comment, created_at, student_id")
+      const { data, error } = await supabase.from("reviews").select("id, rating, comment, created_at, student_id, lesson_id")
         .eq("tutor_id", id!).order("created_at", { ascending: false })
       if (error) throw error
       if (!data?.length) return []
@@ -200,7 +200,7 @@ export default function TutorProfile() {
                   <div className="text-center sm:text-left">
                     <p className="display text-5xl text-ink-2">{avg.toFixed(1).replace(".", ",")}</p>
                     <Stars value={avg} />
-                    <p className="mt-1 text-sm text-muted-foreground">{reviews.length} avis vérifiés</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{reviews.length} avis</p>
                   </div>
                   <div className="space-y-1.5">
                     {dist.map(({ n, c }) => (
@@ -219,7 +219,10 @@ export default function TutorProfile() {
                         <span className="grid h-9 w-9 place-items-center rounded-xl bg-peri-soft text-sm font-bold text-ink">{r.student_name[0]?.toUpperCase()}</span>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-ink-2">{r.student_name}</p>
-                          <p className="text-xs text-muted-foreground">{format(new Date(r.created_at), "d MMMM yyyy", { locale: fr })}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(r.created_at), "d MMMM yyyy", { locale: fr })}
+                            {r.lesson_id ? " · après un cours terminé" : " · avis de l'ancienne version, non lié à un cours"}
+                          </p>
                         </div>
                         <Stars value={r.rating} size="h-3.5 w-3.5" />
                       </div>
@@ -227,6 +230,10 @@ export default function TutorProfile() {
                     </li>
                   ))}
                 </ul>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Avis publiés sans contrôle préalable de leur contenu, du plus récent au plus ancien.{" "}
+                  <Link to="/fonctionnement#avis" className="underline">Comment fonctionnent les avis</Link>
+                </p>
               </>
             )}
           </section>
@@ -274,7 +281,7 @@ export default function TutorProfile() {
           <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground">
             <li className="flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-mint" />Annulation gratuite jusqu'à {FREE_CANCEL_HOURS} h avant</li>
             <li className="flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-mint" />Remboursé si le prof ne confirme pas</li>
-            <li className="flex gap-2"><Star className="h-4 w-4 shrink-0 text-gold" />Avis laissés seulement après un vrai cours</li>
+            <li className="flex gap-2"><Star className="h-4 w-4 shrink-0 text-gold" />Chaque nouvel avis est lié à un cours terminé</li>
           </ul>
         </aside>
       </div>

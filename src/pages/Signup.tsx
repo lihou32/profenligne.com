@@ -5,6 +5,8 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { markTermsPendingForOAuth, termsMetadata } from "@/lib/terms"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
@@ -36,6 +38,7 @@ export default function Signup() {
   const [schoolType, setSchoolType] = useState("")
   const [subjects, setSubjects] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [referralCode, setReferralCode] = useState<string | null>(null)
   const { signUp } = useAuth()
   const navigate = useNavigate()
@@ -56,6 +59,7 @@ export default function Signup() {
     e.preventDefault()
     const pwdError = validatePassword(password)
     if (pwdError) { toast.error(pwdError); return }
+    if (!acceptedTerms) { toast.error("Accepte les conditions générales pour créer ton compte"); return }
     setIsLoading(true)
     try {
       const metadata: Record<string, string> = { first_name: firstName.trim(), last_name: lastName.trim(), role }
@@ -67,6 +71,8 @@ export default function Signup() {
       if (subjects.length > 0) metadata.subjects = subjects.join(",")
       // Le parrainage est lié côté base à la création du compte (trigger handle_new_user)
       if (referralCode) metadata.referral_code = referralCode
+      // Trace de l'acceptation des CGU/CGV (date et version)
+      Object.assign(metadata, termsMetadata())
 
       await signUp(email.trim(), password, metadata)
 
@@ -88,6 +94,8 @@ export default function Signup() {
   }
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
+    // Continuer avec Google vaut acceptation des CGU (mention sous le bouton)
+    markTermsPendingForOAuth()
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } })
     if (error) toast.error(error.message)
   }
@@ -118,6 +126,10 @@ export default function Signup() {
 
       <div className="mt-6 grid gap-3">
         <SocialButton provider="google" onClick={() => handleSocialLogin("google")} />
+        <p className="text-center text-xs text-muted-foreground">
+          En continuant avec Google, tu acceptes les <Link to="/conditions" className="underline">conditions générales</Link> et
+          la <Link to="/confidentialite" className="underline">politique de confidentialité</Link>.
+        </p>
       </div>
       <OrDivider />
 
@@ -182,6 +194,14 @@ export default function Signup() {
           </div>
           <PasswordMeter value={password} />
         </div>
+
+        <label className="flex items-start gap-3 text-sm text-muted-foreground">
+          <Checkbox checked={acceptedTerms} onCheckedChange={(v) => setAcceptedTerms(v === true)} className="mt-0.5" aria-required="true" />
+          <span>
+            J'accepte les <Link to="/conditions" className="font-semibold text-ink underline">conditions générales d'utilisation et de vente</Link> et
+            j'ai lu la <Link to="/confidentialite" className="font-semibold text-ink underline">politique de confidentialité</Link>.
+          </span>
+        </label>
 
         <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
           {isLoading ? <><Loader2 className="animate-spin" /> Création…</> : isStudent ? "Créer mon compte" : "Continuer vers mon profil de prof"}
