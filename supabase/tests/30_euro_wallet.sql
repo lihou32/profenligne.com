@@ -55,6 +55,8 @@ RESET ROLE;
 UPDATE lessons SET scheduled_at = now() WHERE tutor_id='b1111111-1111-1111-1111-111111111111' AND status='confirmed';
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','b1111111-1111-1111-1111-111111111111',false);
 SELECT start_lesson(id) IS NOT NULL FROM lessons WHERE tutor_id=auth.uid() AND status='confirmed';
+RESET ROLE; UPDATE lessons SET started_at = now() - interval '3 hours', scheduled_at = LEAST(scheduled_at, now() - interval '3 hours') WHERE status = 'in_progress'; -- cours fait (migration 1100 : pas de fin avant la moitié du cours)
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','b1111111-1111-1111-1111-111111111111',false);
 SELECT 'E25 termine:', (complete_lesson((SELECT id FROM lessons WHERE tutor_id=auth.uid() AND status='in_progress'))).status;
 SELECT 'E26 gain prof (attendu 52.00):', amount FROM tutor_earnings WHERE tutor_id=auth.uid();
 SELECT 'E27 retrait 50 € (attendu 50.00|1.00|49.00):', amount||'|'||fee_eur||'|'||net_amount_eur FROM request_withdrawal(50);

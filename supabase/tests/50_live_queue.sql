@@ -58,6 +58,8 @@ RESET ROLE;
 -- Fin du cours : le prof redevient en ligne
 SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','d1111111-1111-1111-1111-111111111111',false);
 SELECT start_lesson(id) IS NOT NULL FROM lessons WHERE tutor_id=auth.uid() AND status='confirmed';
+RESET ROLE; UPDATE lessons SET started_at = now() - interval '3 hours', scheduled_at = LEAST(scheduled_at, now() - interval '3 hours') WHERE status = 'in_progress'; -- cours fait (migration 1100 : pas de fin avant la moitié du cours)
+SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','d1111111-1111-1111-1111-111111111111',false);
 SELECT complete_lesson(id) IS NOT NULL FROM lessons WHERE tutor_id=auth.uid() AND status='in_progress';
 SELECT 'Q18 prof de nouveau en ligne (attendu online):', status FROM tutors WHERE user_id=auth.uid();
 RESET ROLE;

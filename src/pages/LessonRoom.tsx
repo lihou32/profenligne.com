@@ -76,9 +76,9 @@ export default function LessonRoom() {
   // Le canal privé n'est ouvert qu'une fois l'accès vérifié
   const { transport } = useRoomTransport(lessonInfo ? id : undefined, user?.id);
 
+  // Chaque entrée dans la salle est notée (le prof doit être venu pour être payé)
   const beforeJoin = async () => {
     if (!id || !lessonInfo) return false;
-    if (lessonInfo.status === "in_progress") return true;
     try {
       const updated = await startLesson.mutateAsync(id);
       setLessonInfo((prev) => (prev ? { ...prev, status: updated.status } : prev));
@@ -152,7 +152,7 @@ export default function LessonRoom() {
             <AlertDialogTitle>Terminer le cours ?</AlertDialogTitle>
             <AlertDialogDescription>
               Le cours sera marqué comme terminé : vos gains sont crédités, l'élève reçoit son certificat
-              et peut laisser un avis. Si vous avez simplement perdu la connexion, choisissez « Pas encore ».
+              et peut laisser un avis. Un cours peut être terminé à partir de la moitié de sa durée. Si vous avez simplement perdu la connexion, choisissez « Pas encore ».
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
