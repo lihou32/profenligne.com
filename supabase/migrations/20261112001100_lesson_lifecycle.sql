@@ -14,6 +14,13 @@
 ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS student_joined_at timestamptz;
 ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS tutor_joined_at timestamptz;
 
+-- Cours déjà commencés avant cette règle : on considère que les deux étaient là
+-- (sinon le ménage automatique rembourserait un cours réellement donné)
+UPDATE public.lessons
+   SET tutor_joined_at   = COALESCE(tutor_joined_at, started_at, now()),
+       student_joined_at = COALESCE(student_joined_at, started_at, now())
+ WHERE status = 'in_progress' AND tutor_joined_at IS NULL;
+
 -- Ces dates ne se modifient que par les fonctions du site
 CREATE OR REPLACE FUNCTION public.guard_lesson_join_columns()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$
