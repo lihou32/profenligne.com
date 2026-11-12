@@ -1,11 +1,10 @@
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, BookOpen, Video, HelpCircle, LogOut, Shield, Star,
   Wallet, Coins, Settings, Search, Award, Gift, UserRound, Zap, CalendarClock, Crown,
 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -57,8 +56,7 @@ const GENERAL: Item[] = [
 
 export function AppSidebar() {
   const location = useLocation()
-  const navigate = useNavigate()
-  const { signOut, profile, hasRole, user, mode, canSwitchMode, setMode } = useAuth()
+  const { signOut, profile, hasRole, user, mode } = useAuth()
   const isTutor = mode === "tutor"
   const queryClient = useQueryClient()
   const { isMobile, setOpenMobile } = useSidebar()
@@ -85,8 +83,10 @@ export function AppSidebar() {
   }, [user, queryClient])
 
   const handleSignOut = async () => {
-    try { await signOut(); toast.success("À bientôt !"); navigate("/login") }
-    catch { toast.error("Déconnexion impossible") }
+    await signOut().catch(() => undefined)
+    queryClient.clear()
+    // Rechargement complet : plus aucune donnée du compte en mémoire
+    window.location.assign("/login")
   }
 
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Mon compte"
@@ -136,30 +136,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        {canSwitchMode && (
-          <div className="mb-2 grid grid-cols-2 gap-1 rounded-2xl border-2 border-ink-2 bg-white p-1" role="group" aria-label="Espace">
-            {(["student", "tutor"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={mode === m}
-                onClick={() => {
-                  if (mode === m) return
-                  setMode(m)
-                  close()
-                  navigate("/dashboard")
-                  toast.success(m === "tutor" ? "Espace prof" : "Espace élève")
-                }}
-                className={cn(
-                  "rounded-xl px-2 py-1.5 text-xs font-bold transition",
-                  mode === m ? "bg-ink-2 text-white" : "text-ink-2/70 hover:bg-peri-soft",
-                )}
-              >
-                {m === "tutor" ? "Espace prof" : "Espace élève"}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="flex items-center gap-3 rounded-2xl border-2 border-ink-2 bg-peri-soft p-2.5">
           <Link to="/profile" onClick={close} className="flex min-w-0 flex-1 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border-2 border-ink-2 bg-white text-sm font-bold text-ink-2">
@@ -172,7 +148,7 @@ export function AppSidebar() {
               </span>
             </span>
           </Link>
-          <button onClick={handleSignOut} aria-label="Se déconnecter"
+          <button onClick={handleSignOut} aria-label="Se déconnecter" title="Se déconnecter"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-rose-soft hover:text-rose">
             <LogOut className="h-4 w-4" />
           </button>
